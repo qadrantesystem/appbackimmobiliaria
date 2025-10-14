@@ -1,0 +1,466 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 1,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 1,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 2,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 2,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 3,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 3,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 4,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 4,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 4,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 5,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 5,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 5,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 6,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 6,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 6,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 7,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 7,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 7,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 8,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 8,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 8,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 9,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 9,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 9,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 10,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 10,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 10,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 11,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 11,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 11,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 12,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 12,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 12,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 13,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 13,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 13,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 14,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 14,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 14,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 15,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 15,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 15,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 16,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 16,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 16,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 17,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 17,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 17,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 18,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 18,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 18,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 19,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 19,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 19,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 20,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 20,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 20,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 21,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 21,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 21,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 22,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 22,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 22,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 23,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 23,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 23,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 24,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 24,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 24,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 25,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 25,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 25,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 26,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 26,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 26,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 27,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 27,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 27,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 28,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 28,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 28,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 29,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 29,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 29,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 30,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 30,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 30,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 31,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 31,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 31,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 32,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 32,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 32,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 33,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 33,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 33,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 34,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 34,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 34,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 35,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 35,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 35,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 36,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 36,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 36,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 37,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 37,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 37,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 38,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 38,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 38,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 39,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 39,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 39,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 40,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 40,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 40,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 41,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 41,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 41,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 42,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 42,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 42,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 43,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 43,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 43,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 44,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 44,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 44,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 45,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 45,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 45,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 46,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 46,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 46,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 47,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 47,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 47,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 48,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 48,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 48,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 49,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 49,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 49,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 50,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 50,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 50,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "id": 51,
+      "tipo_inmueble_id": 1,
+      "caracteristica_id": 51,
+      "requerido": false,
+      "visible_en_filtro": true,
+      "orden": 51,
+      "created_at": "2024-01-01T10:00:00Z"
+    }
+  ],
+  "total": 51,
+  "nota": "Este archivo muestra las 51 características aplicables al tipo_inmueble_id=1 (Oficina en Edificio). En producción, habría más registros para otros tipos de inmuebles."
+}

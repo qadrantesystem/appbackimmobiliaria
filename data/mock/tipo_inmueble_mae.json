@@ -1,0 +1,126 @@
+{
+  "success": true,
+  "data": [
+    {
+      "tipo_inmueble_id": 1,
+      "nombre": "Oficina en Edificio",
+      "descripcion": "Oficinas corporativas en edificios empresariales",
+      "icono": "fa-building",
+      "orden": 1,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 2,
+      "nombre": "Casa",
+      "descripcion": "Casas independientes unifamiliares",
+      "icono": "fa-home",
+      "orden": 2,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 3,
+      "nombre": "Departamento",
+      "descripcion": "Departamentos en edificios residenciales",
+      "icono": "fa-door-closed",
+      "orden": 3,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 4,
+      "nombre": "Local Comercial",
+      "descripcion": "Locales para negocios y comercio",
+      "icono": "fa-store",
+      "orden": 4,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 5,
+      "nombre": "Terreno",
+      "descripcion": "Terrenos urbanos y rurales",
+      "icono": "fa-map",
+      "orden": 5,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 6,
+      "nombre": "Almacén",
+      "descripcion": "Almacenes industriales y logísticos",
+      "icono": "fa-warehouse",
+      "orden": 6,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 7,
+      "nombre": "Cochera",
+      "descripcion": "Estacionamientos y cocheras",
+      "icono": "fa-car",
+      "orden": 7,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 8,
+      "nombre": "Habitación",
+      "descripcion": "Habitaciones individuales en casas compartidas",
+      "icono": "fa-bed",
+      "orden": 8,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 9,
+      "nombre": "Oficina Independiente",
+      "descripcion": "Oficinas en casas o locales independientes",
+      "icono": "fa-briefcase",
+      "orden": 9,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 10,
+      "nombre": "Consultorio",
+      "descripcion": "Consultorios médicos y profesionales",
+      "icono": "fa-stethoscope",
+      "orden": 10,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 11,
+      "nombre": "Depósito",
+      "descripcion": "Depósitos y espacios de almacenamiento",
+      "icono": "fa-box",
+      "orden": 11,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "tipo_inmueble_id": 12,
+      "nombre": "Edificio Completo",
+      "descripcion": "Edificios completos para inversión",
+      "icono": "fa-city",
+      "orden": 12,
+      "activo": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    }
+  ],
+  "total": 12
+}

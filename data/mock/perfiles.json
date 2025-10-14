@@ -1,0 +1,49 @@
+{
+  "success": true,
+  "data": [
+    {
+      "perfil_id": 1,
+      "nombre": "arrendatario",
+      "descripcion": "Usuario que busca inmuebles para alquilar o comprar",
+      "permisos": {
+        "buscar": true,
+        "guardar_favoritos": true,
+        "contactar": true,
+        "publicar": false,
+        "gestionar_propiedades": false
+      },
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "perfil_id": 2,
+      "nombre": "propietario",
+      "descripcion": "Usuario que publica y gestiona inmuebles",
+      "permisos": {
+        "buscar": true,
+        "guardar_favoritos": true,
+        "contactar": true,
+        "publicar": true,
+        "gestionar_propiedades": true,
+        "ver_estadisticas": true
+      },
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "perfil_id": 3,
+      "nombre": "admin",
+      "descripcion": "Administrador del sistema con acceso completo",
+      "permisos": {
+        "all": true,
+        "gestionar_usuarios": true,
+        "gestionar_planes": true,
+        "ver_reportes": true,
+        "moderar_contenido": true
+      },
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    }
+  ],
+  "total": 3
+}

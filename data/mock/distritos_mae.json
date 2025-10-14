@@ -1,0 +1,116 @@
+{
+  "success": true,
+  "data": [
+    {
+      "distrito_id": 1,
+      "nombre": "San Isidro",
+      "ciudad": "Lima",
+      "provincia": "Lima",
+      "latitud": -12.0969,
+      "longitud": -77.0347,
+      "activo": true,
+      "orden": 1,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "distrito_id": 2,
+      "nombre": "Miraflores",
+      "ciudad": "Lima",
+      "provincia": "Lima",
+      "latitud": -12.1196,
+      "longitud": -77.0283,
+      "activo": true,
+      "orden": 2,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "distrito_id": 3,
+      "nombre": "San Borja",
+      "ciudad": "Lima",
+      "provincia": "Lima",
+      "latitud": -12.0894,
+      "longitud": -76.9969,
+      "activo": true,
+      "orden": 3,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "distrito_id": 4,
+      "nombre": "Surco",
+      "ciudad": "Lima",
+      "provincia": "Lima",
+      "latitud": -12.1391,
+      "longitud": -76.9897,
+      "activo": true,
+      "orden": 4,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "distrito_id": 5,
+      "nombre": "La Molina",
+      "ciudad": "Lima",
+      "provincia": "Lima",
+      "latitud": -12.0797,
+      "longitud": -76.9397,
+      "activo": true,
+      "orden": 5,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "distrito_id": 6,
+      "nombre": "Barranco",
+      "ciudad": "Lima",
+      "provincia": "Lima",
+      "latitud": -12.1461,
+      "longitud": -77.0208,
+      "activo": true,
+      "orden": 6,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "distrito_id": 7,
+      "nombre": "Jesús María",
+      "ciudad": "Lima",
+      "provincia": "Lima",
+      "latitud": -12.0725,
+      "longitud": -77.0419,
+      "activo": true,
+      "orden": 7,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "distrito_id": 8,
+      "nombre": "Lince",
+      "ciudad": "Lima",
+      "provincia": "Lima",
+      "latitud": -12.0833,
+      "longitud": -77.0333,
+      "activo": true,
+      "orden": 8,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "distrito_id": 9,
+      "nombre": "Magdalena",
+      "ciudad": "Lima",
+      "provincia": "Lima",
+      "latitud": -12.0908,
+      "longitud": -77.0650,
+      "activo": true,
+      "orden": 9,
+      "created_at": "2024-01-01T10:00:00Z"
+    },
+    {
+      "distrito_id": 10,
+      "nombre": "Pueblo Libre",
+      "ciudad": "Lima",
+      "provincia": "Lima",
+      "latitud": -12.0769,
+      "longitud": -77.0633,
+      "activo": true,
+      "orden": 10,
+      "created_at": "2024-01-01T10:00:00Z"
+    }
+  ],
+  "total": 10
+}

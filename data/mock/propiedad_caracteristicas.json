@@ -1,0 +1,304 @@
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "propiedad_id": 1,
+      "caracteristica_id": 1,
+      "valor_boolean": null,
+      "valor_numerico": 8,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 2,
+      "propiedad_id": 1,
+      "caracteristica_id": 2,
+      "valor_boolean": null,
+      "valor_numerico": 2,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 3,
+      "propiedad_id": 1,
+      "caracteristica_id": 4,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 4,
+      "propiedad_id": 1,
+      "caracteristica_id": 8,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 5,
+      "propiedad_id": 1,
+      "caracteristica_id": 9,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 6,
+      "propiedad_id": 1,
+      "caracteristica_id": 11,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 7,
+      "propiedad_id": 1,
+      "caracteristica_id": 15,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 8,
+      "propiedad_id": 1,
+      "caracteristica_id": 19,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 9,
+      "propiedad_id": 1,
+      "caracteristica_id": 20,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 10,
+      "propiedad_id": 1,
+      "caracteristica_id": 25,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 11,
+      "propiedad_id": 1,
+      "caracteristica_id": 32,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 12,
+      "propiedad_id": 1,
+      "caracteristica_id": 34,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 13,
+      "propiedad_id": 1,
+      "caracteristica_id": 38,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 14,
+      "propiedad_id": 1,
+      "caracteristica_id": 39,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 15,
+      "propiedad_id": 1,
+      "caracteristica_id": 40,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-02-15T10:00:00Z"
+    },
+    {
+      "id": 16,
+      "propiedad_id": 2,
+      "caracteristica_id": 1,
+      "valor_boolean": null,
+      "valor_numerico": 6,
+      "valor_texto": null,
+      "created_at": "2024-03-20T10:00:00Z"
+    },
+    {
+      "id": 17,
+      "propiedad_id": 2,
+      "caracteristica_id": 9,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-03-20T10:00:00Z"
+    },
+    {
+      "id": 18,
+      "propiedad_id": 2,
+      "caracteristica_id": 25,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-03-20T10:00:00Z"
+    },
+    {
+      "id": 19,
+      "propiedad_id": 2,
+      "caracteristica_id": 27,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-03-20T10:00:00Z"
+    },
+    {
+      "id": 20,
+      "propiedad_id": 2,
+      "caracteristica_id": 37,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-03-20T10:00:00Z"
+    },
+    {
+      "id": 21,
+      "propiedad_id": 3,
+      "caracteristica_id": 1,
+      "valor_boolean": null,
+      "valor_numerico": 10,
+      "valor_texto": null,
+      "created_at": "2024-01-10T10:00:00Z"
+    },
+    {
+      "id": 22,
+      "propiedad_id": 3,
+      "caracteristica_id": 8,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-01-10T10:00:00Z"
+    },
+    {
+      "id": 23,
+      "propiedad_id": 3,
+      "caracteristica_id": 11,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-01-10T10:00:00Z"
+    },
+    {
+      "id": 24,
+      "propiedad_id": 3,
+      "caracteristica_id": 29,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-01-10T10:00:00Z"
+    },
+    {
+      "id": 25,
+      "propiedad_id": 3,
+      "caracteristica_id": 30,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-01-10T10:00:00Z"
+    },
+    {
+      "id": 26,
+      "propiedad_id": 4,
+      "caracteristica_id": 1,
+      "valor_boolean": null,
+      "valor_numerico": 5,
+      "valor_texto": null,
+      "created_at": "2024-06-05T10:00:00Z"
+    },
+    {
+      "id": 27,
+      "propiedad_id": 4,
+      "caracteristica_id": 25,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-06-05T10:00:00Z"
+    },
+    {
+      "id": 28,
+      "propiedad_id": 4,
+      "caracteristica_id": 38,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-06-05T10:00:00Z"
+    },
+    {
+      "id": 29,
+      "propiedad_id": 5,
+      "caracteristica_id": 1,
+      "valor_boolean": null,
+      "valor_numerico": 7,
+      "valor_texto": null,
+      "created_at": "2024-04-12T10:00:00Z"
+    },
+    {
+      "id": 30,
+      "propiedad_id": 5,
+      "caracteristica_id": 15,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-04-12T10:00:00Z"
+    },
+    {
+      "id": 31,
+      "propiedad_id": 5,
+      "caracteristica_id": 47,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-04-12T10:00:00Z"
+    },
+    {
+      "id": 32,
+      "propiedad_id": 6,
+      "caracteristica_id": 1,
+      "valor_boolean": null,
+      "valor_numerico": 4,
+      "valor_texto": null,
+      "created_at": "2024-05-18T10:00:00Z"
+    },
+    {
+      "id": 33,
+      "propiedad_id": 6,
+      "caracteristica_id": 9,
+      "valor_boolean": true,
+      "valor_numerico": null,
+      "valor_texto": null,
+      "created_at": "2024-05-18T10:00:00Z"
+    }
+  ],
+  "total": 33,
+  "nota": "Este archivo muestra características específicas de las primeras 6 propiedades. Cada registro vincula una propiedad con una característica y su valor (boolean, numérico o texto según el tipo)."
+}

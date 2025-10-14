@@ -1,0 +1,151 @@
+{
+  "nombre": "Mock Data - Sistema Inmobiliario",
+  "version": "1.0",
+  "fecha_creacion": "2025-01-14",
+  "descripcion": "Archivos JSON que simulan respuestas de API con datos reales de ejemplo",
+  "total_registros": 219,
+  "archivos": [
+    {
+      "nombre": "perfiles.json",
+      "tabla": "perfiles",
+      "tipo": "maestro",
+      "registros": 3,
+      "descripcion": "Tipos de usuario del sistema",
+      "endpoint_simulado": "GET /api/perfiles"
+    },
+    {
+      "nombre": "planes_mae.json",
+      "tabla": "planes_mae",
+      "tipo": "maestro",
+      "registros": 4,
+      "descripcion": "Planes de suscripción disponibles",
+      "endpoint_simulado": "GET /api/planes"
+    },
+    {
+      "nombre": "tipo_inmueble_mae.json",
+      "tabla": "tipo_inmueble_mae",
+      "tipo": "maestro",
+      "registros": 12,
+      "descripcion": "Catálogo de tipos de inmuebles",
+      "endpoint_simulado": "GET /api/tipos-inmueble"
+    },
+    {
+      "nombre": "distritos_mae.json",
+      "tabla": "distritos_mae",
+      "tipo": "maestro",
+      "registros": 10,
+      "descripcion": "Distritos de Lima disponibles",
+      "endpoint_simulado": "GET /api/distritos"
+    },
+    {
+      "nombre": "caracteristicas_mae.json",
+      "tabla": "caracteristicas_mae",
+      "tipo": "maestro",
+      "registros": 51,
+      "descripcion": "Catálogo completo de características",
+      "endpoint_simulado": "GET /api/caracteristicas"
+    },
+    {
+      "nombre": "caracteristicas_x_inmueble_mae.json",
+      "tabla": "caracteristicas_x_inmueble_mae",
+      "tipo": "relacion",
+      "registros": 51,
+      "descripcion": "Relación entre tipos de inmuebles y características aplicables",
+      "endpoint_simulado": "GET /api/caracteristicas/tipo/{tipo_inmueble_id}"
+    },
+    {
+      "nombre": "usuarios.json",
+      "tabla": "usuarios",
+      "tipo": "principal",
+      "registros": 10,
+      "descripcion": "Usuarios registrados en el sistema",
+      "endpoint_simulado": "GET /api/usuarios"
+    },
+    {
+      "nombre": "propiedades.json",
+      "tabla": "propiedades",
+      "tipo": "principal",
+      "registros": 10,
+      "descripcion": "Inmuebles publicados en la plataforma",
+      "endpoint_simulado": "GET /api/propiedades"
+    },
+    {
+      "nombre": "propiedad_caracteristicas.json",
+      "tabla": "propiedad_caracteristicas",
+      "tipo": "valores",
+      "registros": 33,
+      "descripcion": "Valores específicos de características por propiedad",
+      "endpoint_simulado": "GET /api/propiedades/{id}/caracteristicas"
+    },
+    {
+      "nombre": "suscripciones.json",
+      "tabla": "suscripciones",
+      "tipo": "principal",
+      "registros": 8,
+      "descripcion": "Suscripciones activas de usuarios",
+      "endpoint_simulado": "GET /api/suscripciones"
+    },
+    {
+      "nombre": "busqueda_x_inmueble_mov.json",
+      "tabla": "busqueda_x_inmueble_mov",
+      "tipo": "movimiento",
+      "registros": 15,
+      "descripcion": "Historial de búsquedas realizadas",
+      "endpoint_simulado": "GET /api/busquedas"
+    },
+    {
+      "nombre": "registro_x_inmueble_mov.json",
+      "tabla": "registro_x_inmueble_mov",
+      "tipo": "movimiento",
+      "registros": 20,
+      "descripcion": "Registro de interacciones (vistas, favoritos, contactos)",
+      "endpoint_simulado": "GET /api/interacciones"
+    }
+  ],
+  "resumen_por_tipo": {
+    "maestro": {
+      "archivos": 5,
+      "registros": 80
+    },
+    "relacion": {
+      "archivos": 1,
+      "registros": 51
+    },
+    "principal": {
+      "archivos": 3,
+      "registros": 28
+    },
+    "valores": {
+      "archivos": 1,
+      "registros": 33
+    },
+    "movimiento": {
+      "archivos": 2,
+      "registros": 35
+    }
+  },
+  "usuarios_ejemplo": {
+    "arrendatario": {
+      "email": "juan.perez@email.com",
+      "password": "demo123",
+      "perfil": "arrendatario"
+    },
+    "propietario": {
+      "email": "maria.garcia@inmobiliaria.com",
+      "password": "demo123",
+      "perfil": "propietario"
+    },
+    "admin": {
+      "email": "admin@inmobiliaria.com",
+      "password": "admin123",
+      "perfil": "admin"
+    }
+  },
+  "notas": [
+    "Todos los archivos siguen el formato: { success: true, data: [...], total: N }",
+    "Los password_hash son ficticios, usar bcrypt en producción",
+    "Las IPs son de ejemplo (192.168.x.x)",
+    "Los datos están alineados con el modelo de datos en MODELO_DATOS.md",
+    "Usar estos mocks para desarrollo y testing antes de implementar API real"
+  ]
+}

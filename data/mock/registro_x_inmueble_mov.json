@@ -1,0 +1,244 @@
+{
+  "success": true,
+  "data": [
+    {
+      "registro_id": 1,
+      "usuario_id": 1,
+      "propiedad_id": 1,
+      "tipo_interaccion": "vista",
+      "detalles": {
+        "duracion_segundos": 45,
+        "origen": "resultados_busqueda"
+      },
+      "fecha_interaccion": "2025-01-13T15:35:00Z",
+      "ip_address": "192.168.1.100"
+    },
+    {
+      "registro_id": 2,
+      "usuario_id": 1,
+      "propiedad_id": 1,
+      "tipo_interaccion": "favorito",
+      "detalles": {
+        "accion": "agregar"
+      },
+      "fecha_interaccion": "2025-01-13T15:36:00Z",
+      "ip_address": "192.168.1.100"
+    },
+    {
+      "registro_id": 3,
+      "usuario_id": 1,
+      "propiedad_id": 2,
+      "tipo_interaccion": "vista",
+      "detalles": {
+        "duracion_segundos": 32,
+        "origen": "resultados_busqueda"
+      },
+      "fecha_interaccion": "2025-01-13T15:40:00Z",
+      "ip_address": "192.168.1.100"
+    },
+    {
+      "registro_id": 4,
+      "usuario_id": 1,
+      "propiedad_id": 3,
+      "tipo_interaccion": "vista",
+      "detalles": {
+        "duracion_segundos": 28,
+        "origen": "resultados_busqueda"
+      },
+      "fecha_interaccion": "2025-01-13T15:45:00Z",
+      "ip_address": "192.168.1.100"
+    },
+    {
+      "registro_id": 5,
+      "usuario_id": 3,
+      "propiedad_id": 5,
+      "tipo_interaccion": "vista",
+      "detalles": {
+        "duracion_segundos": 52,
+        "origen": "resultados_busqueda"
+      },
+      "fecha_interaccion": "2025-01-13T18:50:00Z",
+      "ip_address": "192.168.1.105"
+    },
+    {
+      "registro_id": 6,
+      "usuario_id": 3,
+      "propiedad_id": 5,
+      "tipo_interaccion": "favorito",
+      "detalles": {
+        "accion": "agregar"
+      },
+      "fecha_interaccion": "2025-01-13T18:51:00Z",
+      "ip_address": "192.168.1.105"
+    },
+    {
+      "registro_id": 7,
+      "usuario_id": 3,
+      "propiedad_id": 5,
+      "tipo_interaccion": "contacto",
+      "detalles": {
+        "mensaje": "Hola, me interesa la oficina. ¿Podríamos agendar una visita?",
+        "telefono": "+51 998877665",
+        "email": "carlos.rodriguez@email.com"
+      },
+      "fecha_interaccion": "2025-01-13T18:55:00Z",
+      "ip_address": "192.168.1.105"
+    },
+    {
+      "registro_id": 8,
+      "usuario_id": 5,
+      "propiedad_id": 8,
+      "tipo_interaccion": "vista",
+      "detalles": {
+        "duracion_segundos": 67,
+        "origen": "resultados_busqueda"
+      },
+      "fecha_interaccion": "2025-01-12T14:25:00Z",
+      "ip_address": "192.168.1.110"
+    },
+    {
+      "registro_id": 9,
+      "usuario_id": 5,
+      "propiedad_id": 8,
+      "tipo_interaccion": "favorito",
+      "detalles": {
+        "accion": "agregar"
+      },
+      "fecha_interaccion": "2025-01-12T14:26:00Z",
+      "ip_address": "192.168.1.110"
+    },
+    {
+      "registro_id": 10,
+      "usuario_id": 1,
+      "propiedad_id": 4,
+      "tipo_interaccion": "vista",
+      "detalles": {
+        "duracion_segundos": 41,
+        "origen": "destacados"
+      },
+      "fecha_interaccion": "2025-01-11T16:35:00Z",
+      "ip_address": "192.168.1.100"
+    },
+    {
+      "registro_id": 11,
+      "usuario_id": 1,
+      "propiedad_id": 4,
+      "tipo_interaccion": "favorito",
+      "detalles": {
+        "accion": "agregar"
+      },
+      "fecha_interaccion": "2025-01-11T16:36:00Z",
+      "ip_address": "192.168.1.100"
+    },
+    {
+      "registro_id": 12,
+      "usuario_id": 1,
+      "propiedad_id": 1,
+      "tipo_interaccion": "compartir",
+      "detalles": {
+        "metodo": "whatsapp",
+        "destinatario": "+51 987654321"
+      },
+      "fecha_interaccion": "2025-01-13T15:50:00Z",
+      "ip_address": "192.168.1.100"
+    },
+    {
+      "registro_id": 13,
+      "usuario_id": 7,
+      "propiedad_id": 9,
+      "tipo_interaccion": "vista",
+      "detalles": {
+        "duracion_segundos": 38,
+        "origen": "destacados"
+      },
+      "fecha_interaccion": "2025-01-10T16:05:00Z",
+      "ip_address": "192.168.1.115"
+    },
+    {
+      "registro_id": 14,
+      "usuario_id": 7,
+      "propiedad_id": 9,
+      "tipo_interaccion": "contacto",
+      "detalles": {
+        "mensaje": "Me interesa el local comercial. ¿Cuál es el proceso de alquiler?",
+        "telefono": "+51 977665544",
+        "email": "sofia.lopez@email.com"
+      },
+      "fecha_interaccion": "2025-01-10T16:10:00Z",
+      "ip_address": "192.168.1.115"
+    },
+    {
+      "registro_id": 15,
+      "usuario_id": 3,
+      "propiedad_id": 2,
+      "tipo_interaccion": "vista",
+      "detalles": {
+        "duracion_segundos": 55,
+        "origen": "resultados_busqueda"
+      },
+      "fecha_interaccion": "2025-01-12T09:35:00Z",
+      "ip_address": "192.168.1.105"
+    },
+    {
+      "registro_id": 16,
+      "usuario_id": 3,
+      "propiedad_id": 2,
+      "tipo_interaccion": "favorito",
+      "detalles": {
+        "accion": "agregar"
+      },
+      "fecha_interaccion": "2025-01-12T09:36:00Z",
+      "ip_address": "192.168.1.105"
+    },
+    {
+      "registro_id": 17,
+      "usuario_id": 1,
+      "propiedad_id": 2,
+      "tipo_interaccion": "favorito",
+      "detalles": {
+        "accion": "remover"
+      },
+      "fecha_interaccion": "2025-01-12T10:20:00Z",
+      "ip_address": "192.168.1.100"
+    },
+    {
+      "registro_id": 18,
+      "usuario_id": 5,
+      "propiedad_id": 7,
+      "tipo_interaccion": "vista",
+      "detalles": {
+        "duracion_segundos": 72,
+        "origen": "resultados_busqueda"
+      },
+      "fecha_interaccion": "2025-01-11T15:50:00Z",
+      "ip_address": "192.168.1.110"
+    },
+    {
+      "registro_id": 19,
+      "usuario_id": null,
+      "propiedad_id": 1,
+      "tipo_interaccion": "vista",
+      "detalles": {
+        "duracion_segundos": 25,
+        "origen": "destacados",
+        "sesion_id": "sess_abc123xyz789"
+      },
+      "fecha_interaccion": "2025-01-14T09:05:00Z",
+      "ip_address": "192.168.1.200"
+    },
+    {
+      "registro_id": 20,
+      "usuario_id": 3,
+      "propiedad_id": 1,
+      "tipo_interaccion": "reporte",
+      "detalles": {
+        "motivo": "informacion_incorrecta",
+        "descripcion": "El precio mostrado no coincide con la información del propietario",
+        "estado": "pendiente"
+      },
+      "fecha_interaccion": "2025-01-08T17:30:00Z",
+      "ip_address": "192.168.1.105"
+    }
+  ],
+  "total": 20
+}
