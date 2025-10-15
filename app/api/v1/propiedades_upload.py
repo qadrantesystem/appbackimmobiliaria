@@ -132,7 +132,7 @@ async def crear_propiedad_con_imagenes(
         
         # Subir a ImageKit
         resultado_principal = imagekit_service.upload_image(
-            file=imagen_principal_content,
+            file_content=imagen_principal_content,
             file_name=filename_principal,
             folder="/propiedades"
         )
@@ -161,7 +161,7 @@ async def crear_propiedad_con_imagenes(
                 
                 # Subir a ImageKit
                 resultado_galeria = imagekit_service.upload_image(
-                    file=imagen_content,
+                    file_content=imagen_content,
                     file_name=filename_galeria,
                     folder="/propiedades"
                 )
@@ -291,7 +291,7 @@ async def actualizar_imagenes_propiedad(
             filename = f"propiedad_{propiedad_id}_principal_updated"
             
             resultado = imagekit_service.upload_image(
-                file=imagen_content,
+                file_content=imagen_content,
                 file_name=filename,
                 folder="/propiedades"
             )
@@ -314,7 +314,7 @@ async def actualizar_imagenes_propiedad(
                 filename = f"propiedad_{propiedad_id}_galeria_{idx}_updated"
                 
                 resultado = imagekit_service.upload_image(
-                    file=imagen_content,
+                    file_content=imagen_content,
                     file_name=filename,
                     folder="/propiedades"
                 )
