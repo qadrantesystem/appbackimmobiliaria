@@ -14,6 +14,7 @@ class Usuario(Base):
     apellido = Column(String(100), nullable=False)
     telefono = Column(String(20))
     dni = Column(String(20))
+    foto_perfil = Column(String(500))  # URL de ImageKit
     perfil_id = Column(Integer, ForeignKey("perfiles.perfil_id"), nullable=False)
     estado = Column(String(20), default="activo", nullable=False)
     plan_id = Column(Integer, ForeignKey("planes_mae.plan_id"))

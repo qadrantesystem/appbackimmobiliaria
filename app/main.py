@@ -93,6 +93,13 @@ try:
 except ImportError as e:
     print(f"   ⚠️ Error cargando propiedades: {e}")
 
+try:
+    from app.api.v1 import perfiles
+    app.include_router(perfiles.router, prefix="/api/v1/perfiles", tags=["👤 Perfiles"])
+    print("   ✅ Perfiles")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando perfiles: {e}")
+
 # TODO: Más endpoints (planes, suscripciones, búsquedas, favoritos, etc.)
 
 print("✅ Aplicación lista!")

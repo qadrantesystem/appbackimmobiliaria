@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     apellido VARCHAR(100) NOT NULL,
     telefono VARCHAR(20),
     dni VARCHAR(20),
+    foto_perfil VARCHAR(500),
     perfil_id INTEGER NOT NULL REFERENCES perfiles(perfil_id),
     estado VARCHAR(20) DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo', 'suspendido')),
     plan_id INTEGER REFERENCES planes_mae(plan_id),
