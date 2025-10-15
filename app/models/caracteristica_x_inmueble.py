@@ -6,6 +6,7 @@ from app.database import Base
 class CaracteristicaXInmueble(Base):
     """Modelo de Característica por Tipo de Inmueble"""
     __tablename__ = "caracteristicas_x_inmueble_mae"
+    __table_args__ = {'extend_existing': True}
     
     id = Column(Integer, primary_key=True, index=True)
     tipo_inmueble_id = Column(Integer, ForeignKey('tipo_inmueble_mae.tipo_inmueble_id'), nullable=False)
