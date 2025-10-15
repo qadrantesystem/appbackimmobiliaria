@@ -281,3 +281,113 @@ async def logout():
         message="Logout exitoso",
         data={"info": "Token debe ser eliminado del cliente"}
     )
+
+@router.post("/forgot-password", response_model=ResponseModel[dict])
+async def forgot_password(
+    email: str,
+    db: Session = Depends(get_db)
+):
+    """
+    🔐 Solicitar recuperación de contraseña
+    Envía un código de 6 dígitos al email del usuario
+    """
+    try:
+        # Buscar usuario
+        usuario = db.query(Usuario).filter(Usuario.email == email).first()
+        
+        if not usuario:
+            # Por seguridad, no revelar si el email existe o no
+            return ResponseModel(
+                success=True,
+                message="Si el email existe, recibirás un código de recuperación",
+                data={}
+            )
+        
+        # Generar código de 6 dígitos
+        codigo = email_service.generate_verification_code()
+        
+        # Eliminar tokens anteriores
+        db.query(PasswordResetToken).filter(
+            PasswordResetToken.usuario_id == usuario.usuario_id
+        ).delete()
+        
+        # Crear nuevo token
+        nuevo_token = PasswordResetToken(
+            usuario_id=usuario.usuario_id,
+            codigo=codigo
+        )
+        db.add(nuevo_token)
+        db.commit()
+        
+        # Enviar email
+        await email_service.send_password_reset_email(
+            email=usuario.email,
+            name=usuario.nombre,
+            reset_code=codigo
+        )
+        
+        logger.info(f"✅ Código de recuperación enviado a {email}")
+        
+        return ResponseModel(
+            success=True,
+            message="Si el email existe, recibirás un código de recuperación",
+            data={}
+        )
+        
+    except Exception as e:
+        logger.error(f"❌ Error en forgot-password: {e}")
+        raise HTTPException(status_code=500, detail="Error al procesar solicitud")
+
+@router.post("/reset-password", response_model=ResponseModel[dict])
+async def reset_password(
+    email: str,
+    codigo: str,
+    nueva_password: str,
+    db: Session = Depends(get_db)
+):
+    """
+    🔐 Restablecer contraseña con código
+    """
+    try:
+        # Buscar usuario
+        usuario = db.query(Usuario).filter(Usuario.email == email).first()
+        
+        if not usuario:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+        
+        # Buscar token válido
+        token = db.query(PasswordResetToken).filter(
+            PasswordResetToken.usuario_id == usuario.usuario_id,
+            PasswordResetToken.codigo == codigo,
+            PasswordResetToken.usado == False,
+            PasswordResetToken.expira_en > datetime.now()
+        ).first()
+        
+        if not token:
+            raise HTTPException(
+                status_code=400, 
+                detail="Código inválido o expirado"
+            )
+        
+        # Actualizar contraseña
+        usuario.password = get_password_hash(nueva_password)
+        
+        # Marcar token como usado
+        token.usado = True
+        
+        db.commit()
+        
+        logger.info(f"✅ Contraseña restablecida para {email}")
+        
+        return ResponseModel(
+            success=True,
+            message="Contraseña restablecida exitosamente. Ya puedes iniciar sesión.",
+            data={"email": email}
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Error en reset-password: {e}")
+        raise HTTPException(status_code=500, detail="Error al restablecer contraseña")

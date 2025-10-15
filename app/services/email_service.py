@@ -397,23 +397,53 @@ class EmailService:
             </html>
             """
             
-            message = Mail(
-                from_email=From(self.from_email, self.from_name),
-                to_emails=To(email),
-                subject=Subject(f"🔐 Código de Recuperación: {reset_code} - Sistema Inmobiliario"),
-                plain_text_content=PlainTextContent(f"Tu código de recuperación es: {reset_code}. Válido por 15 minutos."),
-                html_content=HtmlContent(html_content)
-            )
+            logger.info(f"📤 [EMAIL] Enviando código de recuperación a {email}")
+            logger.info(f"   🔐 Código: {reset_code}")
             
-            response = self.sendgrid.send(message)
-            
-            logger.info(f"✅ [EMAIL] Código de recuperación enviado a {email}")
-            
-            return {
-                "success": True,
-                "message": "Código de recuperación enviado",
-                "email": email
-            }
+            # Enviar según el método configurado
+            if self.use_smtp:
+                # Enviar con SMTP
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = f"🔐 Código de Recuperación: {reset_code} - Sistema Inmobiliario"
+                msg['From'] = f"{self.from_name} <{self.from_email}>"
+                msg['To'] = email
+                
+                part1 = MIMEText(f"Tu código de recuperación es: {reset_code}. Válido por 15 minutos.", 'plain', 'utf-8')
+                part2 = MIMEText(html_content, 'html', 'utf-8')
+                msg.attach(part1)
+                msg.attach(part2)
+                
+                with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                    server.starttls()
+                    server.login(self.smtp_user, self.smtp_password)
+                    server.send_message(msg)
+                
+                logger.info(f"✅ [SMTP] Código de recuperación enviado a {email}")
+                
+                return {
+                    "success": True,
+                    "message": "Código de recuperación enviado",
+                    "email": email
+                }
+            else:
+                # Enviar con SendGrid
+                message = Mail(
+                    from_email=From(self.from_email, self.from_name),
+                    to_emails=To(email),
+                    subject=Subject(f"🔐 Código de Recuperación: {reset_code} - Sistema Inmobiliario"),
+                    plain_text_content=PlainTextContent(f"Tu código de recuperación es: {reset_code}. Válido por 15 minutos."),
+                    html_content=HtmlContent(html_content)
+                )
+                
+                response = self.sendgrid.send(message)
+                
+                logger.info(f"✅ [SENDGRID] Código de recuperación enviado a {email}")
+                
+                return {
+                    "success": True,
+                    "message": "Código de recuperación enviado",
+                    "email": email
+                }
             
         except Exception as e:
             logger.error(f"❌ [EMAIL] Error enviando recuperación: {str(e)}")
@@ -422,6 +452,12 @@ class EmailService:
                 "message": f"Error enviando email: {str(e)}",
                 "email": email
             }
+
+
+    # Alias para compatibilidad
+    async def send_password_reset_email(self, email: str, name: str, reset_code: str):
+        """Alias para send_password_reset_code"""
+        return await self.send_password_reset_code(email, name, reset_code)
 
 
 # Instancia global del servicio
