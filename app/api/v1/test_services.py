@@ -82,6 +82,38 @@ async def test_imagekit():
             "message": f"Error: {str(e)}"
         }
 
+@router.post("/send-email")
+async def send_test_email(email: str):
+    """
+    📧 Enviar email de prueba a una dirección específica
+    """
+    try:
+        if not email or "@" not in email:
+            raise HTTPException(status_code=400, detail="Email inválido")
+        
+        result = await email_service.send_verification_email(
+            email=email,
+            name="Usuario de Prueba",
+            verification_code="TEST123"
+        )
+        
+        if result:
+            return {
+                "success": True,
+                "message": f"Email de prueba enviado exitosamente a {email}",
+                "email": email
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Error al enviar email",
+                "email": email
+            }
+            
+    except Exception as e:
+        logger.error(f"❌ Error enviando email de prueba: {e}")
+        raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
+
 @router.get("/all")
 async def test_all_services():
     """
