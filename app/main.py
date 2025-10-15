@@ -107,6 +107,13 @@ try:
 except ImportError as e:
     print(f"   ⚠️ Error cargando test services: {e}")
 
-# TODO: Más endpoints (planes, suscripciones, búsquedas, favoritos, etc.)
+try:
+    from app.api.v1 import planes
+    app.include_router(planes.router, prefix="/api/v1/planes", tags=["💳 Planes"])
+    print("   ✅ Planes")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando planes: {e}")
+
+# TODO: Más endpoints (suscripciones, búsquedas, favoritos, etc.)
 
 print("✅ Aplicación lista!")
