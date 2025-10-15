@@ -16,7 +16,8 @@ class Usuario(Base):
     dni = Column(String(20))
     foto_perfil = Column(String(500))  # URL de ImageKit
     perfil_id = Column(Integer, ForeignKey("perfiles.perfil_id"), nullable=False)
-    estado = Column(String(20), default="activo", nullable=False)
+    estado = Column(String(20), default="pendiente", nullable=False)  # pendiente, activo, inactivo, suspendido
+    email_verificado = Column(Boolean, default=False)
     plan_id = Column(Integer, ForeignKey("planes_mae.plan_id"))
     fecha_inicio_suscripcion = Column(TIMESTAMP)
     fecha_fin_suscripcion = Column(TIMESTAMP)
@@ -33,6 +34,8 @@ class Usuario(Base):
     # Relationships
     perfil = relationship("Perfil", backref="usuarios")
     plan = relationship("Plan", backref="usuarios")
+    verification_tokens = relationship("EmailVerificationToken", back_populates="usuario", cascade="all, delete-orphan")
+    password_reset_tokens = relationship("PasswordResetToken", back_populates="usuario", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Usuario {self.email}>"

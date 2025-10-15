@@ -3,6 +3,7 @@
 # 1. Seguridad
 from app.models.perfil import Perfil
 from app.models.usuario import Usuario
+from app.models.verification_token import EmailVerificationToken, PasswordResetToken
 
 # 2. Maestras
 from app.models.plan import Plan
@@ -24,6 +25,8 @@ __all__ = [
     # Seguridad
     "Perfil",
     "Usuario",
+    "EmailVerificationToken",
+    "PasswordResetToken",
     # Maestras
     "Plan",
     "Distrito",

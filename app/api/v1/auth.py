@@ -1,14 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from datetime import datetime
+from datetime import datetime, timedelta
 from app.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token
 from app.core.exceptions import UnauthorizedException, BadRequestException, ConflictException
-from app.models import Usuario, Perfil
+from app.models import Usuario, Perfil, EmailVerificationToken, PasswordResetToken
 from app.schemas.auth import UserRegister, UserLogin, Token
 from app.schemas.common import ResponseModel
+from app.services.email_service import email_service
+import logging
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.post("/register", response_model=ResponseModel[dict], status_code=status.HTTP_201_CREATED)
 async def register(
@@ -41,12 +44,34 @@ async def register(
         telefono=user_data.telefono,
         dni=user_data.dni,
         perfil_id=1,  # Por defecto: demandante
-        estado="activo"
+        estado="pendiente",  # Pendiente hasta verificar email
+        email_verificado=False
     )
     
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
+    
+    # Crear token de verificación
+    verification_token = EmailVerificationToken.create_token(
+        usuario_id=new_user.usuario_id,
+        email=new_user.email
+    )
+    db.add(verification_token)
+    db.commit()
+    
+    # Enviar email de verificación
+    try:
+        email_result = await email_service.send_verification_email(
+            email=new_user.email,
+            name=f"{new_user.nombre} {new_user.apellido}",
+            verification_code=verification_token.token
+        )
+        logger.info(f"✅ [REGISTRO] Email de verificación enviado a {new_user.email}")
+        logger.info(f"   🔐 Token ID: {verification_token.id}, Código: {verification_token.token}")
+    except Exception as e:
+        logger.error(f"❌ [REGISTRO] Error enviando email: {str(e)}")
+        # No fallar el registro si falla el email
     
     # Obtener nombre del perfil
     perfil = db.query(Perfil).filter(Perfil.perfil_id == new_user.perfil_id).first()
@@ -123,6 +148,124 @@ async def login(
                 "permisos": perfil.permisos if perfil else {}
             }
         )
+    )
+
+@router.post("/verify-email", response_model=ResponseModel[dict])
+async def verify_email(
+    email: str,
+    codigo: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Verificar email con código de 6 dígitos
+    
+    - **email**: Email del usuario
+    - **codigo**: Código de verificación de 6 dígitos
+    """
+    # Buscar usuario
+    user = db.query(Usuario).filter(Usuario.email == email).first()
+    
+    if not user:
+        raise BadRequestException("Usuario no encontrado")
+    
+    # Verificar si ya está verificado
+    if user.email_verificado:
+        raise BadRequestException("El email ya está verificado")
+    
+    # Buscar token válido
+    token = db.query(EmailVerificationToken).filter(
+        EmailVerificationToken.email == email,
+        EmailVerificationToken.token == codigo,
+        EmailVerificationToken.used == False
+    ).order_by(EmailVerificationToken.created_at.desc()).first()
+    
+    if not token:
+        raise BadRequestException("Código de verificación incorrecto")
+    
+    # Verificar si el token es válido
+    if not token.is_valid():
+        raise BadRequestException("El código de verificación ha expirado. Solicita uno nuevo.")
+    
+    # Marcar token como usado
+    token.used = True
+    
+    # Marcar usuario como verificado
+    user.email_verificado = True
+    user.estado = "activo"
+    
+    db.commit()
+    db.refresh(user)
+    
+    # Enviar email de bienvenida
+    try:
+        perfil = db.query(Perfil).filter(Perfil.perfil_id == user.perfil_id).first()
+        await email_service.send_welcome_email(
+            email=user.email,
+            name=f"{user.nombre} {user.apellido}",
+            perfil=perfil.nombre if perfil else "Usuario"
+        )
+        logger.info(f"✅ [VERIFICACIÓN] Email de bienvenida enviado a {user.email}")
+    except Exception as e:
+        logger.error(f"❌ [VERIFICACIÓN] Error enviando bienvenida: {str(e)}")
+    
+    return ResponseModel(
+        success=True,
+        message="Email verificado exitosamente. Ya puedes iniciar sesión.",
+        data={
+            "usuario_id": user.usuario_id,
+            "email": user.email,
+            "email_verificado": user.email_verificado,
+            "estado": user.estado
+        }
+    )
+
+@router.post("/resend-verification", response_model=ResponseModel[dict])
+async def resend_verification(
+    email: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Reenviar código de verificación
+    
+    - **email**: Email del usuario
+    """
+    # Buscar usuario
+    user = db.query(Usuario).filter(Usuario.email == email).first()
+    
+    if not user:
+        raise BadRequestException("Usuario no encontrado")
+    
+    # Verificar si ya está verificado
+    if user.email_verificado:
+        raise BadRequestException("El email ya está verificado")
+    
+    # Crear nuevo token
+    verification_token = EmailVerificationToken.create_token(
+        usuario_id=user.usuario_id,
+        email=user.email
+    )
+    db.add(verification_token)
+    db.commit()
+    
+    # Enviar email
+    try:
+        await email_service.send_verification_email(
+            email=user.email,
+            name=f"{user.nombre} {user.apellido}",
+            verification_code=verification_token.token
+        )
+        logger.info(f"✅ [REENVÍO] Código reenviado a {user.email}")
+    except Exception as e:
+        logger.error(f"❌ [REENVÍO] Error enviando email: {str(e)}")
+        raise BadRequestException("Error enviando email de verificación")
+    
+    return ResponseModel(
+        success=True,
+        message="Código de verificación reenviado. Revisa tu email.",
+        data={
+            "email": user.email,
+            "mensaje": "Código válido por 15 minutos"
+        }
     )
 
 @router.post("/logout", response_model=ResponseModel[dict])
