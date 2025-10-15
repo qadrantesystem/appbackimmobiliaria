@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
+from app.dependencies import require_admin, get_optional_user
 from app.models.estado_crm import EstadoCRM
+from app.models.usuario import Usuario
 from pydantic import BaseModel, Field
 import logging
 
@@ -56,7 +58,8 @@ class EstadoCRMResponse(EstadoCRMBase):
 async def listar_estados_crm(
     activo: Optional[bool] = Query(None),
     es_final: Optional[bool] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)
 ):
     """📋 Listar todos los estados CRM"""
     try:
@@ -99,7 +102,8 @@ async def obtener_estado_crm(
 @router.post("/", response_model=EstadoCRMResponse, status_code=201)
 async def crear_estado_crm(
     estado_data: EstadoCRMCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """➕ Crear un nuevo estado CRM"""
     try:
@@ -128,7 +132,8 @@ async def crear_estado_crm(
 async def actualizar_estado_crm(
     estado_id: int,
     estado_data: EstadoCRMUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """✏️ Actualizar un estado CRM"""
     try:
@@ -168,7 +173,8 @@ async def actualizar_estado_crm(
 @router.delete("/{estado_id}")
 async def eliminar_estado_crm(
     estado_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """🗑️ Eliminar un estado CRM (soft delete)"""
     try:

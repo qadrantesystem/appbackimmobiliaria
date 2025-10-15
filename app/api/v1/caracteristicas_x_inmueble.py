@@ -6,9 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
+from app.dependencies import require_admin, get_optional_user
 from app.models.caracteristica_x_inmueble import CaracteristicaXInmueble
 from app.models.caracteristica import Caracteristica
 from app.models.tipo_inmueble import TipoInmueble
+from app.models.usuario import Usuario
 from pydantic import BaseModel
 import logging
 
@@ -61,7 +63,8 @@ class CaracteristicaDetalle(BaseModel):
 @router.get("/tipo-inmueble/{tipo_inmueble_id}", response_model=List[CaracteristicaDetalle])
 async def listar_caracteristicas_por_tipo(
     tipo_inmueble_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)
 ):
     """
     📋 Listar características de un tipo de inmueble específico
@@ -109,7 +112,8 @@ async def listar_caracteristicas_por_tipo(
 @router.post("/", response_model=CaracteristicaXInmuebleResponse, status_code=201)
 async def asignar_caracteristica_a_tipo(
     data: CaracteristicaXInmuebleCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """➕ Asignar una característica a un tipo de inmueble"""
     try:
@@ -151,7 +155,8 @@ async def asignar_caracteristica_a_tipo(
 async def actualizar_caracteristica_tipo(
     relacion_id: int,
     data: CaracteristicaXInmuebleUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """✏️ Actualizar configuración de característica en tipo de inmueble"""
     try:
@@ -182,7 +187,8 @@ async def actualizar_caracteristica_tipo(
 @router.delete("/{relacion_id}")
 async def eliminar_caracteristica_tipo(
     relacion_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """🗑️ Eliminar asignación de característica a tipo de inmueble"""
     try:

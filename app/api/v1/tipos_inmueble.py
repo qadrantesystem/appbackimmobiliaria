@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
+from app.dependencies import require_admin, get_optional_user
 from app.models.tipo_inmueble import TipoInmueble
+from app.models.usuario import Usuario
 from pydantic import BaseModel, Field
 import logging
 
@@ -47,7 +49,8 @@ class TipoInmuebleResponse(TipoInmuebleBase):
 @router.get("/", response_model=List[TipoInmuebleResponse])
 async def listar_tipos_inmueble(
     activo: Optional[bool] = Query(None, description="Filtrar por estado activo"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)
 ):
     """
     📋 Listar todos los tipos de inmueble
@@ -91,7 +94,8 @@ async def obtener_tipo_inmueble(
 @router.post("/", response_model=TipoInmuebleResponse, status_code=201)
 async def crear_tipo_inmueble(
     tipo_data: TipoInmuebleCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """
     ➕ Crear un nuevo tipo de inmueble
@@ -122,7 +126,8 @@ async def crear_tipo_inmueble(
 async def actualizar_tipo_inmueble(
     tipo_id: int,
     tipo_data: TipoInmuebleUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """
     ✏️ Actualizar un tipo de inmueble
@@ -155,7 +160,8 @@ async def actualizar_tipo_inmueble(
 @router.delete("/{tipo_id}")
 async def eliminar_tipo_inmueble(
     tipo_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """
     🗑️ Eliminar un tipo de inmueble (soft delete)

@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
+from app.dependencies import require_admin, get_optional_user
 from app.models.caracteristica import Caracteristica
+from app.models.usuario import Usuario
 from pydantic import BaseModel, Field
 import logging
 
@@ -52,7 +54,8 @@ class CaracteristicaResponse(CaracteristicaBase):
 async def listar_caracteristicas(
     activo: Optional[bool] = Query(None),
     categoria: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)
 ):
     """📋 Listar todas las características"""
     try:
@@ -95,7 +98,8 @@ async def obtener_caracteristica(
 @router.post("/", response_model=CaracteristicaResponse, status_code=201)
 async def crear_caracteristica(
     caracteristica_data: CaracteristicaCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """➕ Crear una nueva característica"""
     try:
@@ -117,7 +121,8 @@ async def crear_caracteristica(
 async def actualizar_caracteristica(
     caracteristica_id: int,
     caracteristica_data: CaracteristicaUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """✏️ Actualizar una característica"""
     try:
@@ -148,7 +153,8 @@ async def actualizar_caracteristica(
 @router.delete("/{caracteristica_id}")
 async def eliminar_caracteristica(
     caracteristica_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
 ):
     """🗑️ Eliminar una característica (soft delete)"""
     try:

@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
+from app.dependencies import get_current_user, require_admin, get_optional_user
 from app.models.plan import Plan
+from app.models.usuario import Usuario
 from pydantic import BaseModel, Field
 from decimal import Decimal
 import logging
@@ -62,7 +64,8 @@ class PlanResponse(PlanBase):
 @router.get("/", response_model=List[PlanResponse])
 async def listar_planes(
     activo: Optional[bool] = Query(None, description="Filtrar por estado activo"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)  # Público pero puede personalizar
 ):
     """
     📋 Listar todos los planes
@@ -109,7 +112,8 @@ async def obtener_plan(
 @router.post("/", response_model=PlanResponse, status_code=201)
 async def crear_plan(
     plan_data: PlanCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)  # Solo ADMIN
 ):
     """
     ➕ Crear un nuevo plan
@@ -141,7 +145,8 @@ async def crear_plan(
 async def actualizar_plan(
     plan_id: int,
     plan_data: PlanUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)  # Solo ADMIN
 ):
     """
     ✏️ Actualizar un plan existente
@@ -175,7 +180,8 @@ async def actualizar_plan(
 @router.delete("/{plan_id}")
 async def eliminar_plan(
     plan_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)  # Solo ADMIN
 ):
     """
     🗑️ Eliminar un plan (soft delete - marca como inactivo)
@@ -207,7 +213,8 @@ async def eliminar_plan(
 @router.patch("/{plan_id}/activar")
 async def activar_plan(
     plan_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)  # Solo ADMIN
 ):
     """
     ✅ Activar un plan desactivado
