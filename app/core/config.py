@@ -16,9 +16,9 @@ class Settings:
         default="postgresql://postgres:esbHQXHuToTttMYUpnRCkYAdHMpXapuM@maglev.proxy.rlwy.net:44913/railway"
     )
     
-    # 📸 ImageKit (para imágenes de propiedades)
-    IMAGEKIT_PRIVATE_KEY: str = config("IMAGEKIT_PRIVATE_KEY", default="private_juJdHhsZIjOMwacjNq6/94YqfYo=")
-    IMAGEKIT_PUBLIC_KEY: str = config("IMAGEKIT_PUBLIC_KEY", default="public_m7rawfzMCD/O2+1pNfMA8aHqCkk=")
+    # 📸 ImageKit (para imágenes de propiedades y perfiles)
+    IMAGEKIT_PRIVATE_KEY: str = config("IMAGEKIT_PRIVATE_KEY", default="private_1xysV6NsG2Lm3I+iU63EhJHfJ2g=")
+    IMAGEKIT_PUBLIC_KEY: str = config("IMAGEKIT_PUBLIC_KEY", default="public_y/LX/tLO5qSkPjgOTlEx8JnFq9Q=")
     IMAGEKIT_URL_ENDPOINT: str = config("IMAGEKIT_URL_ENDPOINT", default="https://ik.imagekit.io/3y7rfi7jj")
     
     # 📧 SendGrid Email Service
