@@ -149,6 +149,20 @@ try:
 except ImportError as e:
     print(f"   ⚠️ Error cargando estados CRM: {e}")
 
-# TODO: Más endpoints (suscripciones, búsquedas, favoritos, etc.)
+try:
+    from app.api.v1 import suscripciones
+    app.include_router(suscripciones.router, prefix="/api/v1/suscripciones", tags=["💳 Suscripciones"])
+    print("   ✅ Suscripciones")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando suscripciones: {e}")
+
+try:
+    from app.api.v1 import favoritos
+    app.include_router(favoritos.router, prefix="/api/v1/favoritos", tags=["⭐ Favoritos"])
+    print("   ✅ Favoritos")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando favoritos: {e}")
+
+# TODO: Más endpoints (búsquedas, tracking, etc.)
 
 print("✅ Aplicación lista!")
