@@ -114,6 +114,41 @@ try:
 except ImportError as e:
     print(f"   ⚠️ Error cargando planes: {e}")
 
+try:
+    from app.api.v1 import distritos
+    app.include_router(distritos.router, prefix="/api/v1/distritos", tags=["📍 Distritos"])
+    print("   ✅ Distritos")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando distritos: {e}")
+
+try:
+    from app.api.v1 import tipos_inmueble
+    app.include_router(tipos_inmueble.router, prefix="/api/v1/tipos-inmueble", tags=["🏠 Tipos de Inmueble"])
+    print("   ✅ Tipos de Inmueble")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando tipos de inmueble: {e}")
+
+try:
+    from app.api.v1 import caracteristicas
+    app.include_router(caracteristicas.router, prefix="/api/v1/caracteristicas", tags=["⭐ Características"])
+    print("   ✅ Características")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando características: {e}")
+
+try:
+    from app.api.v1 import caracteristicas_x_inmueble
+    app.include_router(caracteristicas_x_inmueble.router, prefix="/api/v1/caracteristicas-x-inmueble", tags=["🔗 Características x Inmueble"])
+    print("   ✅ Características x Inmueble")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando características x inmueble: {e}")
+
+try:
+    from app.api.v1 import estados_crm
+    app.include_router(estados_crm.router, prefix="/api/v1/estados-crm", tags=["📊 Estados CRM"])
+    print("   ✅ Estados CRM")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando estados CRM: {e}")
+
 # TODO: Más endpoints (suscripciones, búsquedas, favoritos, etc.)
 
 print("✅ Aplicación lista!")

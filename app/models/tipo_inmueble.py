@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, Text
 from sqlalchemy.sql import func
 from app.database import Base
 
@@ -8,7 +8,7 @@ class TipoInmueble(Base):
     
     tipo_inmueble_id = Column(Integer, primary_key=True, index=True)
     nombre = Column(String(100), nullable=False)
-    descripcion = Column(String(255))
+    descripcion = Column(Text)
     icono = Column(String(50))
     orden = Column(Integer, default=0)
     activo = Column(Boolean, default=True)
