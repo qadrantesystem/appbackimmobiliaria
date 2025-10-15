@@ -14,7 +14,7 @@ class Tracking(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.usuario_id"))
     corredor_id = Column(Integer, ForeignKey("usuarios.usuario_id"))
     motivo = Column(Text)
-    metadata = Column(JSON)  # Para próximas acciones, calendario, etc.
+    metadata_json = Column(JSON)  # Para próximas acciones, calendario, etc.
     ip_address = Column(String(45))
     created_at = Column(TIMESTAMP, server_default=func.now())
     

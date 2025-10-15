@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS registro_x_inmueble_tracking (
   usuario_id INTEGER REFERENCES usuarios(usuario_id),
   corredor_id INTEGER REFERENCES usuarios(usuario_id),
   motivo TEXT,
-  metadata JSONB,
+  metadata_json JSONB,
   ip_address VARCHAR(45),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -37,7 +37,7 @@ COMMENT ON COLUMN registro_x_inmueble_tracking.corredor_id IS 'Corredor asignado
 
 INSERT INTO registro_x_inmueble_tracking (
   registro_cab_id, estado_anterior, estado_nuevo, usuario_id, corredor_id, 
-  motivo, metadata, ip_address, created_at
+  motivo, metadata_json, ip_address, created_at
 ) VALUES
 
 -- Propiedad 1: Depto San Isidro
