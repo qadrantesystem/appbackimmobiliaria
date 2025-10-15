@@ -4,7 +4,7 @@ from app.database import get_db
 from app.dependencies import get_current_active_user
 from app.models import Usuario
 from app.schemas.common import ResponseModel
-from app.services.imagekit_service import ImageKitService
+from app.services.imagekit_service import imagekit_service
 import logging
 
 router = APIRouter()
@@ -71,7 +71,7 @@ async def upload_avatar(
         file_name = f"avatar_user_{current_user.usuario_id}_{file.filename}"
         folder = "inmobiliaria/avatars"
         
-        upload_result = ImageKitService.upload_image(
+        upload_result = imagekit_service.upload_image(
             file_content=file_content,
             file_name=file_name,
             folder=folder
