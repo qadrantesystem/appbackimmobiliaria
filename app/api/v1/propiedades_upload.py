@@ -137,10 +137,10 @@ async def crear_propiedad_con_imagenes(
             folder="/propiedades"
         )
         
-        if not resultado_principal.get('success'):
+        if not resultado_principal or not resultado_principal.get('url'):
             raise HTTPException(
                 status_code=500,
-                detail=f"Error subiendo imagen principal: {resultado_principal.get('error')}"
+                detail=f"Error subiendo imagen principal a ImageKit"
             )
         
         url_imagen_principal = resultado_principal['url']
@@ -166,11 +166,11 @@ async def crear_propiedad_con_imagenes(
                     folder="/propiedades"
                 )
                 
-                if resultado_galeria.get('success'):
+                if resultado_galeria and resultado_galeria.get('url'):
                     urls_galeria.append(resultado_galeria['url'])
                     logger.info(f"✅ Imagen {idx} subida: {resultado_galeria['url']}")
                 else:
-                    logger.warning(f"⚠️ Error subiendo imagen {idx}: {resultado_galeria.get('error')}")
+                    logger.warning(f"⚠️ Error subiendo imagen {idx} a ImageKit")
         
         # 5. Crear registro en registro_x_inmueble_cab
         logger.info(f"💾 Guardando propiedad en base de datos...")
@@ -296,7 +296,7 @@ async def actualizar_imagenes_propiedad(
                 folder="/propiedades"
             )
             
-            if resultado.get('success'):
+            if resultado and resultado.get('url'):
                 propiedad.imagen_principal = resultado['url']
                 urls_actualizadas['imagen_principal'] = resultado['url']
                 logger.info(f"✅ Imagen principal actualizada")
@@ -319,7 +319,7 @@ async def actualizar_imagenes_propiedad(
                     folder="/propiedades"
                 )
                 
-                if resultado.get('success'):
+                if resultado and resultado.get('url'):
                     urls_galeria.append(resultado['url'])
             
             propiedad.imagenes = urls_galeria
