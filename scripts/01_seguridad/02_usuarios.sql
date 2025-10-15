@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS usuarios (
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
     telefono VARCHAR(20),
+    dni VARCHAR(20),
     perfil_id INTEGER NOT NULL REFERENCES perfiles(perfil_id),
     estado VARCHAR(20) DEFAULT 'activo' CHECK (estado IN ('activo', 'inactivo', 'suspendido')),
     plan_id INTEGER REFERENCES planes_mae(plan_id),
@@ -33,26 +34,26 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_estado ON usuarios(estado);
 -- Hash generado: $2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG
 -- ============================================
 
-INSERT INTO usuarios (usuario_id, email, password_hash, nombre, apellido, telefono, perfil_id, estado, plan_id, fecha_registro) VALUES
+INSERT INTO usuarios (usuario_id, email, password_hash, nombre, apellido, telefono, dni, perfil_id, estado, plan_id, fecha_registro) VALUES
 -- Admin (perfil_id = 4)
 (1, 'admin@inmobiliaria.com', '$2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG', 
- 'Admin', 'Sistema', '+51 900000000', 4, 'activo', NULL, '2024-01-01 00:00:00'),
+ 'Admin', 'Sistema', '+51 900000000', '00000000', 4, 'activo', NULL, '2024-01-01 00:00:00'),
 
 -- Demandante (perfil_id = 1)
 (2, 'demandante@email.com', '$2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG', 
- 'Juan', 'Pérez', '+51 987654321', 1, 'activo', 1, '2024-01-15 10:00:00'),
+ 'Juan', 'Pérez', '+51 987654321', '12345678', 1, 'activo', 1, '2024-01-15 10:00:00'),
 
 -- Ofertante (perfil_id = 2)
 (3, 'ofertante@email.com', '$2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG', 
- 'María', 'García', '+51 912345678', 2, 'activo', 2, '2024-02-01 10:00:00'),
+ 'María', 'García', '+51 912345678', '87654321', 2, 'activo', 2, '2024-02-01 10:00:00'),
 
 -- Corredor (perfil_id = 3)
 (4, 'corredor@inmobiliaria.com', '$2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG', 
- 'Carlos', 'Rodríguez', '+51 998877665', 3, 'activo', NULL, '2024-01-10 10:00:00'),
+ 'Carlos', 'Rodríguez', '+51 998877665', '11223344', 3, 'activo', NULL, '2024-01-10 10:00:00'),
 
 -- Usuario adicional Demandante
 (5, 'ana.martinez@email.com', '$2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG', 
- 'Ana', 'Martínez', '+51 955443322', 1, 'activo', 1, '2024-04-20 10:00:00')
+ 'Ana', 'Martínez', '+51 955443322', '55667788', 1, 'activo', 1, '2024-04-20 10:00:00')
 
 ON CONFLICT (usuario_id) DO NOTHING;
 
