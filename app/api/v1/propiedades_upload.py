@@ -88,7 +88,7 @@ async def crear_propiedad_con_imagenes(
     imagen_principal: UploadFile = File(..., description="Foto principal de la propiedad"),
     
     # Galería de imágenes (hasta 5, opcional)
-    imagenes_galeria: Optional[List[UploadFile]] = File(None, description="Hasta 5 fotos adicionales"),
+    imagenes_galeria: List[UploadFile] = File(default=[], description="Hasta 5 fotos adicionales"),
     
     # Autenticación
     current_user: Usuario = Depends(require_ofertante),

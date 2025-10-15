@@ -1,0 +1,248 @@
+### ============================================
+### 🧪 PRUEBAS DE TRANSACCIONES - Sistema Inmobiliario
+### ============================================
+
+@baseUrl = https://appbackimmobiliaria-production.up.railway.app
+@token = {{$dotenv ADMIN_TOKEN}}
+
+### ============================================
+### 1️⃣ BÚSQUEDAS - Registrar búsqueda genérica
+### ============================================
+
+POST {{baseUrl}}/api/v1/busquedas/registrar
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "criterios_json": {
+    "tipo": "generica",
+    "tipo_inmueble_id": 1,
+    "pais": "PERU",
+    "departamento": "LIMA",
+    "provincia": "LIMA",
+    "distritos_ids": [1, 2, 3],
+    "transaccion": "alquiler",
+    "metraje": 460,
+    "metraje_min": 391,
+    "metraje_max": 529,
+    "presupuesto": 5000,
+    "presupuesto_min": 4250,
+    "presupuesto_max": 5750
+  },
+  "cantidad_resultados": 3
+}
+
+### ============================================
+### 2️⃣ BÚSQUEDAS - Registrar búsqueda básica
+### ============================================
+
+POST {{baseUrl}}/api/v1/busquedas/registrar
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "criterios_json": {
+    "tipo": "basica",
+    "tipo_inmueble_id": 1,
+    "distritos_ids": [1, 3],
+    "transaccion": "compra",
+    "presupuesto_max": 800000,
+    "area_min": 350,
+    "area_max": 500,
+    "parqueos_min": 5,
+    "antiguedad_max": 5,
+    "filtro_basico": {
+      "habitaciones": [3, 4],
+      "banos": [2, 3]
+    }
+  },
+  "cantidad_resultados": 2
+}
+
+### ============================================
+### 3️⃣ BÚSQUEDAS - Registrar búsqueda avanzada
+### ============================================
+
+POST {{baseUrl}}/api/v1/busquedas/registrar
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "criterios_json": {
+    "tipo": "avanzada",
+    "tipo_inmueble_id": 1,
+    "distritos_ids": [1, 2, 3, 4],
+    "transaccion": "alquiler",
+    "presupuesto_max": 6000,
+    "area_min": 450,
+    "area_max": 550,
+    "parqueos_min": 8,
+    "antiguedad_max": 5,
+    "implementacion": "Amoblado FULL",
+    "filtro_avanzado": {
+      "AREAS_COMUNES_EDIFICIO": {
+        "9": true,
+        "11": true,
+        "15": true
+      },
+      "IMPLEMENTACION_DETALLE": {
+        "29": true,
+        "30": true
+      }
+    }
+  },
+  "cantidad_resultados": 1
+}
+
+### ============================================
+### 4️⃣ BÚSQUEDAS - Ver historial
+### ============================================
+
+GET {{baseUrl}}/api/v1/busquedas/historial?limit=10
+Authorization: Bearer {{token}}
+
+### ============================================
+### 5️⃣ BÚSQUEDAS - Guardar búsqueda con alerta
+### ============================================
+
+POST {{baseUrl}}/api/v1/busquedas/guardadas
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "criterios_json": {
+    "tipo": "generica",
+    "tipo_inmueble_id": 1,
+    "distritos_ids": [1, 2],
+    "transaccion": "alquiler",
+    "presupuesto_max": 5000,
+    "area_min": 400
+  },
+  "nombre_busqueda": "Oficinas San Isidro - Alquiler",
+  "frecuencia_alerta": "diaria",
+  "alerta_activa": true
+}
+
+### ============================================
+### 6️⃣ BÚSQUEDAS - Listar búsquedas guardadas
+### ============================================
+
+GET {{baseUrl}}/api/v1/busquedas/guardadas
+Authorization: Bearer {{token}}
+
+### ============================================
+### 7️⃣ BÚSQUEDAS - Actualizar búsqueda guardada
+### ============================================
+
+PUT {{baseUrl}}/api/v1/busquedas/guardadas/5
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "nombre_busqueda": "Oficinas San Isidro - Alquiler ACTUALIZADO",
+  "frecuencia_alerta": "semanal",
+  "alerta_activa": true
+}
+
+### ============================================
+### 8️⃣ BÚSQUEDAS - Buscar por código (ADMIN)
+### ============================================
+
+GET {{baseUrl}}/api/v1/busquedas/buscar/BUS-20250115-000001
+Authorization: Bearer {{token}}
+
+### ============================================
+### 9️⃣ BÚSQUEDAS - Ver todas (ADMIN)
+### ============================================
+
+GET {{baseUrl}}/api/v1/busquedas/admin/todas?limit=20
+Authorization: Bearer {{token}}
+
+### ============================================
+### 🔟 BÚSQUEDAS - Limpiar historial
+### ============================================
+
+DELETE {{baseUrl}}/api/v1/busquedas/historial
+Authorization: Bearer {{token}}
+
+### ============================================
+### 1️⃣1️⃣ FAVORITOS - Agregar favorito
+### ============================================
+
+POST {{baseUrl}}/api/v1/favoritos
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "registro_cab_id": 1
+}
+
+### ============================================
+### 1️⃣2️⃣ FAVORITOS - Listar favoritos
+### ============================================
+
+GET {{baseUrl}}/api/v1/favoritos
+Authorization: Bearer {{token}}
+
+### ============================================
+### 1️⃣3️⃣ FAVORITOS - Eliminar favorito
+### ============================================
+
+DELETE {{baseUrl}}/api/v1/favoritos/1
+Authorization: Bearer {{token}}
+
+### ============================================
+### 1️⃣4️⃣ TRACKING - Ver tracking de propiedad
+### ============================================
+
+GET {{baseUrl}}/api/v1/tracking/propiedad/1
+Authorization: Bearer {{token}}
+
+### ============================================
+### 1️⃣5️⃣ TRACKING - Ver mis propiedades
+### ============================================
+
+GET {{baseUrl}}/api/v1/tracking/usuario/mis-propiedades
+Authorization: Bearer {{token}}
+
+### ============================================
+### 1️⃣6️⃣ TRACKING - Ver todo (ADMIN)
+### ============================================
+
+GET {{baseUrl}}/api/v1/tracking/admin/todos?limit=50
+Authorization: Bearer {{token}}
+
+### ============================================
+### 1️⃣7️⃣ TRACKING - Estadísticas de conversión (ADMIN)
+### ============================================
+
+GET {{baseUrl}}/api/v1/tracking/estadisticas/conversiones
+Authorization: Bearer {{token}}
+
+### ============================================
+### 1️⃣8️⃣ SUSCRIPCIONES - Crear suscripción
+### ============================================
+
+POST {{baseUrl}}/api/v1/suscripciones
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "plan_id": 1,
+  "metodo_pago": "tarjeta",
+  "monto_pagado": 99.00
+}
+
+### ============================================
+### 1️⃣9️⃣ SUSCRIPCIONES - Ver mis suscripciones
+### ============================================
+
+GET {{baseUrl}}/api/v1/suscripciones/mis-suscripciones
+Authorization: Bearer {{token}}
+
+### ============================================
+### 2️⃣0️⃣ SUSCRIPCIONES - Ver suscripción activa
+### ============================================
+
+GET {{baseUrl}}/api/v1/suscripciones/activa
+Authorization: Bearer {{token}}
