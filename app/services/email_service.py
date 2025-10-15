@@ -18,12 +18,22 @@ class EmailService:
     def __init__(self):
         """Inicializar cliente de SendGrid"""
         try:
+            logger.info(f"🔧 [SENDGRID] Inicializando con API Key: {settings.SENDGRID_API_KEY[:10]}...")
+            logger.info(f"📧 [SENDGRID] From Email: {settings.SENDGRID_FROM_EMAIL}")
+            logger.info(f"👤 [SENDGRID] From Name: {settings.SENDGRID_FROM_NAME}")
+            
+            if not settings.SENDGRID_API_KEY or settings.SENDGRID_API_KEY == "":
+                logger.error("❌ [SENDGRID] API Key está vacía!")
+                self.sendgrid = None
+                return
+            
             self.sendgrid = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
             self.from_email = settings.SENDGRID_FROM_EMAIL
             self.from_name = settings.SENDGRID_FROM_NAME
-            logger.info("✅ SendGrid inicializado correctamente")
+            logger.info("✅ [SENDGRID] Inicializado correctamente")
         except Exception as e:
-            logger.error(f"❌ Error inicializando SendGrid: {e}")
+            logger.error(f"❌ [SENDGRID] Error inicializando: {e}")
+            logger.exception(e)
             self.sendgrid = None
     
     def generate_verification_code(self) -> str:
@@ -130,19 +140,27 @@ class EmailService:
                 html_content=HtmlContent(html_content)
             )
             
+            logger.info(f"📤 [EMAIL] Enviando código de verificación a {email}")
+            logger.info(f"   🔐 Código: {verification_code}")
+            logger.info(f"   📧 From: {self.from_email} ({self.from_name})")
+            
             response = self.sendgrid.send(message)
             
-            logger.info(f"✅ [EMAIL] Código de verificación enviado a {email}")
-            logger.info(f"   🔐 Código: {verification_code}")
+            logger.info(f"✅ [EMAIL] Respuesta SendGrid - Status: {response.status_code}")
+            logger.info(f"   📨 Headers: {response.headers}")
+            logger.info(f"   ✉️ Email enviado exitosamente a {email}")
             
             return {
                 "success": True,
                 "message": "Código de verificación enviado correctamente",
-                "email": email
+                "email": email,
+                "status_code": response.status_code
             }
             
         except Exception as e:
-            logger.error(f"❌ [EMAIL] Error enviando verificación: {str(e)}")
+            logger.error(f"❌ [EMAIL] Error enviando verificación a {email}")
+            logger.error(f"   ⚠️ Error: {str(e)}")
+            logger.exception(e)
             return {
                 "success": False,
                 "message": f"Error enviando email: {str(e)}",
