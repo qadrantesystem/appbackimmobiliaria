@@ -63,12 +63,21 @@ async def listar_mis_favoritos(
         
         favoritos = []
         for fav, prop in resultados:
+            # Determinar precio según tipo de transacción
+            precio = None
+            if prop.transaccion == "venta" and prop.precio_venta:
+                precio = float(prop.precio_venta)
+            elif prop.transaccion == "alquiler" and prop.precio_alquiler:
+                precio = float(prop.precio_alquiler)
+            elif prop.precio_venta:
+                precio = float(prop.precio_venta)
+            
             favoritos.append({
                 **fav.__dict__,
-                "propiedad_titulo": prop.titulo or "Sin título",
+                "propiedad_titulo": prop.titulo or prop.nombre_inmueble or "Sin título",
                 "propiedad_direccion": prop.direccion,
-                "propiedad_precio": float(prop.precio) if prop.precio else None,
-                "propiedad_tipo": prop.tipo_operacion
+                "propiedad_precio": precio,
+                "propiedad_tipo": prop.transaccion
             })
         
         return favoritos
