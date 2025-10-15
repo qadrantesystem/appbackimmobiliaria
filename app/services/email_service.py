@@ -1,5 +1,5 @@
 """
-📧 Servicio de Email con SendGrid
+📧 Servicio de Email con SendGrid o SMTP
 Sistema Inmobiliario - Verificación de cuenta y notificaciones
 """
 from typing import Optional, Dict, Any
@@ -9,32 +9,57 @@ from sendgrid.helpers.mail import Mail, From, To, Subject, PlainTextContent, Htm
 from app.core.config import settings
 import random
 import string
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 logger = logging.getLogger(__name__)
 
 class EmailService:
-    """Servicio de email con SendGrid"""
+    """Servicio de email con SendGrid o SMTP"""
     
     def __init__(self):
-        """Inicializar cliente de SendGrid"""
-        try:
-            logger.info(f"🔧 [SENDGRID] Inicializando con API Key: {settings.SENDGRID_API_KEY[:10]}...")
-            logger.info(f"📧 [SENDGRID] From Email: {settings.SENDGRID_FROM_EMAIL}")
-            logger.info(f"👤 [SENDGRID] From Name: {settings.SENDGRID_FROM_NAME}")
-            
-            if not settings.SENDGRID_API_KEY or settings.SENDGRID_API_KEY == "":
-                logger.error("❌ [SENDGRID] API Key está vacía!")
+        """Inicializar cliente de email"""
+        self.use_smtp = settings.USE_SMTP
+        
+        if self.use_smtp:
+            # Usar SMTP propio
+            try:
+                self.smtp_host = settings.SMTP_HOST
+                self.smtp_port = settings.SMTP_PORT
+                self.smtp_user = settings.SMTP_USER
+                self.smtp_password = settings.SMTP_PASSWORD
+                self.from_email = settings.SMTP_FROM_EMAIL
+                self.from_name = settings.SMTP_FROM_NAME
+                
+                logger.info(f"🔧 [SMTP] Configurado con servidor: {self.smtp_host}:{self.smtp_port}")
+                logger.info(f"📧 [SMTP] Usuario: {self.smtp_user}")
+                logger.info(f"📧 [SMTP] From Email: {self.from_email}")
+                self.sendgrid = True  # Flag para compatibilidad
+                
+            except Exception as e:
+                logger.error(f"❌ [SMTP] Error en configuración: {e}")
                 self.sendgrid = None
-                return
-            
-            self.sendgrid = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
-            self.from_email = settings.SENDGRID_FROM_EMAIL
-            self.from_name = settings.SENDGRID_FROM_NAME
-            logger.info("✅ [SENDGRID] Inicializado correctamente")
-        except Exception as e:
-            logger.error(f"❌ [SENDGRID] Error inicializando: {e}")
-            logger.exception(e)
-            self.sendgrid = None
+        else:
+            # Usar SendGrid
+            try:
+                logger.info(f"🔧 [SENDGRID] Inicializando con API Key: {settings.SENDGRID_API_KEY[:10]}...")
+                logger.info(f"📧 [SENDGRID] From Email: {settings.SENDGRID_FROM_EMAIL}")
+                logger.info(f"👤 [SENDGRID] From Name: {settings.SENDGRID_FROM_NAME}")
+                
+                if not settings.SENDGRID_API_KEY or settings.SENDGRID_API_KEY == "":
+                    logger.error("❌ [SENDGRID] API Key está vacía!")
+                    self.sendgrid = None
+                    return
+                
+                self.sendgrid = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+                self.from_email = settings.SENDGRID_FROM_EMAIL
+                self.from_name = settings.SENDGRID_FROM_NAME
+                logger.info("✅ [SENDGRID] Inicializado correctamente")
+            except Exception as e:
+                logger.error(f"❌ [SENDGRID] Error inicializando: {e}")
+                logger.exception(e)
+                self.sendgrid = None
     
     def generate_verification_code(self) -> str:
         """Generar código de verificación de 6 dígitos"""
@@ -144,18 +169,46 @@ class EmailService:
             logger.info(f"   🔐 Código: {verification_code}")
             logger.info(f"   📧 From: {self.from_email} ({self.from_name})")
             
-            response = self.sendgrid.send(message)
-            
-            logger.info(f"✅ [EMAIL] Respuesta SendGrid - Status: {response.status_code}")
-            logger.info(f"   📨 Headers: {response.headers}")
-            logger.info(f"   ✉️ Email enviado exitosamente a {email}")
-            
-            return {
-                "success": True,
-                "message": "Código de verificación enviado correctamente",
-                "email": email,
-                "status_code": response.status_code
-            }
+            # Enviar según el método configurado
+            if self.use_smtp:
+                # Enviar con SMTP
+                msg = MIMEMultipart('alternative')
+                msg['Subject'] = f"🔐 Código de Verificación: {verification_code} - Sistema Inmobiliario"
+                msg['From'] = f"{self.from_name} <{self.from_email}>"
+                msg['To'] = email
+                
+                part1 = MIMEText(f"Tu código de verificación es: {verification_code}. Válido por 15 minutos.", 'plain', 'utf-8')
+                part2 = MIMEText(html_content, 'html', 'utf-8')
+                msg.attach(part1)
+                msg.attach(part2)
+                
+                with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                    server.starttls()
+                    server.login(self.smtp_user, self.smtp_password)
+                    server.send_message(msg)
+                
+                logger.info(f"✅ [SMTP] Email enviado exitosamente a {email}")
+                
+                return {
+                    "success": True,
+                    "message": "Código de verificación enviado correctamente",
+                    "email": email,
+                    "status_code": 200
+                }
+            else:
+                # Enviar con SendGrid
+                response = self.sendgrid.send(message)
+                
+                logger.info(f"✅ [SENDGRID] Respuesta - Status: {response.status_code}")
+                logger.info(f"   📨 Headers: {response.headers}")
+                logger.info(f"   ✉️ Email enviado exitosamente a {email}")
+                
+                return {
+                    "success": True,
+                    "message": "Código de verificación enviado correctamente",
+                    "email": email,
+                    "status_code": response.status_code
+                }
             
         except Exception as e:
             logger.error(f"❌ [EMAIL] Error enviando verificación a {email}")

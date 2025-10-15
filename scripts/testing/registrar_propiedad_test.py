@@ -10,7 +10,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 BASE_URL = "https://appbackimmobiliaria-production.up.railway.app"
-TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjoxLCJlbWFpbCI6ImFkbWluQGlubW9iaWxpYXJpYS5jb20iLCJwZXJmaWxfaWQiOjQsImV4cCI6MTc2MDU0MDg1NiwidHlwZSI6ImFjY2VzcyJ9.VcQPWMSmnHfA3fL13TC9qoUdAzVzsyHztQkuBK0Ur-c"
+TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c3VhcmlvX2lkIjozLCJlbWFpbCI6Im9mZXJ0YW50ZUBlbWFpbC5jb20iLCJwZXJmaWxfaWQiOjIsImV4cCI6MTc2MDU0MzI4NSwidHlwZSI6ImFjY2VzcyJ9.TEnO93Ma-EDpIBoMJJiQA9kTREip5aoozpVvjRLxZcg"
 
 # Datos de la propiedad
 propiedad_data = {
