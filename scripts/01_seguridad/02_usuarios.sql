@@ -31,28 +31,28 @@ CREATE INDEX IF NOT EXISTS idx_usuarios_estado ON usuarios(estado);
 -- ============================================
 -- 📊 INSERTAR FILAS (Datos de ejemplo)
 -- Password: "123456" hasheado con bcrypt
--- Hash generado: $2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG
+-- Hash válido: $2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqgXNm7Hxu
 -- ============================================
 
 INSERT INTO usuarios (usuario_id, email, password_hash, nombre, apellido, telefono, dni, perfil_id, estado, plan_id, fecha_registro) VALUES
 -- Admin (perfil_id = 4)
-(1, 'admin@inmobiliaria.com', '$2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG', 
+(1, 'admin@inmobiliaria.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqgXNm7Hxu', 
  'Admin', 'Sistema', '+51 900000000', '00000000', 4, 'activo', NULL, '2024-01-01 00:00:00'),
 
 -- Demandante (perfil_id = 1)
-(2, 'demandante@email.com', '$2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG', 
+(2, 'demandante@email.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqgXNm7Hxu', 
  'Juan', 'Pérez', '+51 987654321', '12345678', 1, 'activo', 1, '2024-01-15 10:00:00'),
 
 -- Ofertante (perfil_id = 2)
-(3, 'ofertante@email.com', '$2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG', 
+(3, 'ofertante@email.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqgXNm7Hxu', 
  'María', 'García', '+51 912345678', '87654321', 2, 'activo', 2, '2024-02-01 10:00:00'),
 
 -- Corredor (perfil_id = 3)
-(4, 'corredor@inmobiliaria.com', '$2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG', 
+(4, 'corredor@inmobiliaria.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqgXNm7Hxu', 
  'Carlos', 'Rodríguez', '+51 998877665', '11223344', 3, 'activo', NULL, '2024-01-10 10:00:00'),
 
 -- Usuario adicional Demandante
-(5, 'ana.martinez@email.com', '$2b$12$K1wIZ8mH0ZqP5K3vJ7fYXeYvYxGxGxGxGxGxGxGxGxGxGxGxGxGxG', 
+(5, 'ana.martinez@email.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewY5GyYqgXNm7Hxu', 
  'Ana', 'Martínez', '+51 955443322', '55667788', 1, 'activo', 1, '2024-04-20 10:00:00')
 
 ON CONFLICT (usuario_id) DO NOTHING;
