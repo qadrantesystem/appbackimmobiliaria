@@ -163,6 +163,18 @@ try:
 except ImportError as e:
     print(f"   ⚠️ Error cargando favoritos: {e}")
 
-# TODO: Más endpoints (búsquedas, tracking, etc.)
+try:
+    from app.api.v1 import busquedas
+    app.include_router(busquedas.router, prefix="/api/v1/busquedas", tags=["🔍 Búsquedas"])
+    print("   ✅ Búsquedas")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando búsquedas: {e}")
+
+try:
+    from app.api.v1 import tracking
+    app.include_router(tracking.router, prefix="/api/v1/tracking", tags=["📊 Tracking CRM"])
+    print("   ✅ Tracking CRM")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando tracking: {e}")
 
 print("✅ Aplicación lista!")
