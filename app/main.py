@@ -94,6 +94,13 @@ except ImportError as e:
     print(f"   ⚠️ Error cargando propiedades: {e}")
 
 try:
+    from app.api.v1 import propiedades_upload
+    app.include_router(propiedades_upload.router, prefix="/api/v1/propiedades", tags=["🏠 Propiedades - Upload"])
+    print("   ✅ Propiedades Upload")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando propiedades upload: {e}")
+
+try:
     from app.api.v1 import perfiles
     app.include_router(perfiles.router, prefix="/api/v1/perfiles", tags=["👤 Perfiles"])
     print("   ✅ Perfiles")
