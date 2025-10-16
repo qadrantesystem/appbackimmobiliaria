@@ -314,7 +314,9 @@ async def forgot_password(
         # Crear nuevo token
         nuevo_token = PasswordResetToken(
             usuario_id=usuario.usuario_id,
-            codigo=codigo
+            email=usuario.email,
+            token=codigo,
+            expires_at=datetime.now() + timedelta(minutes=15)
         )
         db.add(nuevo_token)
         db.commit()
@@ -358,9 +360,9 @@ async def reset_password(
         # Buscar token válido
         token = db.query(PasswordResetToken).filter(
             PasswordResetToken.usuario_id == usuario.usuario_id,
-            PasswordResetToken.codigo == codigo,
-            PasswordResetToken.usado == False,
-            PasswordResetToken.expira_en > datetime.now()
+            PasswordResetToken.token == codigo,
+            PasswordResetToken.used == False,
+            PasswordResetToken.expires_at > datetime.now()
         ).first()
         
         if not token:
@@ -373,7 +375,7 @@ async def reset_password(
         usuario.password = get_password_hash(nueva_password)
         
         # Marcar token como usado
-        token.usado = True
+        token.used = True
         
         db.commit()
         
