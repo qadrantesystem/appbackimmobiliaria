@@ -372,7 +372,7 @@ async def reset_password(
             )
         
         # Actualizar contraseña
-        usuario.password = get_password_hash(nueva_password)
+        usuario.password_hash = get_password_hash(nueva_password)
         
         # Marcar token como usado
         token.used = True
