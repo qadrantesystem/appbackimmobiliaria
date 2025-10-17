@@ -124,6 +124,82 @@ async def list_properties(
         }
     )
 
+@router.get("/me/propiedades", response_model=PaginatedResponse[PropiedadResponse])
+@router.get("/mis-propiedades", response_model=PaginatedResponse[PropiedadResponse])
+async def my_properties(
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+    estado: Optional[str] = None,
+    current_user: Usuario = Depends(require_ofertante),
+    db: Session = Depends(get_db)
+):
+    """Mis propiedades (Ofertante/Corredor)"""
+    query = db.query(Propiedad).filter(Propiedad.usuario_id == current_user.usuario_id)
+
+    if estado:
+        query = query.filter(Propiedad.estado == estado)
+
+    total = query.count()
+    offset = (page - 1) * limit
+    propiedades = query.order_by(Propiedad.created_at.desc()).offset(offset).limit(limit).all()
+
+    # Formatear respuesta (similar a list_properties)
+    propiedades_list = []
+    for prop in propiedades:
+        tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == prop.tipo_inmueble_id).first()
+        distrito = db.query(Distrito).filter(Distrito.distrito_id == prop.distrito_id).first()
+
+        propiedades_list.append(PropiedadResponse(
+            registro_cab_id=prop.registro_cab_id,
+            titulo=prop.titulo,
+            tipo_inmueble=tipo.nombre if tipo else "N/A",
+            distrito=distrito.nombre if distrito else "N/A",
+            transaccion=prop.transaccion,
+            precio_alquiler=prop.precio_alquiler,
+            precio_venta=prop.precio_venta,
+            moneda=prop.moneda,
+            area=prop.area,
+            habitaciones=prop.habitaciones,
+            banos=prop.banos,
+            parqueos=prop.parqueos,
+            imagen_principal=prop.imagen_principal,
+            estado=prop.estado,
+            vistas=prop.vistas,
+            contactos=prop.contactos,
+            created_at=prop.created_at
+        ))
+
+    # Estadísticas
+    stats = {
+        "total_propiedades": total,
+        "publicadas": db.query(Propiedad).filter(
+            Propiedad.usuario_id == current_user.usuario_id,
+            Propiedad.estado == "publicado"
+        ).count(),
+        "borradores": db.query(Propiedad).filter(
+            Propiedad.usuario_id == current_user.usuario_id,
+            Propiedad.estado == "borrador"
+        ).count(),
+        "total_vistas": db.query(Propiedad).filter(
+            Propiedad.usuario_id == current_user.usuario_id
+        ).with_entities(Propiedad.vistas).all(),
+        "total_contactos": db.query(Propiedad).filter(
+            Propiedad.usuario_id == current_user.usuario_id
+        ).with_entities(Propiedad.contactos).all()
+    }
+
+    return PaginatedResponse(
+        success=True,
+        data=propiedades_list,
+        pagination={
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "total_pages": (total + limit - 1) // limit,
+            "estadisticas": stats
+        }
+    )
+
 @router.get("/{propiedad_id}", response_model=ResponseModel[PropiedadDetalleResponse])
 async def get_property_detail(
     propiedad_id: int,
@@ -267,82 +343,6 @@ async def contact_property(
         success=True,
         message="Contacto registrado. El propietario se comunicará contigo pronto.",
         data={}
-    )
-
-@router.get("/me/propiedades", response_model=PaginatedResponse[PropiedadResponse])
-@router.get("/mis-propiedades", response_model=PaginatedResponse[PropiedadResponse])
-async def my_properties(
-    page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100),
-    estado: Optional[str] = None,
-    current_user: Usuario = Depends(require_ofertante),
-    db: Session = Depends(get_db)
-):
-    """Mis propiedades (Ofertante/Corredor)"""
-    query = db.query(Propiedad).filter(Propiedad.usuario_id == current_user.usuario_id)
-    
-    if estado:
-        query = query.filter(Propiedad.estado == estado)
-    
-    total = query.count()
-    offset = (page - 1) * limit
-    propiedades = query.order_by(Propiedad.created_at.desc()).offset(offset).limit(limit).all()
-    
-    # Formatear respuesta (similar a list_properties)
-    propiedades_list = []
-    for prop in propiedades:
-        tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == prop.tipo_inmueble_id).first()
-        distrito = db.query(Distrito).filter(Distrito.distrito_id == prop.distrito_id).first()
-        
-        propiedades_list.append(PropiedadResponse(
-            registro_cab_id=prop.registro_cab_id,
-            titulo=prop.titulo,
-            tipo_inmueble=tipo.nombre if tipo else "N/A",
-            distrito=distrito.nombre if distrito else "N/A",
-            transaccion=prop.transaccion,
-            precio_alquiler=prop.precio_alquiler,
-            precio_venta=prop.precio_venta,
-            moneda=prop.moneda,
-            area=prop.area,
-            habitaciones=prop.habitaciones,
-            banos=prop.banos,
-            parqueos=prop.parqueos,
-            imagen_principal=prop.imagen_principal,
-            estado=prop.estado,
-            vistas=prop.vistas,
-            contactos=prop.contactos,
-            created_at=prop.created_at
-        ))
-    
-    # Estadísticas
-    stats = {
-        "total_propiedades": total,
-        "publicadas": db.query(Propiedad).filter(
-            Propiedad.usuario_id == current_user.usuario_id,
-            Propiedad.estado == "publicado"
-        ).count(),
-        "borradores": db.query(Propiedad).filter(
-            Propiedad.usuario_id == current_user.usuario_id,
-            Propiedad.estado == "borrador"
-        ).count(),
-        "total_vistas": db.query(Propiedad).filter(
-            Propiedad.usuario_id == current_user.usuario_id
-        ).with_entities(Propiedad.vistas).all(),
-        "total_contactos": db.query(Propiedad).filter(
-            Propiedad.usuario_id == current_user.usuario_id
-        ).with_entities(Propiedad.contactos).all()
-    }
-    
-    return PaginatedResponse(
-        success=True,
-        data=propiedades_list,
-        pagination={
-            "page": page,
-            "limit": limit,
-            "total": total,
-            "total_pages": (total + limit - 1) // limit,
-            "estadisticas": stats
-        }
     )
 
 @router.post("", response_model=ResponseModel[dict], status_code=201)
