@@ -184,4 +184,11 @@ try:
 except ImportError as e:
     print(f"   ⚠️ Error cargando tracking: {e}")
 
+try:
+    from app.api.v1 import dashboard
+    app.include_router(dashboard.router, prefix="/api/v1/dashboard", tags=["📊 Dashboard Estadísticas"])
+    print("   ✅ Dashboard")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando dashboard: {e}")
+
 print("✅ Aplicación lista!")

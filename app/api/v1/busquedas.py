@@ -104,6 +104,7 @@ async def registrar_busqueda(
         raise HTTPException(status_code=500, detail=f"Error al registrar búsqueda: {str(e)}")
 
 @router.get("/historial", response_model=List[BusquedaResponse])
+@router.get("/mis-busquedas", response_model=List[BusquedaResponse])
 async def obtener_historial(
     limit: int = Query(50, le=100),
     db: Session = Depends(get_db),
@@ -115,7 +116,7 @@ async def obtener_historial(
             Busqueda.usuario_id == current_user.usuario_id,
             Busqueda.es_guardada == False
         ).order_by(Busqueda.fecha_busqueda.desc()).limit(limit).all()
-        
+
         # Enriquecer con datos adicionales
         resultados = []
         for busqueda in busquedas:
@@ -123,11 +124,11 @@ async def obtener_historial(
             data['codigo_busqueda'] = busqueda.generar_codigo()
             data['descripcion_legible'] = busqueda.generar_descripcion_legible(db)
             data['usuario_nombre'] = f"{current_user.nombre} {current_user.apellido}"
-            
+
             resultados.append(data)
-        
+
         return resultados
-        
+
     except Exception as e:
         logger.error(f"❌ Error obteniendo historial: {e}")
         raise HTTPException(status_code=500, detail="Error al obtener historial")

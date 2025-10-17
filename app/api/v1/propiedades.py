@@ -270,6 +270,7 @@ async def contact_property(
     )
 
 @router.get("/me/propiedades", response_model=PaginatedResponse[PropiedadResponse])
+@router.get("/mis-propiedades", response_model=PaginatedResponse[PropiedadResponse])
 async def my_properties(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
