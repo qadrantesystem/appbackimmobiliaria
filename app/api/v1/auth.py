@@ -20,13 +20,18 @@ async def register(
 ):
     """
     Registrar nuevo usuario
-    
+
     - **email**: Email único del usuario
     - **password**: Contraseña (mínimo 6 caracteres)
     - **nombre**: Nombre del usuario
     - **apellido**: Apellido del usuario
     - **telefono**: Teléfono (opcional)
     - **dni**: DNI (opcional)
+    - **tipo_persona**: Tipo de persona (natural/juridica)
+    - **tipo_documento**: Tipo de documento (DNI/RUC/CE/PAS)
+    - **razon_social**: Razón social para personas jurídicas (opcional)
+    - **ruc**: RUC para personas jurídicas (opcional)
+    - **representante_legal**: Representante legal para personas jurídicas (opcional)
     """
     # Verificar si el email ya existe
     existing_user = db.query(Usuario).filter(Usuario.email == user_data.email).first()
@@ -43,6 +48,11 @@ async def register(
         apellido=user_data.apellido,
         telefono=user_data.telefono,
         dni=user_data.dni,
+        tipo_persona=user_data.tipo_persona,
+        tipo_documento=user_data.tipo_documento,
+        razon_social=user_data.razon_social,
+        ruc=user_data.ruc,
+        representante_legal=user_data.representante_legal,
         perfil_id=1,  # Por defecto: demandante
         estado="pendiente",  # Pendiente hasta verificar email
         email_verificado=False

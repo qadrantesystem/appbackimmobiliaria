@@ -15,6 +15,16 @@ class Usuario(Base):
     telefono = Column(String(20))
     dni = Column(String(20))
     foto_perfil = Column(String(500))  # URL de ImageKit
+
+    # Campos para tipo de persona
+    tipo_persona = Column(String(20), default="natural")  # natural, juridica
+    tipo_documento = Column(String(10), default="DNI")  # DNI, RUC, CE, PAS
+
+    # Campos para persona jurídica
+    razon_social = Column(String(255))
+    ruc = Column(String(11))
+    representante_legal = Column(String(255))
+
     perfil_id = Column(Integer, ForeignKey("perfiles.perfil_id"), nullable=False)
     estado = Column(String(20), default="pendiente", nullable=False)  # pendiente, activo, inactivo, suspendido
     email_verificado = Column(Boolean, default=False)
