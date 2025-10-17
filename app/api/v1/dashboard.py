@@ -161,11 +161,11 @@ async def obtener_estadisticas_dashboard(
         # ============================================
         if current_user.perfil_id in [1, 4]:
             query_fav = db.query(Favorito).filter(
-                extract('year', Favorito.fecha_agregado) == filtro_anio
+                extract('year', Favorito.created_at) == filtro_anio
             )
 
             if mes:
-                query_fav = query_fav.filter(extract('month', Favorito.fecha_agregado) == mes)
+                query_fav = query_fav.filter(extract('month', Favorito.created_at) == mes)
 
             if not mostrar_global:
                 query_fav = query_fav.filter(Favorito.usuario_id == target_user_id)
@@ -180,10 +180,10 @@ async def obtener_estadisticas_dashboard(
                 func.count(Favorito.favorito_id).label('cantidad')
             ).join(Propiedad, Propiedad.registro_cab_id == Favorito.registro_cab_id
             ).join(TipoInmueble
-            ).filter(extract('year', Favorito.fecha_agregado) == filtro_anio)
+            ).filter(extract('year', Favorito.created_at) == filtro_anio)
 
             if mes:
-                fav_tipo = fav_tipo.filter(extract('month', Favorito.fecha_agregado) == mes)
+                fav_tipo = fav_tipo.filter(extract('month', Favorito.created_at) == mes)
             if not mostrar_global:
                 fav_tipo = fav_tipo.filter(Favorito.usuario_id == target_user_id)
             elif perfil_id and user_ids:
@@ -197,10 +197,10 @@ async def obtener_estadisticas_dashboard(
                 func.count(Favorito.favorito_id).label('cantidad')
             ).join(Propiedad, Propiedad.registro_cab_id == Favorito.registro_cab_id
             ).join(Distrito
-            ).filter(extract('year', Favorito.fecha_agregado) == filtro_anio)
+            ).filter(extract('year', Favorito.created_at) == filtro_anio)
 
             if mes:
-                fav_dist = fav_dist.filter(extract('month', Favorito.fecha_agregado) == mes)
+                fav_dist = fav_dist.filter(extract('month', Favorito.created_at) == mes)
             if not mostrar_global:
                 fav_dist = fav_dist.filter(Favorito.usuario_id == target_user_id)
             elif perfil_id and user_ids:
@@ -210,9 +210,9 @@ async def obtener_estadisticas_dashboard(
 
             # Por mes
             fav_mes = db.query(
-                extract('month', Favorito.fecha_agregado).label('mes'),
+                extract('month', Favorito.created_at).label('mes'),
                 func.count(Favorito.favorito_id).label('cantidad')
-            ).filter(extract('year', Favorito.fecha_agregado) == filtro_anio)
+            ).filter(extract('year', Favorito.created_at) == filtro_anio)
 
             if not mostrar_global:
                 fav_mes = fav_mes.filter(Favorito.usuario_id == target_user_id)
