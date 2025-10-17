@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, UploadFile, File
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, and_
+from sqlalchemy import or_, and_, func
 from typing import Optional, List
 from decimal import Decimal
 from app.database import get_db
@@ -180,12 +180,12 @@ async def my_properties(
             Propiedad.usuario_id == current_user.usuario_id,
             Propiedad.estado == "borrador"
         ).count(),
-        "total_vistas": db.query(Propiedad).filter(
+        "total_vistas": db.query(func.sum(Propiedad.vistas)).filter(
             Propiedad.usuario_id == current_user.usuario_id
-        ).with_entities(Propiedad.vistas).all(),
-        "total_contactos": db.query(Propiedad).filter(
+        ).scalar() or 0,
+        "total_contactos": db.query(func.sum(Propiedad.contactos)).filter(
             Propiedad.usuario_id == current_user.usuario_id
-        ).with_entities(Propiedad.contactos).all()
+        ).scalar() or 0
     }
 
     return PaginatedResponse(
