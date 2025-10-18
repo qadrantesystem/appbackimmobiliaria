@@ -107,6 +107,7 @@ async def list_properties(
             banos=prop.banos,
             parqueos=prop.parqueos,
             imagen_principal=prop.imagen_principal,
+            imagenes=prop.imagenes or [],  # 🔥 AGREGADO para carrusel
             estado=prop.estado,
             vistas=prop.vistas,
             contactos=prop.contactos,
@@ -133,8 +134,12 @@ async def my_properties(
     current_user: Usuario = Depends(require_ofertante),
     db: Session = Depends(get_db)
 ):
-    """Mis propiedades (Ofertante/Corredor)"""
-    query = db.query(Propiedad).filter(Propiedad.usuario_id == current_user.usuario_id)
+    """Mis propiedades (Ofertante/Corredor) - Admin ve TODAS"""
+    # 🔥 Admin (perfil_id == 4) puede ver TODAS las propiedades
+    if current_user.perfil_id == 4:
+        query = db.query(Propiedad)  # Sin filtro de usuario
+    else:
+        query = db.query(Propiedad).filter(Propiedad.usuario_id == current_user.usuario_id)
 
     if estado:
         query = query.filter(Propiedad.estado == estado)
@@ -163,6 +168,7 @@ async def my_properties(
             banos=prop.banos,
             parqueos=prop.parqueos,
             imagen_principal=prop.imagen_principal,
+            imagenes=prop.imagenes or [],  # 🔥 AGREGADO para carrusel
             estado=prop.estado,
             vistas=prop.vistas,
             contactos=prop.contactos,

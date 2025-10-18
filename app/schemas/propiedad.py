@@ -92,11 +92,12 @@ class PropiedadResponse(BaseModel):
     banos: Optional[int]
     parqueos: Optional[int]
     imagen_principal: Optional[str]
+    imagenes: Optional[List[str]] = []  # 🔥 AGREGADO para carrusel
     estado: str
     vistas: int
     contactos: int
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
