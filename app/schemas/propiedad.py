@@ -83,6 +83,9 @@ class PropiedadResponse(BaseModel):
     titulo: str
     tipo_inmueble: str
     distrito: str
+    direccion: str
+    telefono: str
+    email: Optional[str]
     transaccion: str
     precio_alquiler: Optional[Decimal]
     precio_venta: Optional[Decimal]
@@ -94,6 +97,7 @@ class PropiedadResponse(BaseModel):
     imagen_principal: Optional[str]
     imagenes: Optional[List[str]] = []  # 🔥 AGREGADO para carrusel
     estado: str
+    estado_crm: str
     vistas: int
     contactos: int
     created_at: datetime

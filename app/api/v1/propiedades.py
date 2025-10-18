@@ -98,6 +98,9 @@ async def list_properties(
             titulo=prop.titulo,
             tipo_inmueble=tipo.nombre if tipo else "N/A",
             distrito=distrito.nombre if distrito else "N/A",
+            direccion=prop.direccion,
+            telefono=prop.propietario_real_telefono,
+            email=prop.propietario_real_email,
             transaccion=prop.transaccion,
             precio_alquiler=prop.precio_alquiler,
             precio_venta=prop.precio_venta,
@@ -109,6 +112,7 @@ async def list_properties(
             imagen_principal=prop.imagen_principal,
             imagenes=prop.imagenes or [],  # 🔥 AGREGADO para carrusel
             estado=prop.estado,
+            estado_crm=prop.estado_crm,
             vistas=prop.vistas,
             contactos=prop.contactos,
             created_at=prop.created_at
@@ -159,6 +163,9 @@ async def my_properties(
             titulo=prop.titulo,
             tipo_inmueble=tipo.nombre if tipo else "N/A",
             distrito=distrito.nombre if distrito else "N/A",
+            direccion=prop.direccion,
+            telefono=prop.propietario_real_telefono,
+            email=prop.propietario_real_email,
             transaccion=prop.transaccion,
             precio_alquiler=prop.precio_alquiler,
             precio_venta=prop.precio_venta,
@@ -170,6 +177,7 @@ async def my_properties(
             imagen_principal=prop.imagen_principal,
             imagenes=prop.imagenes or [],  # 🔥 AGREGADO para carrusel
             estado=prop.estado,
+            estado_crm=prop.estado_crm,
             vistas=prop.vistas,
             contactos=prop.contactos,
             created_at=prop.created_at
