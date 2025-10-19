@@ -232,28 +232,44 @@ async def listar_caracteristicas_agrupadas(
             raise HTTPException(status_code=404, detail="Tipo de inmueble no encontrado")
         
         # Obtener características asociadas
-        relaciones = db.query(
+        query = db.query(
             CaracteristicaXInmueble, Caracteristica
         ).join(
             Caracteristica, CaracteristicaXInmueble.caracteristica_id == Caracteristica.caracteristica_id
         ).filter(
             CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
             CaracteristicaXInmueble.visible_en_filtro == True  # Solo las visibles en filtro
-        ).order_by(
-            Caracteristica.orden_categoria, 
-            CaracteristicaXInmueble.orden, 
-            Caracteristica.nombre
-        ).all()
+        )
+        
+        # Ordenar (backward compatible si no existe orden_categoria)
+        try:
+            query = query.order_by(
+                Caracteristica.orden_categoria, 
+                CaracteristicaXInmueble.orden, 
+                Caracteristica.nombre
+            )
+        except:
+            # Si orden_categoria no existe, ordenar solo por orden y nombre
+            query = query.order_by(
+                CaracteristicaXInmueble.orden, 
+                Caracteristica.nombre
+            )
+        
+        relaciones = query.all()
         
         # Agrupar por categoría
         categorias_dict = {}
         for rel, car in relaciones:
-            categoria_nombre = car.categoria or 'General'
+            # Obtener categoria de forma segura
+            categoria_nombre = getattr(car, 'categoria', None) or 'General'
             
             if categoria_nombre not in categorias_dict:
+                # Obtener orden_categoria de forma segura (backward compatible)
+                orden_cat = getattr(car, 'orden_categoria', None) or 999
+                
                 categorias_dict[categoria_nombre] = {
                     "nombre": categoria_nombre,
-                    "orden": car.orden_categoria or 999,
+                    "orden": orden_cat,
                     "caracteristicas": []
                 }
             
