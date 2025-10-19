@@ -11,7 +11,8 @@ class Caracteristica(Base):
     descripcion = Column(Text)
     tipo_input = Column(String(50))  # text, number, checkbox, select
     unidad = Column(String(20))  # m2, habitaciones, baños, etc.
-    categoria = Column(String(50))  # general, dimensiones, servicios, etc.
+    categoria = Column(String(100))  # Áreas Comunes, Ascensores, etc.
+    orden_categoria = Column(Integer, default=0)  # Orden de la categoría para agrupar
     orden = Column(Integer, default=0)
     activo = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP, server_default=func.now())

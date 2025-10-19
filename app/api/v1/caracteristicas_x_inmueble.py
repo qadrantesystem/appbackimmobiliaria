@@ -213,3 +213,71 @@ async def eliminar_caracteristica_tipo(
         db.rollback()
         logger.error(f"❌ Error eliminando relación {relacion_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al eliminar: {str(e)}")
+
+@router.get("/tipo-inmueble/{tipo_inmueble_id}/agrupadas")
+async def listar_caracteristicas_agrupadas(
+    tipo_inmueble_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)
+):
+    """
+    📊 Listar características AGRUPADAS POR CATEGORÍA
+    Retorna un objeto con categorías y sus características
+    Ideal para renderizar filtros avanzados en frontend
+    """
+    try:
+        # Verificar que el tipo de inmueble existe
+        tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == tipo_inmueble_id).first()
+        if not tipo:
+            raise HTTPException(status_code=404, detail="Tipo de inmueble no encontrado")
+        
+        # Obtener características asociadas
+        relaciones = db.query(
+            CaracteristicaXInmueble, Caracteristica
+        ).join(
+            Caracteristica, CaracteristicaXInmueble.caracteristica_id == Caracteristica.caracteristica_id
+        ).filter(
+            CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
+            CaracteristicaXInmueble.visible_en_filtro == True  # Solo las visibles en filtro
+        ).order_by(
+            Caracteristica.orden_categoria, 
+            CaracteristicaXInmueble.orden, 
+            Caracteristica.nombre
+        ).all()
+        
+        # Agrupar por categoría
+        categorias_dict = {}
+        for rel, car in relaciones:
+            categoria_nombre = car.categoria or 'General'
+            
+            if categoria_nombre not in categorias_dict:
+                categorias_dict[categoria_nombre] = {
+                    "nombre": categoria_nombre,
+                    "orden": car.orden_categoria or 999,
+                    "caracteristicas": []
+                }
+            
+            categorias_dict[categoria_nombre]["caracteristicas"].append({
+                "caracteristica_id": car.caracteristica_id,
+                "nombre": car.nombre,
+                "descripcion": car.descripcion,
+                "tipo_input": car.tipo_input,
+                "unidad": car.unidad,
+                "requerido": rel.requerido,
+                "orden": rel.orden
+            })
+        
+        # Convertir a lista y ordenar por orden_categoria
+        categorias_list = sorted(categorias_dict.values(), key=lambda x: x['orden'])
+        
+        return {
+            "tipo_inmueble_id": tipo_inmueble_id,
+            "tipo_inmueble_nombre": tipo.nombre,
+            "categorias": categorias_list
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error listando características agrupadas del tipo {tipo_inmueble_id}: {e}")
+        raise HTTPException(status_code=500, detail="Error al listar características agrupadas")
