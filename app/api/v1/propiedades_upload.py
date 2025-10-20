@@ -343,3 +343,278 @@ async def actualizar_imagenes_propiedad(
         db.rollback()
         logger.error(f"❌ Error actualizando imágenes: {e}")
         raise HTTPException(status_code=500, detail=f"Error al actualizar imágenes: {str(e)}")
+
+# ============================================
+# 🔄 ACTUALIZACIÓN COMPLETA (TODO DE GOLPE)
+# ============================================
+
+class PropiedadUpdateComplete(BaseModel):
+    """Schema para actualización completa (todos los campos opcionales)"""
+    # Propietario real
+    propietario_real_nombre: Optional[str] = None
+    propietario_real_dni: Optional[str] = None
+    propietario_real_telefono: Optional[str] = None
+    propietario_real_email: Optional[str] = None
+    
+    # Corredor (opcional)
+    corredor_asignado_id: Optional[int] = None
+    comision_corredor: Optional[Decimal] = None
+    
+    # Datos del inmueble
+    tipo_inmueble_id: Optional[int] = None
+    distrito_id: Optional[int] = None
+    nombre_inmueble: Optional[str] = None
+    direccion: Optional[str] = None
+    latitud: Optional[Decimal] = None
+    longitud: Optional[Decimal] = None
+    
+    # Características básicas
+    area: Optional[Decimal] = None
+    habitaciones: Optional[int] = None
+    banos: Optional[int] = None
+    parqueos: Optional[int] = None
+    antiguedad: Optional[int] = None
+    
+    # Transacción y precios
+    transaccion: Optional[str] = Field(None, pattern="^(venta|alquiler|ambos)$")
+    precio_venta: Optional[Decimal] = None
+    precio_alquiler: Optional[Decimal] = None
+    moneda: Optional[str] = None
+    
+    # Descripción
+    titulo: Optional[str] = None
+    descripcion: Optional[str] = None
+    
+    # Características detalladas (si se envían, se reemplazan todas)
+    caracteristicas: Optional[List[CaracteristicaInput]] = None
+    
+    @model_validator(mode='before')
+    @classmethod
+    def validate_to_json(cls, value):
+        """Convierte string JSON a dict si es necesario"""
+        if isinstance(value, str):
+            return cls(**json.loads(value))
+        return value
+
+@router.put("/actualizar-completa/{propiedad_id}", status_code=200)
+async def actualizar_propiedad_completa(
+    propiedad_id: int,
+    
+    # JSON con datos a actualizar (todos opcionales)
+    propiedad_json: Optional[str] = Form(None, description="JSON con datos a actualizar (solo incluir campos que se quieren cambiar)"),
+    
+    # Imágenes opcionales
+    imagen_principal: Optional[UploadFile] = File(None, description="Nueva imagen principal (opcional)"),
+    imagenes_galeria: Optional[List[UploadFile]] = File(None, description="Nueva galería (opcional, hasta 5 fotos)"),
+    
+    # Autenticación
+    current_user: Usuario = Depends(require_ofertante),
+    db: Session = Depends(get_db)
+):
+    """
+    🔄 Actualizar propiedad completa (cabecera + detalle + imágenes)
+    
+    **Actualiza TODO de golpe:**
+    1. Datos de cabecera (solo los campos enviados)
+    2. Características/detalle (reemplaza todas si se envían)
+    3. Imágenes (solo si se envían nuevas)
+    
+    **Ventajas:**
+    - Solo envías lo que quieres cambiar
+    - Si no envías imágenes, mantiene las actuales
+    - Si no envías características, mantiene las actuales
+    - Todo en una sola transacción
+    
+    **Límites:**
+    - Imagen principal: 1 foto (opcional)
+    - Galería: hasta 5 fotos (opcional)
+    - Tamaño máximo por imagen: 10MB
+    """
+    try:
+        # 1. Buscar propiedad
+        logger.info(f"🔍 Buscando propiedad {propiedad_id}...")
+        propiedad = db.query(Propiedad).filter(Propiedad.registro_cab_id == propiedad_id).first()
+        
+        if not propiedad:
+            raise HTTPException(status_code=404, detail="Propiedad no encontrada")
+        
+        # 2. Verificar permisos (dueño o admin)
+        if current_user.perfil_id != 4 and propiedad.usuario_id != current_user.usuario_id:
+            raise HTTPException(
+                status_code=403,
+                detail="No tienes permiso para modificar esta propiedad"
+            )
+        
+        logger.info(f"✅ Permisos validados para usuario {current_user.usuario_id}")
+        
+        # 3. Parsear y actualizar datos de cabecera (si se enviaron)
+        if propiedad_json:
+            logger.info(f"📝 Actualizando datos de cabecera...")
+            datos_actualizacion = PropiedadUpdateComplete.model_validate_json(propiedad_json)
+            
+            # Actualizar solo los campos que vienen en el JSON
+            if datos_actualizacion.propietario_real_nombre is not None:
+                propiedad.propietario_real_nombre = datos_actualizacion.propietario_real_nombre
+            if datos_actualizacion.propietario_real_dni is not None:
+                propiedad.propietario_real_dni = datos_actualizacion.propietario_real_dni
+            if datos_actualizacion.propietario_real_telefono is not None:
+                propiedad.propietario_real_telefono = datos_actualizacion.propietario_real_telefono
+            if datos_actualizacion.propietario_real_email is not None:
+                propiedad.propietario_real_email = datos_actualizacion.propietario_real_email
+            
+            if datos_actualizacion.corredor_asignado_id is not None:
+                propiedad.corredor_asignado_id = datos_actualizacion.corredor_asignado_id
+            if datos_actualizacion.comision_corredor is not None:
+                propiedad.comision_corredor = datos_actualizacion.comision_corredor
+            
+            if datos_actualizacion.tipo_inmueble_id is not None:
+                propiedad.tipo_inmueble_id = datos_actualizacion.tipo_inmueble_id
+            if datos_actualizacion.distrito_id is not None:
+                propiedad.distrito_id = datos_actualizacion.distrito_id
+            if datos_actualizacion.nombre_inmueble is not None:
+                propiedad.nombre_inmueble = datos_actualizacion.nombre_inmueble
+            if datos_actualizacion.direccion is not None:
+                propiedad.direccion = datos_actualizacion.direccion
+            if datos_actualizacion.latitud is not None:
+                propiedad.latitud = datos_actualizacion.latitud
+            if datos_actualizacion.longitud is not None:
+                propiedad.longitud = datos_actualizacion.longitud
+            
+            if datos_actualizacion.area is not None:
+                propiedad.area = datos_actualizacion.area
+            if datos_actualizacion.habitaciones is not None:
+                propiedad.habitaciones = datos_actualizacion.habitaciones
+            if datos_actualizacion.banos is not None:
+                propiedad.banos = datos_actualizacion.banos
+            if datos_actualizacion.parqueos is not None:
+                propiedad.parqueos = datos_actualizacion.parqueos
+            if datos_actualizacion.antiguedad is not None:
+                propiedad.antiguedad = datos_actualizacion.antiguedad
+            
+            if datos_actualizacion.transaccion is not None:
+                propiedad.transaccion = datos_actualizacion.transaccion
+            if datos_actualizacion.precio_venta is not None:
+                propiedad.precio_venta = datos_actualizacion.precio_venta
+            if datos_actualizacion.precio_alquiler is not None:
+                propiedad.precio_alquiler = datos_actualizacion.precio_alquiler
+            if datos_actualizacion.moneda is not None:
+                propiedad.moneda = datos_actualizacion.moneda
+            
+            if datos_actualizacion.titulo is not None:
+                propiedad.titulo = datos_actualizacion.titulo
+            if datos_actualizacion.descripcion is not None:
+                propiedad.descripcion = datos_actualizacion.descripcion
+            
+            propiedad.updated_by = current_user.usuario_id
+            logger.info(f"✅ Datos de cabecera actualizados")
+            
+            # 4. Actualizar características (si se enviaron)
+            if datos_actualizacion.caracteristicas is not None:
+                logger.info(f"💾 Actualizando características...")
+                
+                # Eliminar características actuales
+                db.query(PropiedadDetalle).filter(
+                    PropiedadDetalle.registro_cab_id == propiedad_id
+                ).delete()
+                
+                # Agregar nuevas características
+                for caract in datos_actualizacion.caracteristicas:
+                    detalle = PropiedadDetalle(
+                        registro_cab_id=propiedad_id,
+                        caracteristica_id=caract.caracteristica_id,
+                        valor=caract.valor
+                    )
+                    db.add(detalle)
+                
+                logger.info(f"✅ {len(datos_actualizacion.caracteristicas)} características actualizadas")
+        
+        # 5. Actualizar imagen principal (si se envió)
+        url_imagen_principal_nueva = None
+        if imagen_principal:
+            logger.info(f"📸 Subiendo nueva imagen principal...")
+            
+            imagen_content = await imagen_principal.read()
+            filename = f"propiedad_{propiedad_id}_{propiedad.nombre_inmueble.replace(' ', '_')}_principal_updated"
+            
+            resultado = imagekit_service.upload_image(
+                file_content=imagen_content,
+                file_name=filename,
+                folder="/propiedades"
+            )
+            
+            if resultado and resultado.get('url'):
+                propiedad.imagen_principal = resultado['url']
+                url_imagen_principal_nueva = resultado['url']
+                logger.info(f"✅ Imagen principal actualizada: {url_imagen_principal_nueva}")
+        
+        # 6. Actualizar galería (si se envió)
+        urls_galeria_nueva = None
+        if imagenes_galeria:
+            if len(imagenes_galeria) > 5:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Máximo 5 imágenes en la galería"
+                )
+            
+            logger.info(f"📸 Subiendo nueva galería ({len(imagenes_galeria)} imágenes)...")
+            
+            urls_nuevas = []
+            for idx, imagen in enumerate(imagenes_galeria, 1):
+                imagen_content = await imagen.read()
+                filename = f"propiedad_{propiedad_id}_{propiedad.nombre_inmueble.replace(' ', '_')}_galeria_{idx}_updated"
+                
+                resultado = imagekit_service.upload_image(
+                    file_content=imagen_content,
+                    file_name=filename,
+                    folder="/propiedades"
+                )
+                
+                if resultado and resultado.get('url'):
+                    urls_nuevas.append(resultado['url'])
+            
+            propiedad.imagenes = urls_nuevas
+            urls_galeria_nueva = urls_nuevas
+            logger.info(f"✅ Galería actualizada con {len(urls_nuevas)} imágenes")
+        
+        # 7. Commit de todos los cambios
+        db.commit()
+        db.refresh(propiedad)
+        
+        logger.info(f"✅ Propiedad {propiedad_id} actualizada exitosamente")
+        
+        # 8. Preparar respuesta
+        response_data = {
+            "registro_cab_id": propiedad_id,
+            "titulo": propiedad.titulo,
+            "estado": propiedad.estado
+        }
+        
+        if url_imagen_principal_nueva:
+            response_data["imagen_principal_nueva"] = url_imagen_principal_nueva
+        
+        if urls_galeria_nueva:
+            response_data["imagenes_galeria_nuevas"] = urls_galeria_nueva
+            response_data["total_imagenes_galeria"] = len(urls_galeria_nueva)
+        
+        return {
+            "success": True,
+            "message": "Propiedad actualizada exitosamente",
+            "data": response_data
+        }
+        
+    except HTTPException:
+        raise
+    except json.JSONDecodeError as e:
+        logger.error(f"❌ Error parseando JSON: {e}")
+        raise HTTPException(
+            status_code=400,
+            detail=f"JSON inválido: {str(e)}"
+        )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Error actualizando propiedad: {e}")
+        logger.exception(e)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error al actualizar propiedad: {str(e)}"
+        )
