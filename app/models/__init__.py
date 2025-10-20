@@ -10,7 +10,7 @@ from app.models.plan import Plan
 from app.models.distrito import Distrito
 from app.models.tipo_inmueble import TipoInmueble
 from app.models.caracteristica import Caracteristica
-from app.models.caracteristica_inmueble import CaracteristicaInmueble
+from app.models.caracteristica_x_inmueble import CaracteristicaXInmueble
 from app.models.estado_crm import EstadoCRM
 
 # 3. Transaccionales
@@ -32,7 +32,7 @@ __all__ = [
     "Distrito",
     "TipoInmueble",
     "Caracteristica",
-    "CaracteristicaInmueble",
+    "CaracteristicaXInmueble",
     "EstadoCRM",
     # Transaccionales
     "Suscripcion",
