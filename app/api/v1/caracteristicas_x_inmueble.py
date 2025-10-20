@@ -247,8 +247,9 @@ async def listar_caracteristicas_agrupadas(
                 Caracteristica.nombre
             ).all()
         except Exception as e:
-            # Si falla (campo orden_categoria no existe), usar ordenamiento alternativo
+            # Si falla (campo orden_categoria no existe), hacer rollback y usar ordenamiento alternativo
             logger.warning(f"⚠️ Campo orden_categoria no disponible, usando ordenamiento alternativo: {e}")
+            db.rollback()  # Importante: rollback para limpiar la transacción fallida
             relaciones = db.query(
                 CaracteristicaXInmueble, Caracteristica
             ).join(
