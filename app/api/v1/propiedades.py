@@ -99,6 +99,8 @@ async def list_properties(
             tipo_inmueble=tipo.nombre if tipo else "N/A",
             distrito=distrito.nombre if distrito else "N/A",
             direccion=prop.direccion,
+            latitud=prop.latitud,  # 🗺️ Para mapa
+            longitud=prop.longitud,  # 🗺️ Para mapa
             telefono=prop.propietario_real_telefono,
             email=prop.propietario_real_email,
             transaccion=prop.transaccion,
@@ -164,6 +166,8 @@ async def my_properties(
             tipo_inmueble=tipo.nombre if tipo else "N/A",
             distrito=distrito.nombre if distrito else "N/A",
             direccion=prop.direccion,
+            latitud=prop.latitud,  # 🗺️ Para mapa
+            longitud=prop.longitud,  # 🗺️ Para mapa
             telefono=prop.propietario_real_telefono,
             email=prop.propietario_real_email,
             transaccion=prop.transaccion,
