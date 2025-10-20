@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
@@ -86,7 +87,7 @@ def require_ofertante(current_user: Usuario = Depends(require_perfil("ofertante"
 def get_optional_user(
     credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
     db: Session = Depends(get_db)
-) -> Usuario | None:
+) -> Optional[Usuario]:
     """
     Obtener usuario actual si existe token, sino None
     Útil para endpoints públicos que pueden personalizar respuesta si hay usuario
