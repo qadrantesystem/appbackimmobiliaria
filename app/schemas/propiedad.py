@@ -86,8 +86,8 @@ class PropiedadResponse(BaseModel):
     direccion: str
     latitud: Optional[Decimal]  # 🗺️ Para mapa
     longitud: Optional[Decimal]  # 🗺️ Para mapa
-    telefono: str
-    email: Optional[str]
+    telefono: Optional[str] = ""  # Puede ser vacío
+    email: Optional[str] = ""  # Puede ser vacío
     transaccion: str
     precio_alquiler: Optional[Decimal]
     precio_venta: Optional[Decimal]
