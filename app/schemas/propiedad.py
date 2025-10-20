@@ -123,6 +123,7 @@ class Corredor(BaseModel):
 
 class PropiedadDetalleResponse(PropiedadResponse):
     """Schema de respuesta detallada de Propiedad"""
+    nombre_inmueble: Optional[str]  # Nombre del inmueble
     descripcion: Optional[str]
     direccion: str
     latitud: Optional[Decimal]

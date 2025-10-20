@@ -289,6 +289,7 @@ async def get_property_detail(
         data=PropiedadDetalleResponse(
             registro_cab_id=propiedad.registro_cab_id,
             titulo=propiedad.titulo,
+            nombre_inmueble=propiedad.nombre_inmueble,
             tipo_inmueble=tipo.nombre if tipo else "N/A",
             distrito=distrito.nombre if distrito else "N/A",
             transaccion=propiedad.transaccion,
