@@ -231,31 +231,35 @@ async def listar_caracteristicas_agrupadas(
         if not tipo:
             raise HTTPException(status_code=404, detail="Tipo de inmueble no encontrado")
         
-        # Obtener características asociadas
-        query = db.query(
-            CaracteristicaXInmueble, Caracteristica
-        ).join(
-            Caracteristica, CaracteristicaXInmueble.caracteristica_id == Caracteristica.caracteristica_id
-        ).filter(
-            CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
-            CaracteristicaXInmueble.visible_en_filtro == True  # Solo las visibles en filtro
-        )
-        
-        # Ordenar (backward compatible si no existe orden_categoria)
+        # Obtener características asociadas y ejecutar query con manejo de errores
         try:
-            query = query.order_by(
+            # Intentar con orden_categoria (nueva versión)
+            relaciones = db.query(
+                CaracteristicaXInmueble, Caracteristica
+            ).join(
+                Caracteristica, CaracteristicaXInmueble.caracteristica_id == Caracteristica.caracteristica_id
+            ).filter(
+                CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
+                CaracteristicaXInmueble.visible_en_filtro == True  # Solo las visibles en filtro
+            ).order_by(
                 Caracteristica.orden_categoria, 
                 CaracteristicaXInmueble.orden, 
                 Caracteristica.nombre
-            )
-        except:
-            # Si orden_categoria no existe, ordenar solo por orden y nombre
-            query = query.order_by(
+            ).all()
+        except Exception as e:
+            # Si falla (campo orden_categoria no existe), usar ordenamiento alternativo
+            logger.warning(f"⚠️ Campo orden_categoria no disponible, usando ordenamiento alternativo: {e}")
+            relaciones = db.query(
+                CaracteristicaXInmueble, Caracteristica
+            ).join(
+                Caracteristica, CaracteristicaXInmueble.caracteristica_id == Caracteristica.caracteristica_id
+            ).filter(
+                CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
+                CaracteristicaXInmueble.visible_en_filtro == True
+            ).order_by(
                 CaracteristicaXInmueble.orden, 
                 Caracteristica.nombre
-            )
-        
-        relaciones = query.all()
+            ).all()
         
         # Agrupar por categoría
         categorias_dict = {}
