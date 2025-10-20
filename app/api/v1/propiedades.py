@@ -221,16 +221,29 @@ async def my_properties(
 @router.get("/{propiedad_id}", response_model=ResponseModel[PropiedadDetalleResponse])
 async def get_property_detail(
     propiedad_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Optional[Usuario] = Depends(get_optional_user)
 ):
-    """Ver detalle de propiedad"""
+    """
+    Ver detalle de propiedad
+    - Sin token: Solo propiedades publicadas
+    - Con token: Dueño puede ver sus propiedades (cualquier estado), Admin puede ver TODAS
+    """
     propiedad = db.query(Propiedad).filter(Propiedad.registro_cab_id == propiedad_id).first()
     if not propiedad:
         raise NotFoundException("Propiedad no encontrada")
     
-    # Solo mostrar si está publicada
-    if propiedad.estado != "publicado":
-        raise NotFoundException("Propiedad no disponible")
+    # Validar acceso según token
+    if current_user:
+        # Usuario autenticado: Admin puede ver todas, dueño puede ver las suyas
+        if current_user.perfil_id != 4 and propiedad.usuario_id != current_user.usuario_id:
+            # No es admin ni dueño, solo puede ver si está publicada
+            if propiedad.estado != "publicado":
+                raise NotFoundException("Propiedad no disponible")
+    else:
+        # Sin token: solo propiedades publicadas
+        if propiedad.estado != "publicado":
+            raise NotFoundException("Propiedad no disponible")
     
     # Obtener datos relacionados
     tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == propiedad.tipo_inmueble_id).first()
@@ -249,12 +262,16 @@ async def get_property_detail(
                 "categoria": caract.categoria
             })
     
-    # Propietario
+    # Propietario (incluye DNI si está autenticado y es dueño/admin)
     propietario = {
         "nombre": propiedad.propietario_real_nombre,
         "telefono": propiedad.propietario_real_telefono,
         "email": propiedad.propietario_real_email
     }
+    
+    # Agregar DNI si es dueño o admin
+    if current_user and (current_user.perfil_id == 4 or propiedad.usuario_id == current_user.usuario_id):
+        propietario["dni"] = propiedad.propietario_real_dni
     
     # Corredor (si aplica)
     corredor = None
