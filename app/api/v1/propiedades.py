@@ -264,14 +264,14 @@ async def get_property_detail(
     
     # Propietario (incluye DNI si está autenticado y es dueño/admin)
     propietario = {
-        "nombre": propiedad.propietario_real_nombre,
-        "telefono": propiedad.propietario_real_telefono,
-        "email": propiedad.propietario_real_email
+        "nombre": propiedad.propietario_real_nombre or "",
+        "telefono": propiedad.propietario_real_telefono or "",
+        "email": propiedad.propietario_real_email or ""
     }
     
     # Agregar DNI si es dueño o admin
     if current_user and (current_user.perfil_id == 4 or propiedad.usuario_id == current_user.usuario_id):
-        propietario["dni"] = propiedad.propietario_real_dni
+        propietario["dni"] = propiedad.propietario_real_dni or ""
     
     # Corredor (si aplica)
     corredor = None

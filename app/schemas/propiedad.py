@@ -107,6 +107,20 @@ class PropiedadResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class Propietario(BaseModel):
+    """Schema para propietario"""
+    nombre: str
+    telefono: str
+    email: Optional[str] = None
+    dni: Optional[str] = None  # Solo para dueño/admin
+
+class Corredor(BaseModel):
+    """Schema para corredor"""
+    usuario_id: Optional[int] = None
+    nombre: str
+    telefono: str
+    email: str
+
 class PropiedadDetalleResponse(PropiedadResponse):
     """Schema de respuesta detallada de Propiedad"""
     descripcion: Optional[str]
@@ -115,7 +129,7 @@ class PropiedadDetalleResponse(PropiedadResponse):
     longitud: Optional[Decimal]
     antiguedad: Optional[int]
     imagenes: Optional[List[str]]
-    propietario: dict
+    propietario: dict  # Mantener dict para flexibilidad
     corredor: Optional[dict]
     caracteristicas: List[dict]
     estado_crm: str
