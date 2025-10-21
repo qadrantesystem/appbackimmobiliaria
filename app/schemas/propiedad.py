@@ -103,6 +103,7 @@ class PropiedadResponse(BaseModel):
     vistas: int
     contactos: int
     created_at: datetime
+    es_favorito: bool = False  # Si el usuario autenticado la tiene en favoritos
 
     class Config:
         from_attributes = True
@@ -135,7 +136,6 @@ class PropiedadDetalleResponse(PropiedadResponse):
     caracteristicas: List[dict]
     estado_crm: str
     compartidos: int
-    es_favorito: bool = False  # Si el usuario autenticado la tiene en favoritos
     
     class Config:
         from_attributes = True

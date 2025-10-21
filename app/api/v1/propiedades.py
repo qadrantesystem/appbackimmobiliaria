@@ -154,6 +154,11 @@ async def my_properties(
     offset = (page - 1) * limit
     propiedades = query.order_by(Propiedad.created_at.desc()).offset(offset).limit(limit).all()
 
+    # Obtener IDs de favoritos del usuario
+    favoritos_ids = {f.registro_cab_id for f in db.query(Favorito.registro_cab_id).filter(
+        Favorito.usuario_id == current_user.usuario_id
+    ).all()}
+
     # Formatear respuesta (similar a list_properties)
     propiedades_list = []
     for prop in propiedades:
@@ -168,8 +173,8 @@ async def my_properties(
             direccion=prop.direccion,
             latitud=prop.latitud,  # 🗺️ Para mapa
             longitud=prop.longitud,  # 🗺️ Para mapa
-            telefono=prop.propietario_real_telefono,
-            email=prop.propietario_real_email,
+            telefono=prop.propietario_real_telefono or "",
+            email=prop.propietario_real_email or "",
             transaccion=prop.transaccion,
             precio_alquiler=prop.precio_alquiler,
             precio_venta=prop.precio_venta,
@@ -184,7 +189,8 @@ async def my_properties(
             estado_crm=prop.estado_crm,
             vistas=prop.vistas,
             contactos=prop.contactos,
-            created_at=prop.created_at
+            created_at=prop.created_at,
+            es_favorito=prop.registro_cab_id in favoritos_ids  # ⭐ FAVORITO
         ))
 
     # Estadísticas
