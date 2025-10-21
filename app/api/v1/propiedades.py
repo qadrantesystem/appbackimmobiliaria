@@ -6,7 +6,7 @@ from decimal import Decimal
 from app.database import get_db
 from app.dependencies import get_current_active_user, require_ofertante, get_optional_user
 from app.core.exceptions import BadRequestException, NotFoundException, ForbiddenException
-from app.models import Propiedad, PropiedadDetalle, Usuario, TipoInmueble, Distrito, Caracteristica
+from app.models import Propiedad, PropiedadDetalle, Usuario, TipoInmueble, Distrito, Caracteristica, Favorito
 from app.schemas.propiedad import PropiedadCreate, PropiedadUpdate, PropiedadEstadoUpdate, PropiedadResponse, PropiedadDetalleResponse
 from app.schemas.common import ResponseModel, PaginatedResponse
 from app.services.imagekit_service import ImageKitService
@@ -284,6 +284,14 @@ async def get_property_detail(
                 "email": corredor_user.email
             }
     
+    # Verificar si está en favoritos (solo si hay usuario autenticado)
+    es_favorito = False
+    if current_user:
+        es_favorito = db.query(Favorito).filter(
+            Favorito.usuario_id == current_user.usuario_id,
+            Favorito.registro_cab_id == propiedad_id
+        ).first() is not None
+    
     return ResponseModel(
         success=True,
         data=PropiedadDetalleResponse(
@@ -315,7 +323,8 @@ async def get_property_detail(
             corredor=corredor,
             caracteristicas=caracteristicas,
             estado_crm=propiedad.estado_crm,
-            compartidos=propiedad.compartidos
+            compartidos=propiedad.compartidos,
+            es_favorito=es_favorito
         )
     )
 

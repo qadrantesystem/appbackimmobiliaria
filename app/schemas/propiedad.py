@@ -135,6 +135,7 @@ class PropiedadDetalleResponse(PropiedadResponse):
     caracteristicas: List[dict]
     estado_crm: str
     compartidos: int
+    es_favorito: bool = False  # Si el usuario autenticado la tiene en favoritos
     
     class Config:
         from_attributes = True
