@@ -55,6 +55,9 @@ class BusquedaResponse(BaseModel):
     descripcion_legible: Optional[str] = None
     usuario_nombre: Optional[str] = None
     
+    # Datos completos del usuario (JOIN)
+    usuario: Optional[dict] = None
+    
     class Config:
         from_attributes = True
 
@@ -124,6 +127,18 @@ async def obtener_historial(
             data['codigo_busqueda'] = busqueda.generar_codigo()
             data['descripcion_legible'] = busqueda.generar_descripcion_legible(db)
             data['usuario_nombre'] = f"{current_user.nombre} {current_user.apellido}"
+            # Agregar datos completos del usuario
+            data['usuario'] = {
+                "usuario_id": current_user.usuario_id,
+                "email": current_user.email,
+                "nombre": current_user.nombre,
+                "apellido": current_user.apellido,
+                "telefono": current_user.telefono,
+                "dni": current_user.dni,
+                "perfil_id": current_user.perfil_id,
+                "estado": current_user.estado,
+                "fecha_registro": current_user.fecha_registro
+            }
 
             resultados.append(data)
 
@@ -213,6 +228,18 @@ async def listar_todas_busquedas_admin(
                 usuario = db.query(Usuario).filter(Usuario.usuario_id == busqueda.usuario_id).first()
                 if usuario:
                     data['usuario_nombre'] = f"{usuario.nombre} {usuario.apellido}"
+                    # Agregar datos completos del usuario
+                    data['usuario'] = {
+                        "usuario_id": usuario.usuario_id,
+                        "email": usuario.email,
+                        "nombre": usuario.nombre,
+                        "apellido": usuario.apellido,
+                        "telefono": usuario.telefono,
+                        "dni": usuario.dni,
+                        "perfil_id": usuario.perfil_id,
+                        "estado": usuario.estado,
+                        "fecha_registro": usuario.fecha_registro
+                    }
             
             resultados.append(data)
         
@@ -277,6 +304,18 @@ async def listar_busquedas_guardadas(
             data['codigo_busqueda'] = busqueda.generar_codigo()
             data['descripcion_legible'] = busqueda.generar_descripcion_legible(db)
             data['usuario_nombre'] = f"{current_user.nombre} {current_user.apellido}"
+            # Agregar datos completos del usuario
+            data['usuario'] = {
+                "usuario_id": current_user.usuario_id,
+                "email": current_user.email,
+                "nombre": current_user.nombre,
+                "apellido": current_user.apellido,
+                "telefono": current_user.telefono,
+                "dni": current_user.dni,
+                "perfil_id": current_user.perfil_id,
+                "estado": current_user.estado,
+                "fecha_registro": current_user.fecha_registro
+            }
             
             resultados.append(data)
         
