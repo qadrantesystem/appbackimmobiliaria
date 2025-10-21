@@ -101,8 +101,9 @@ async def list_properties(
             direccion=prop.direccion,
             latitud=prop.latitud,  # 🗺️ Para mapa
             longitud=prop.longitud,  # 🗺️ Para mapa
-            telefono=prop.propietario_real_telefono,
-            email=prop.propietario_real_email,
+            telefono=prop.propietario_real_telefono or "",
+            email=prop.propietario_real_email or "",
+            propietario_nombre=prop.propietario_real_nombre or "",
             transaccion=prop.transaccion,
             precio_alquiler=prop.precio_alquiler,
             precio_venta=prop.precio_venta,
@@ -175,6 +176,7 @@ async def my_properties(
             longitud=prop.longitud,  # 🗺️ Para mapa
             telefono=prop.propietario_real_telefono or "",
             email=prop.propietario_real_email or "",
+            propietario_nombre=prop.propietario_real_nombre or "",
             transaccion=prop.transaccion,
             precio_alquiler=prop.precio_alquiler,
             precio_venta=prop.precio_venta,
