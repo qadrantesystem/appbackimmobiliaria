@@ -128,12 +128,26 @@ async def obtener_estadisticas_dashboard(
             busquedas_por_distrito = {}
             for busqueda in busquedas_all:
                 criterios = busqueda.criterios_json or {}
+
+                # Manejar tanto distrito_id (singular) como distritos_ids (plural)
                 distrito_id = criterios.get('distrito_id')
+                distritos_ids = criterios.get('distritos_ids', [])
+
+                # Si hay distrito_id singular
                 if distrito_id:
-                    distrito = db.query(Distrito).filter(Distrito.distrito_id == distrito_id).first()
+                    if isinstance(distrito_id, list):
+                        # Si viene como lista, usar el primer elemento
+                        distrito = db.query(Distrito).filter(Distrito.distrito_id == distrito_id[0]).first()
+                    else:
+                        distrito = db.query(Distrito).filter(Distrito.distrito_id == distrito_id).first()
                     distrito_nombre = distrito.nombre if distrito else "Otro"
+                # Si hay distritos_ids (plural)
+                elif distritos_ids:
+                    # Para múltiples distritos, contar como "Múltiples distritos"
+                    distrito_nombre = "Múltiples distritos"
                 else:
                     distrito_nombre = "Todos los distritos"
+
                 busquedas_por_distrito[distrito_nombre] = busquedas_por_distrito.get(distrito_nombre, 0) + 1
 
             # Por mes
