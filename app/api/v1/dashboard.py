@@ -179,7 +179,7 @@ async def obtener_estadisticas_dashboard(
                 TipoInmueble.nombre,
                 func.count(Favorito.favorito_id).label('cantidad')
             ).join(Propiedad, Propiedad.registro_cab_id == Favorito.registro_cab_id
-            ).join(TipoInmueble
+            ).join(TipoInmueble, Propiedad.tipo_inmueble_id == TipoInmueble.tipo_inmueble_id
             ).filter(extract('year', Favorito.created_at) == filtro_anio)
 
             if mes:
@@ -196,7 +196,7 @@ async def obtener_estadisticas_dashboard(
                 Distrito.nombre,
                 func.count(Favorito.favorito_id).label('cantidad')
             ).join(Propiedad, Propiedad.registro_cab_id == Favorito.registro_cab_id
-            ).join(Distrito
+            ).join(Distrito, Propiedad.distrito_id == Distrito.distrito_id
             ).filter(extract('year', Favorito.created_at) == filtro_anio)
 
             if mes:
@@ -280,7 +280,7 @@ async def obtener_estadisticas_dashboard(
             prop_tipo = db.query(
                 TipoInmueble.nombre,
                 func.count(Propiedad.registro_cab_id).label('cantidad')
-            ).join(TipoInmueble
+            ).join(TipoInmueble, Propiedad.tipo_inmueble_id == TipoInmueble.tipo_inmueble_id
             ).filter(extract('year', Propiedad.created_at) == filtro_anio)
 
             if mes:
@@ -296,7 +296,7 @@ async def obtener_estadisticas_dashboard(
             prop_dist = db.query(
                 Distrito.nombre,
                 func.count(Propiedad.registro_cab_id).label('cantidad')
-            ).join(Distrito
+            ).join(Distrito, Propiedad.distrito_id == Distrito.distrito_id
             ).filter(extract('year', Propiedad.created_at) == filtro_anio)
 
             if mes:
