@@ -178,6 +178,13 @@ except ImportError as e:
     print(f"   ⚠️ Error cargando búsquedas: {e}")
 
 try:
+    from app.api.v1 import emails
+    app.include_router(emails.router, prefix="/api/v1/emails", tags=["📧 Emails"])
+    print("   ✅ Emails")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando emails: {e}")
+
+try:
     from app.api.v1 import tracking
     app.include_router(tracking.router, prefix="/api/v1/tracking", tags=["📊 Tracking CRM"])
     print("   ✅ Tracking CRM")

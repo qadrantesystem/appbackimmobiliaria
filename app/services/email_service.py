@@ -459,6 +459,110 @@ class EmailService:
         """Alias para send_password_reset_code"""
         return await self.send_password_reset_code(email, name, reset_code)
 
+    async def send_email_with_attachments(
+        self,
+        to_email: str,
+        subject: str,
+        html_content: str,
+        attachments: list = None
+    ) -> Dict[str, Any]:
+        """
+        Enviar email con archivos adjuntos (PDFs)
+
+        Args:
+            to_email: Email del destinatario
+            subject: Asunto del correo
+            html_content: Contenido HTML del correo
+            attachments: Lista de diccionarios con:
+                - filename: Nombre del archivo
+                - content: Contenido en bytes o base64
+                - content_type: Tipo MIME (default: 'application/pdf')
+
+        Returns:
+            Dict con success, message, etc.
+        """
+        if not self.sendgrid:
+            logger.error("❌ Email service no está inicializado")
+            return {
+                "success": False,
+                "message": "Servicio de email no disponible"
+            }
+
+        try:
+            # Crear mensaje MIME
+            msg = MIMEMultipart()
+            msg['Subject'] = subject
+            msg['From'] = f"{self.from_name} <{self.from_email}>"
+            msg['To'] = to_email
+
+            # Agregar contenido HTML
+            html_part = MIMEText(html_content, 'html', 'utf-8')
+            msg.attach(html_part)
+
+            # Agregar adjuntos si existen
+            if attachments:
+                from email.mime.base import MIMEBase
+                from email import encoders
+                import base64
+
+                for attachment in attachments:
+                    filename = attachment.get('filename', 'archivo.pdf')
+                    content = attachment.get('content')
+                    content_type = attachment.get('content_type', 'application/pdf')
+
+                    # Si el contenido está en base64, decodificarlo
+                    if isinstance(content, str):
+                        try:
+                            content = base64.b64decode(content)
+                        except:
+                            logger.warning(f"⚠️ No se pudo decodificar base64 para {filename}")
+                            continue
+
+                    # Crear parte del adjunto
+                    part = MIMEBase('application', 'pdf')
+                    part.set_payload(content)
+                    encoders.encode_base64(part)
+                    part.add_header('Content-Disposition', f'attachment; filename="{filename}"')
+                    msg.attach(part)
+
+                    logger.info(f"📎 [EMAIL] Adjunto agregado: {filename}")
+
+            # Enviar según el método configurado
+            if self.use_smtp:
+                # Enviar con SMTP
+                with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                    server.starttls()
+                    server.login(self.smtp_user, self.smtp_password)
+                    server.send_message(msg)
+
+                logger.info(f"✅ [SMTP] Email con adjuntos enviado a {to_email}")
+                logger.info(f"   📧 Asunto: {subject}")
+                logger.info(f"   📎 Adjuntos: {len(attachments) if attachments else 0}")
+
+                return {
+                    "success": True,
+                    "message": "Email enviado correctamente",
+                    "email": to_email,
+                    "attachments_count": len(attachments) if attachments else 0
+                }
+            else:
+                # Enviar con SendGrid
+                # TODO: Implementar envío con SendGrid usando adjuntos
+                logger.warning("⚠️ [SENDGRID] Envío con adjuntos no implementado aún")
+                return {
+                    "success": False,
+                    "message": "SendGrid con adjuntos no implementado, usar SMTP"
+                }
+
+        except Exception as e:
+            logger.error(f"❌ [EMAIL] Error enviando con adjuntos: {str(e)}")
+            logger.exception(e)
+            return {
+                "success": False,
+                "message": f"Error enviando email: {str(e)}",
+                "email": to_email
+            }
+
 
 # Instancia global del servicio
 email_service = EmailService()
