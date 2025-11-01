@@ -8,7 +8,7 @@ from pydantic import BaseModel, EmailStr
 from typing import List, Optional
 from app.services.email_service import email_service
 from app.database import get_db
-from app.models.propiedad import RegistroXInmuebleCab
+from app.models.propiedad import Propiedad
 import logging
 import io
 from reportlab.lib.pagesizes import A4
@@ -65,8 +65,8 @@ async def enviar_fichas_por_correo(
             )
 
         # Consultar propiedades
-        propiedades = db.query(RegistroXInmuebleCab).filter(
-            RegistroXInmuebleCab.registro_cab_id.in_(request.propiedad_ids)
+        propiedades = db.query(Propiedad).filter(
+            Propiedad.registro_cab_id.in_(request.propiedad_ids)
         ).all()
 
         if not propiedades:
@@ -79,7 +79,7 @@ async def enviar_fichas_por_correo(
         for propiedad in propiedades:
             try:
                 pdf_bytes = generar_ficha_pdf(propiedad)
-                codigo = propiedad.codigo or f"PROP_{propiedad.registro_cab_id}"
+                codigo = f"PROP_{propiedad.registro_cab_id}"
 
                 attachments.append({
                     "filename": f"Propiedad_{codigo}.pdf",
@@ -125,7 +125,7 @@ async def enviar_fichas_por_correo(
         raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
 
 
-def generar_ficha_pdf(propiedad: RegistroXInmuebleCab) -> bytes:
+def generar_ficha_pdf(propiedad: Propiedad) -> bytes:
     """
     Generar ficha PDF profesional de una propiedad
 
@@ -157,7 +157,7 @@ def generar_ficha_pdf(propiedad: RegistroXInmuebleCab) -> bytes:
     c.drawString(margin, height - 35*mm, "QUADRANTE")
 
     # Código y fecha
-    codigo = propiedad.codigo or f"PROP-{propiedad.registro_cab_id}"
+    codigo = f"PROP-{propiedad.registro_cab_id}"
     c.setFont("Helvetica-Bold", 18)
     c.drawRightString(width - margin, height - 30*mm, codigo)
 
@@ -170,13 +170,17 @@ def generar_ficha_pdf(propiedad: RegistroXInmuebleCab) -> bytes:
     # ===== TÍTULO Y UBICACIÓN =====
     c.setFillColor(COLOR_AZUL)
     c.setFont("Helvetica-Bold", 16)
-    titulo = propiedad.nombre_inmueble or "Propiedad en Venta/Alquiler"
+    titulo = propiedad.titulo or propiedad.nombre_inmueble or "Propiedad en Venta/Alquiler"
     c.drawString(margin, y, titulo[:60])  # Limitar longitud
     y -= 8*mm
 
     c.setFillColor(COLOR_GRIS)
     c.setFont("Helvetica", 11)
-    ubicacion = f"📍 {propiedad.direccion or ''}, {propiedad.distrito.nombre if propiedad.distrito else ''}"
+    try:
+        distrito_nombre = propiedad.distrito.nombre if propiedad.distrito else ''
+    except:
+        distrito_nombre = ''
+    ubicacion = f"📍 {propiedad.direccion or ''}, {distrito_nombre}"
     c.drawString(margin, y, ubicacion[:80])
     y -= 15*mm
 
@@ -264,7 +268,7 @@ def generar_ficha_pdf(propiedad: RegistroXInmuebleCab) -> bytes:
     return buffer.getvalue()
 
 
-def construir_html_correo(propiedades: List[RegistroXInmuebleCab], mensaje_personal: str) -> str:
+def construir_html_correo(propiedades: List[Propiedad], mensaje_personal: str) -> str:
     """
     Construir HTML del correo con lista de propiedades
 
@@ -278,11 +282,15 @@ def construir_html_correo(propiedades: List[RegistroXInmuebleCab], mensaje_perso
     # Lista de propiedades
     props_html = ""
     for prop in propiedades:
-        codigo = prop.codigo or f"PROP-{prop.registro_cab_id}"
-        titulo = prop.nombre_inmueble or "Propiedad"
+        codigo = f"PROP-{prop.registro_cab_id}"
+        titulo = prop.titulo or prop.nombre_inmueble or "Propiedad"
         precio = f"${'{:,.0f}'.format(prop.precio_venta or 0)}"
         area = f"{prop.area or 'N/A'} m²"
-        ubicacion = f"{prop.direccion or ''}, {prop.distrito.nombre if prop.distrito else ''}"
+        try:
+            distrito_nombre = prop.distrito.nombre if prop.distrito else ''
+        except:
+            distrito_nombre = ''
+        ubicacion = f"{prop.direccion or ''}, {distrito_nombre}"
 
         props_html += f"""
         <tr>
