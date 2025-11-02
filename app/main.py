@@ -136,6 +136,13 @@ except ImportError as e:
     print(f"   ⚠️ Error cargando tipos de inmueble: {e}")
 
 try:
+    from app.api.v1 import categorias
+    app.include_router(categorias.router, prefix="/api/v1/categorias", tags=["📁 Categorías"])
+    print("   ✅ Categorías")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando categorías: {e}")
+
+try:
     from app.api.v1 import caracteristicas
     app.include_router(caracteristicas.router, prefix="/api/v1/caracteristicas", tags=["⭐ Características"])
     print("   ✅ Características")
