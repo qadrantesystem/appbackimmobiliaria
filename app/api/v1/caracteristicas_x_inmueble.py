@@ -10,6 +10,7 @@ from app.dependencies import require_admin, get_optional_user
 from app.models.caracteristica_x_inmueble import CaracteristicaXInmueble
 from app.models.caracteristica import Caracteristica
 from app.models.tipo_inmueble import TipoInmueble
+from app.models.categoria import Categoria
 from app.models.usuario import Usuario
 from pydantic import BaseModel
 import logging
@@ -224,60 +225,51 @@ async def listar_caracteristicas_agrupadas(
     📊 Listar características AGRUPADAS POR CATEGORÍA
     Retorna un objeto con categorías y sus características
     Ideal para renderizar filtros avanzados en frontend
+
+    ✅ ACTUALIZADO: Usa tabla categorias_mae normalizada
     """
     try:
         # Verificar que el tipo de inmueble existe
         tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == tipo_inmueble_id).first()
         if not tipo:
             raise HTTPException(status_code=404, detail="Tipo de inmueble no encontrado")
-        
-        # Obtener características asociadas y ejecutar query con manejo de errores
-        try:
-            # Intentar con orden_categoria (nueva versión)
-            relaciones = db.query(
-                CaracteristicaXInmueble, Caracteristica
-            ).join(
-                Caracteristica, CaracteristicaXInmueble.caracteristica_id == Caracteristica.caracteristica_id
-            ).filter(
-                CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
-                CaracteristicaXInmueble.visible_en_filtro == True  # Solo las visibles en filtro
-            ).order_by(
-                Caracteristica.orden_categoria, 
-                CaracteristicaXInmueble.orden, 
-                Caracteristica.nombre
-            ).all()
-        except Exception as e:
-            # Si falla (campo orden_categoria no existe), hacer rollback y usar ordenamiento alternativo
-            logger.warning(f"⚠️ Campo orden_categoria no disponible, usando ordenamiento alternativo: {e}")
-            db.rollback()  # Importante: rollback para limpiar la transacción fallida
-            relaciones = db.query(
-                CaracteristicaXInmueble, Caracteristica
-            ).join(
-                Caracteristica, CaracteristicaXInmueble.caracteristica_id == Caracteristica.caracteristica_id
-            ).filter(
-                CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
-                CaracteristicaXInmueble.visible_en_filtro == True
-            ).order_by(
-                CaracteristicaXInmueble.orden, 
-                Caracteristica.nombre
-            ).all()
-        
+
+        # ✅ NUEVA QUERY: Join con categorias_mae
+        relaciones = db.query(
+            CaracteristicaXInmueble,
+            Caracteristica,
+            Categoria
+        ).join(
+            Caracteristica,
+            CaracteristicaXInmueble.caracteristica_id == Caracteristica.caracteristica_id
+        ).outerjoin(
+            Categoria,
+            Caracteristica.categoria_id == Categoria.categoria_id
+        ).filter(
+            CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
+            CaracteristicaXInmueble.visible_en_filtro == True  # Solo las visibles en filtro
+        ).order_by(
+            Categoria.orden,
+            CaracteristicaXInmueble.orden,
+            Caracteristica.nombre
+        ).all()
+
         # Agrupar por categoría
         categorias_dict = {}
-        for rel, car in relaciones:
-            # Obtener categoria de forma segura
-            categoria_nombre = getattr(car, 'categoria', None) or 'General'
-            
+        for rel, car, cat in relaciones:
+            # Usar categoría normalizada o 'General' como fallback
+            categoria_nombre = cat.nombre if cat else 'General'
+            categoria_id = cat.categoria_id if cat else None
+            orden_cat = cat.orden if cat else 999
+
             if categoria_nombre not in categorias_dict:
-                # Obtener orden_categoria de forma segura (backward compatible)
-                orden_cat = getattr(car, 'orden_categoria', None) or 999
-                
                 categorias_dict[categoria_nombre] = {
+                    "categoria_id": categoria_id,
                     "nombre": categoria_nombre,
                     "orden": orden_cat,
                     "caracteristicas": []
                 }
-            
+
             categorias_dict[categoria_nombre]["caracteristicas"].append({
                 "caracteristica_id": car.caracteristica_id,
                 "nombre": car.nombre,
@@ -287,10 +279,10 @@ async def listar_caracteristicas_agrupadas(
                 "requerido": rel.requerido,
                 "orden": rel.orden
             })
-        
-        # Convertir a lista y ordenar por orden_categoria
+
+        # Convertir a lista y ordenar por orden de categoría
         categorias_list = sorted(categorias_dict.values(), key=lambda x: x['orden'])
-        
+
         return {
             "tipo_inmueble_id": tipo_inmueble_id,
             "tipo_inmueble_nombre": tipo.nombre,
