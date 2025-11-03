@@ -295,7 +295,6 @@ async def listar_caracteristicas_agrupadas(
         logger.error(f"❌ Error listando características agrupadas del tipo {tipo_inmueble_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al listar características agrupadas")
 
-
 @router.get("/tipo-inmueble/{tipo_inmueble_id}/mantenimiento")
 async def listar_todas_caracteristicas_para_mantenimiento(
     tipo_inmueble_id: int,
@@ -308,6 +307,8 @@ async def listar_todas_caracteristicas_para_mantenimiento(
     Ideal para tree view de asignación en módulo de mantenimiento
     """
     try:
+        from sqlalchemy import func as sql_func
+        
         # Verificar que el tipo de inmueble existe
         tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == tipo_inmueble_id).first()
         if not tipo:
@@ -331,7 +332,7 @@ async def listar_todas_caracteristicas_para_mantenimiento(
         ).filter(
             Caracteristica.activo == True
         ).order_by(
-            Categoria.orden,
+            sql_func.coalesce(Categoria.orden, 999),  # NULL categories go last
             Caracteristica.nombre
         ).all()
 
@@ -370,4 +371,4 @@ async def listar_todas_caracteristicas_para_mantenimiento(
         raise
     except Exception as e:
         logger.error(f"❌ Error listando características para mantenimiento del tipo {tipo_inmueble_id}: {e}")
-        raise HTTPException(status_code=500, detail="Error al listar características para mantenimiento")
+        raise HTTPException(status_code=500, detail=f"Error al listar características para mantenimiento: {str(e)}")
