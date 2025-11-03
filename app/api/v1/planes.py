@@ -57,6 +57,16 @@ class PlanResponse(PlanBase):
     class Config:
         from_attributes = True
 
+
+class PlanPaginado(BaseModel):
+    """Respuesta paginada de planes"""
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+    data: List[PlanResponse]
+
+
 # ============================================
 # 📌 ENDPOINTS
 # ============================================
@@ -86,6 +96,33 @@ async def listar_planes(
     except Exception as e:
         logger.error(f"❌ Error listando planes: {e}")
         raise HTTPException(status_code=500, detail="Error al listar planes")
+
+@router.get("/paginado", response_model=PlanPaginado)
+async def listar_planes_paginado(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(5, ge=1, le=100),
+    activo: Optional[bool] = Query(None),
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)
+):
+    """Listar planes con paginación"""
+    try:
+        query = db.query(Plan)
+        if activo is not None:
+            query = query.filter(Plan.activo == activo)
+        if search:
+            query = query.filter(Plan.nombre.ilike(f"%{search}%"))
+        total = query.count()
+        offset = (page - 1) * page_size
+        planes = query.order_by(Plan.orden, Plan.nombre).offset(offset).limit(page_size).all()
+        total_pages = (total + page_size - 1) // page_size
+        return {"total": total, "page": page, "page_size": page_size, "total_pages": total_pages, "data": planes}
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Error al listar planes")
+
+
 
 @router.get("/{plan_id}", response_model=PlanResponse)
 async def obtener_plan(

@@ -31,6 +31,16 @@ class DistritoResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+class DistritoPaginado(BaseModel):
+    """Respuesta paginada de distritos"""
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+    data: List[DistritoResponse]
+
+
 # ============================================
 # 📌 ENDPOINTS (Solo GET)
 # ============================================
@@ -71,6 +81,54 @@ async def listar_distritos(
     except Exception as e:
         logger.error(f"❌ Error listando distritos: {e}")
         raise HTTPException(status_code=500, detail="Error al listar distritos")
+
+@router.get("/paginado", response_model=DistritoPaginado)
+async def listar_distritos_paginado(
+    page: int = Query(1, ge=1, description="Número de página"),
+    page_size: int = Query(5, ge=1, le=100, description="Tamaño de página"),
+    activo: Optional[bool] = Query(None, description="Filtrar por estado activo"),
+    search: Optional[str] = Query(None, description="Buscar por nombre"),
+    db: Session = Depends(get_db)
+):
+    """
+    📄 Listar distritos con paginación (por defecto 5 registros)
+    
+    - **page**: Número de página (default: 1)
+    - **page_size**: Cantidad de registros por página (default: 5, max: 100)
+    - **activo**: Filtrar por estado activo/inactivo (opcional)
+    - **search**: Buscar por nombre (opcional)
+    """
+    try:
+        query = db.query(Distrito)
+        
+        if activo is not None:
+            query = query.filter(Distrito.activo == activo)
+        
+        if search:
+            query = query.filter(Distrito.nombre.ilike(f"%{search}%"))
+        
+        total = query.count()
+        
+        offset = (page - 1) * page_size
+        distritos = query.order_by(Distrito.orden, Distrito.nombre).offset(offset).limit(page_size).all()
+        
+        total_pages = (total + page_size - 1) // page_size
+        
+        logger.info(f"✅ Listados {len(distritos)} distritos (página {page}/{total_pages})")
+        
+        return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+            "data": distritos
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error listando distritos paginados: {e}")
+        raise HTTPException(status_code=500, detail="Error al listar distritos")
+
+
 
 @router.get("/{distrito_id}", response_model=DistritoResponse)
 async def obtener_distrito(

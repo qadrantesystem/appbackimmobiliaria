@@ -42,6 +42,16 @@ class TipoInmuebleResponse(TipoInmuebleBase):
     class Config:
         from_attributes = True
 
+
+class TipoInmueblePaginado(BaseModel):
+    """Respuesta paginada de tipos de inmueble"""
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+    data: List[TipoInmuebleResponse]
+
+
 # ============================================
 # 📌 ENDPOINTS
 # ============================================
@@ -68,6 +78,33 @@ async def listar_tipos_inmueble(
     except Exception as e:
         logger.error(f"❌ Error listando tipos de inmueble: {e}")
         raise HTTPException(status_code=500, detail="Error al listar tipos de inmueble")
+
+@router.get("/paginado", response_model=TipoInmueblePaginado)
+async def listar_tipos_inmueble_paginado(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(5, ge=1, le=100),
+    activo: Optional[bool] = Query(None),
+    search: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)
+):
+    """Listar tipos de inmueble con paginación"""
+    try:
+        query = db.query(TipoInmueble)
+        if activo is not None:
+            query = query.filter(TipoInmueble.activo == activo)
+        if search:
+            query = query.filter(TipoInmueble.nombre.ilike(f"%{search}%"))
+        total = query.count()
+        offset = (page - 1) * page_size
+        tipos = query.order_by(TipoInmueble.orden, TipoInmueble.nombre).offset(offset).limit(page_size).all()
+        total_pages = (total + page_size - 1) // page_size
+        return {"total": total, "page": page, "page_size": page_size, "total_pages": total_pages, "data": tipos}
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="Error al listar tipos")
+
+
 
 @router.get("/{tipo_id}", response_model=TipoInmuebleResponse)
 async def obtener_tipo_inmueble(

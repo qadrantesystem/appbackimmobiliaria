@@ -46,6 +46,16 @@ class CaracteristicaResponse(CaracteristicaBase):
     class Config:
         from_attributes = True
 
+
+class CaracteristicaPaginada(BaseModel):
+    """Respuesta paginada de características"""
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+    data: List[CaracteristicaResponse]
+
+
 # ============================================
 # 📌 ENDPOINTS
 # ============================================
@@ -74,6 +84,64 @@ async def listar_caracteristicas(
     except Exception as e:
         logger.error(f"❌ Error listando características: {e}")
         raise HTTPException(status_code=500, detail="Error al listar características")
+
+
+@router.get("/paginado", response_model=CaracteristicaPaginada)
+async def listar_caracteristicas_paginado(
+    page: int = Query(1, ge=1, description="Número de página"),
+    page_size: int = Query(5, ge=1, le=100, description="Tamaño de página"),
+    activo: Optional[bool] = Query(None, description="Filtrar por estado activo"),
+    search: Optional[str] = Query(None, description="Buscar por nombre"),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)
+):
+    """
+    📄 Listar características con paginación (por defecto 5 registros)
+    
+    - **page**: Número de página (default: 1)
+    - **page_size**: Cantidad de registros por página (default: 5, max: 100)
+    - **activo**: Filtrar por estado activo/inactivo (opcional)
+    - **search**: Buscar por nombre (opcional)
+    """
+    try:
+        # Query base
+        query = db.query(Caracteristica)
+        
+        # Filtros
+        if activo is not None:
+            query = query.filter(Caracteristica.activo == activo)
+        
+        if search:
+            query = query.filter(Caracteristica.nombre.ilike(f"%{search}%"))
+        
+        # Total de registros
+        total = query.count()
+        
+        # Paginación
+        offset = (page - 1) * page_size
+        caracteristicas = query.order_by(
+            Caracteristica.categoria, 
+            Caracteristica.orden, 
+            Caracteristica.nombre
+        ).offset(offset).limit(page_size).all()
+        
+        # Calcular total de páginas
+        total_pages = (total + page_size - 1) // page_size
+        
+        logger.info(f"✅ Listadas {len(caracteristicas)} características (página {page}/{total_pages})")
+        
+        return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+            "data": caracteristicas
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Error listando características paginadas: {e}")
+        raise HTTPException(status_code=500, detail="Error al listar características")
+
 
 @router.get("/{caracteristica_id}", response_model=CaracteristicaResponse)
 async def obtener_caracteristica(
