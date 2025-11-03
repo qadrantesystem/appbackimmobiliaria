@@ -294,3 +294,80 @@ async def listar_caracteristicas_agrupadas(
     except Exception as e:
         logger.error(f"❌ Error listando características agrupadas del tipo {tipo_inmueble_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al listar características agrupadas")
+
+
+@router.get("/tipo-inmueble/{tipo_inmueble_id}/mantenimiento")
+async def listar_todas_caracteristicas_para_mantenimiento(
+    tipo_inmueble_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)
+):
+    """
+    🛠️ Listar TODAS las características agrupadas por categoría para MANTENIMIENTO
+    Muestra todas las características (asignadas y no asignadas) con flag 'asignado'
+    Ideal para tree view de asignación en módulo de mantenimiento
+    """
+    try:
+        # Verificar que el tipo de inmueble existe
+        tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == tipo_inmueble_id).first()
+        if not tipo:
+            raise HTTPException(status_code=404, detail="Tipo de inmueble no encontrado")
+
+        # Obtener IDs de características ya asignadas
+        asignadas_ids = set(
+            rel.caracteristica_id
+            for rel in db.query(CaracteristicaXInmueble.caracteristica_id).filter(
+                CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id
+            ).all()
+        )
+
+        # Obtener TODAS las características activas con sus categorías
+        caracteristicas = db.query(
+            Caracteristica,
+            Categoria
+        ).outerjoin(
+            Categoria,
+            Caracteristica.categoria_id == Categoria.categoria_id
+        ).filter(
+            Caracteristica.activo == True
+        ).order_by(
+            Categoria.orden,
+            Caracteristica.nombre
+        ).all()
+
+        # Agrupar por categoría
+        categorias_dict = {}
+        for car, cat in caracteristicas:
+            categoria_nombre = cat.nombre if cat else 'General'
+            categoria_id = cat.categoria_id if cat else None
+            orden_cat = cat.orden if cat else 999
+
+            if categoria_nombre not in categorias_dict:
+                categorias_dict[categoria_nombre] = {
+                    "categoria_id": categoria_id,
+                    "nombre": categoria_nombre,
+                    "orden": orden_cat,
+                    "caracteristicas": []
+                }
+
+            categorias_dict[categoria_nombre]["caracteristicas"].append({
+                "caracteristica_id": car.caracteristica_id,
+                "nombre": car.nombre,
+                "icono": car.icono,
+                "asignado": car.caracteristica_id in asignadas_ids  # 🔑 Flag importante
+            })
+
+        # Convertir a lista y ordenar
+        categorias_list = sorted(categorias_dict.values(), key=lambda x: x['orden'])
+
+        return {
+            "tipo_inmueble_id": tipo_inmueble_id,
+            "tipo_inmueble_nombre": tipo.nombre,
+            "categorias": categorias_list
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error listando características para mantenimiento del tipo {tipo_inmueble_id}: {e}")
+        raise HTTPException(status_code=500, detail="Error al listar características para mantenimiento")
