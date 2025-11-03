@@ -306,6 +306,50 @@ async def listar_todas_caracteristicas_para_mantenimiento(
     Muestra todas las características (asignadas y no asignadas) con flag 'asignado'
     Ideal para tree view de asignación en módulo de mantenimiento
     """
+    
+    # Diccionario de iconos por palabra clave
+    ICONOS = {
+        'ascensor': '🛗',
+        'piscina': '🏊',
+        'gimnasio': '🏋️',
+        'garaje': '🚗',
+        'estacionamiento': '🅿️',
+        'parque': '🌳',
+        'jardin': '🌳',
+        'balcon': '🪟',
+        'terraza': '🏖️',
+        'seguridad': '🔒',
+        'vigilancia': '👮',
+        'sala': '🛋️',
+        'cocina': '🍳',
+        'baño': '🚿',
+        'dormitorio': '🛏️',
+        'habitacion': '🛏️',
+        'aire': '❄️',
+        'calefaccion': '🔥',
+        'agua': '💧',
+        'luz': '💡',
+        'gas': '🔥',
+        'internet': '📶',
+        'wifi': '📡',
+        'cable': '📺',
+        'telefono': '📞',
+        'zona': '📍',
+        'area': '📏',
+        'lavanderia': '🧺',
+        'mascotas': '🐕',
+        'amoblado': '🪑',
+        'deposito': '📦',
+    }
+    
+    def obtener_icono(nombre: str) -> str:
+        """Retorna icono basado en palabras clave en el nombre"""
+        nombre_lower = nombre.lower()
+        for palabra, icono in ICONOS.items():
+            if palabra in nombre_lower:
+                return icono
+        return '⚙️'  # Icono por defecto
+    
     try:
         from sqlalchemy import func as sql_func
         
@@ -332,7 +376,7 @@ async def listar_todas_caracteristicas_para_mantenimiento(
         ).filter(
             Caracteristica.activo == True
         ).order_by(
-            sql_func.coalesce(Categoria.orden, 999),  # NULL categories go last
+            sql_func.coalesce(Categoria.orden, 999),
             Caracteristica.nombre
         ).all()
 
@@ -354,8 +398,8 @@ async def listar_todas_caracteristicas_para_mantenimiento(
             categorias_dict[categoria_nombre]["caracteristicas"].append({
                 "caracteristica_id": car.caracteristica_id,
                 "nombre": car.nombre,
-                "icono": car.icono,
-                "asignado": car.caracteristica_id in asignadas_ids  # 🔑 Flag importante
+                "icono": obtener_icono(car.nombre),  # 🎨 Generar icono automáticamente
+                "asignado": car.caracteristica_id in asignadas_ids
             })
 
         # Convertir a lista y ordenar
