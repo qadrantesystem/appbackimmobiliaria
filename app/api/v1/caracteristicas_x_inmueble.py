@@ -307,48 +307,80 @@ async def listar_todas_caracteristicas_para_mantenimiento(
     Ideal para tree view de asignación en módulo de mantenimiento
     """
     
-    # Diccionario de iconos por palabra clave
+    # Iconos monocromáticos elegantes con paleta azul/gris corporativa
     ICONOS = {
-        'ascensor': '🛗',
-        'piscina': '🏊',
-        'gimnasio': '🏋️',
-        'garaje': '🚗',
-        'estacionamiento': '🅿️',
-        'parque': '🌳',
-        'jardin': '🌳',
-        'balcon': '🪟',
-        'terraza': '🏖️',
-        'seguridad': '🔒',
-        'vigilancia': '👮',
-        'sala': '🛋️',
-        'cocina': '🍳',
-        'baño': '🚿',
-        'dormitorio': '🛏️',
-        'habitacion': '🛏️',
-        'aire': '❄️',
-        'calefaccion': '🔥',
-        'agua': '💧',
-        'luz': '💡',
-        'gas': '🔥',
-        'internet': '📶',
-        'wifi': '📡',
-        'cable': '📺',
-        'telefono': '📞',
-        'zona': '📍',
-        'area': '📏',
-        'lavanderia': '🧺',
-        'mascotas': '🐕',
-        'amoblado': '🪑',
-        'deposito': '📦',
+        # Edificio y estructura
+        'ascensor': '▣',
+        'elevador': '▣',
+        'piso': '▢',
+        
+        # Áreas comunes
+        'piscina': '◈',
+        'gimnasio': '◐',
+        'gym': '◐',
+        'salon': '▭',
+        'sala': '▭',
+        'terraza': '▱',
+        'azotea': '▱',
+        'balcon': '▭',
+        
+        # Seguridad
+        'seguridad': '◆',
+        'vigilancia': '◆',
+        'camaras': '◆',
+        'alarma': '◆',
+        'portero': '◆',
+        
+        # Estacionamiento
+        'garaje': '▧',
+        'estacionamiento': '▧',
+        'cochera': '▧',
+        'parking': '▧',
+        
+        # Servicios
+        'agua': '◉',
+        'luz': '◎',
+        'gas': '◉',
+        'internet': '◬',
+        'wifi': '◬',
+        'cable': '◭',
+        
+        # Espacios verdes
+        'parque': '◈',
+        'jardin': '◈',
+        'area verde': '◈',
+        
+        # Clima
+        'aire': '◐',
+        'calefaccion': '◉',
+        'ventilacion': '◎',
+        
+        # Espacios interiores
+        'cocina': '▢',
+        'baño': '▢',
+        'dormitorio': '▢',
+        'habitacion': '▢',
+        'closet': '▢',
+        
+        # Servicios adicionales
+        'lavanderia': '◫',
+        'deposito': '▣',
+        'bodega': '▣',
+        
+        # Características especiales
+        'mascotas': '◇',
+        'amoblado': '▦',
+        'vista': '◈',
+        'esquina': '◆',
     }
     
     def obtener_icono(nombre: str) -> str:
-        """Retorna icono basado en palabras clave en el nombre"""
+        """Retorna icono monocromático basado en palabras clave"""
         nombre_lower = nombre.lower()
         for palabra, icono in ICONOS.items():
             if palabra in nombre_lower:
                 return icono
-        return '⚙️'  # Icono por defecto
+        return '▪'  # Icono por defecto (cuadrado pequeño)
     
     try:
         from sqlalchemy import func as sql_func
@@ -398,7 +430,7 @@ async def listar_todas_caracteristicas_para_mantenimiento(
             categorias_dict[categoria_nombre]["caracteristicas"].append({
                 "caracteristica_id": car.caracteristica_id,
                 "nombre": car.nombre,
-                "icono": obtener_icono(car.nombre),  # 🎨 Generar icono automáticamente
+                "icono": obtener_icono(car.nombre),  # ◆ Iconos monocromáticos elegantes
                 "asignado": car.caracteristica_id in asignadas_ids
             })
 
