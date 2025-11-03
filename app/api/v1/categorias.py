@@ -2,15 +2,17 @@
 📁 API de Categorías de Características
 Sistema Inmobiliario - CRUD completo con paginación
 """
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import func, or_
 from typing import List, Optional
 from app.database import get_db
 from app.dependencies import require_admin, get_optional_user
 from app.models.categoria import Categoria
+from app.models.caracteristica import Caracteristica
 from app.models.usuario import Usuario
 from pydantic import BaseModel, Field
+from app.schemas.common import ResponseModel
 import logging
 
 logger = logging.getLogger(__name__)
@@ -288,3 +290,62 @@ async def eliminar_categoria(
         db.rollback()
         logger.error(f"❌ Error eliminando categoría {categoria_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al eliminar categoría")
+
+@router.get("/agrupadas", response_model=ResponseModel[List[dict]])
+async def listar_categorias_agrupadas(
+    activo: Optional[bool] = Query(None, description="Filtrar por estado activo"),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_optional_user)
+):
+    """
+    📋 Listar categorías con sus características agrupadas
+    Útil para tree views y selección dinámica
+    """
+    try:
+        # Query base de categorías
+        query = db.query(Categoria)
+        
+        if activo is not None:
+            query = query.filter(Categoria.activo == activo)
+        
+        categorias = query.order_by(Categoria.orden, Categoria.nombre).all()
+        
+        # Formatear respuesta con características incluidas
+        resultado = []
+        for categoria in categorias:
+            # Obtener características de esta categoría
+            caracteristicas = db.query(Caracteristica).filter(
+                Caracteristica.categoria_id == categoria.categoria_id,
+                Caracteristica.activo == True
+            ).order_by(Caracteristica.nombre).all()
+            
+            resultado.append({
+                "categoria_id": categoria.categoria_id,
+                "nombre": categoria.nombre,
+                "descripcion": categoria.descripcion,
+                "activo": categoria.activo,
+                "orden": categoria.orden,
+                "caracteristicas": [
+                    {
+                        "caracteristica_id": c.caracteristica_id,
+                        "nombre": c.nombre,
+                        "icono": c.icono,
+                        "activo": c.activo
+                    }
+                    for c in caracteristicas
+                ]
+            })
+        
+        return ResponseModel(
+            success=True,
+            message="Categorías agrupadas obtenidas exitosamente",
+            data=resultado
+        )
+    
+    except Exception as e:
+        logger.error(f"❌ Error listando categorías agrupadas: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al listar categorías agrupadas: {str(e)}"
+        )
+
