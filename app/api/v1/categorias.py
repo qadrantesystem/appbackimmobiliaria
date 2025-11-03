@@ -88,6 +88,30 @@ async def listar_categorias(
         logger.error(f"❌ Error listando categorías: {e}")
         raise HTTPException(status_code=500, detail="Error al listar categorías")
 
+
+# Schema para característica en respuesta agrupada
+class CaracteristicaEnGrupo(BaseModel):
+    caracteristica_id: int
+    nombre: str
+    icono: Optional[str] = None
+    activo: bool
+    
+    class Config:
+        from_attributes = True
+
+# Schema para categoría agrupada con características
+class CategoriaAgrupada(BaseModel):
+    categoria_id: int
+    nombre: str
+    descripcion: Optional[str] = None
+    activo: bool
+    orden: Optional[int] = None
+    caracteristicas: List[CaracteristicaEnGrupo] = []
+    
+    class Config:
+        from_attributes = True
+
+
 @router.get("/paginado", response_model=CategoriaPaginada)
 async def listar_categorias_paginado(
     page: int = Query(1, ge=1, description="Número de página"),
@@ -291,7 +315,7 @@ async def eliminar_categoria(
         logger.error(f"❌ Error eliminando categoría {categoria_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al eliminar categoría")
 
-@router.get("/agrupadas", response_model=ResponseModel[List[dict]])
+@router.get("/agrupadas", response_model=ResponseModel[List[CategoriaAgrupada]])
 async def listar_categorias_agrupadas(
     activo: Optional[bool] = Query(None, description="Filtrar por estado activo"),
     db: Session = Depends(get_db),
@@ -319,22 +343,22 @@ async def listar_categorias_agrupadas(
                 Caracteristica.activo == True
             ).order_by(Caracteristica.nombre).all()
             
-            resultado.append({
-                "categoria_id": categoria.categoria_id,
-                "nombre": categoria.nombre,
-                "descripcion": categoria.descripcion,
-                "activo": categoria.activo,
-                "orden": categoria.orden,
-                "caracteristicas": [
-                    {
-                        "caracteristica_id": c.caracteristica_id,
-                        "nombre": c.nombre,
-                        "icono": c.icono,
-                        "activo": c.activo
-                    }
+            resultado.append(CategoriaAgrupada(
+                categoria_id=categoria.categoria_id,
+                nombre=categoria.nombre,
+                descripcion=categoria.descripcion,
+                activo=categoria.activo,
+                orden=categoria.orden,
+                caracteristicas=[
+                    CaracteristicaEnGrupo(
+                        caracteristica_id=c.caracteristica_id,
+                        nombre=c.nombre,
+                        icono=c.icono,
+                        activo=c.activo
+                    )
                     for c in caracteristicas
                 ]
-            })
+            ))
         
         return ResponseModel(
             success=True,
