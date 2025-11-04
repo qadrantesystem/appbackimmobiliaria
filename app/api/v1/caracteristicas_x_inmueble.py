@@ -448,3 +448,37 @@ async def listar_todas_caracteristicas_para_mantenimiento(
     except Exception as e:
         logger.error(f"❌ Error listando características para mantenimiento del tipo {tipo_inmueble_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al listar características para mantenimiento: {str(e)}")
+
+@router.delete("/tipo/{tipo_inmueble_id}/caracteristica/{caracteristica_id}")
+async def eliminar_por_composite_key(
+    tipo_inmueble_id: int,
+    caracteristica_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
+):
+    """🗑️ Eliminar relación usando tipo_inmueble_id + caracteristica_id"""
+    try:
+        relacion = db.query(CaracteristicaXInmueble).filter(
+            CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
+            CaracteristicaXInmueble.caracteristica_id == caracteristica_id
+        ).first()
+        
+        if not relacion:
+            raise HTTPException(status_code=404, detail="Relación no encontrada")
+        
+        db.delete(relacion)
+        db.commit()
+        
+        logger.info(f"✅ Relación eliminada (Tipo: {tipo_inmueble_id}, Característica: {caracteristica_id})")
+        
+        return {
+            "success": True,
+            "message": "Característica desasignada exitosamente"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Error eliminando relación: {e}")
+        raise HTTPException(status_code=500, detail=f"Error al eliminar: {str(e)}")
