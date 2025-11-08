@@ -7,9 +7,10 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.dependencies import get_current_active_user, require_ofertante, get_optional_user
 from app.core.exceptions import BadRequestException, NotFoundException, ForbiddenException
-from app.models import Propiedad, PropiedadDetalle, Usuario, TipoInmueble, Distrito, Caracteristica, Favorito
+from app.models import Propiedad, PropiedadDetalle, Usuario, TipoInmueble, Distrito, Caracteristica, Favorito, Propietario
 from app.schemas.propiedad import PropiedadCreate, PropiedadUpdate, PropiedadEstadoUpdate, PropiedadResponse, PropiedadDetalleResponse
 from app.schemas.common import ResponseModel, PaginatedResponse
+from app.schemas.oficina_masivo import GenerarOficinasRequest, GenerarOficinasResponse, OficinaGenerada, EdificioDisponible
 from app.services.imagekit_service import ImageKitService
 from app.services.email_service import EmailService
 from app.services.sms_service import SMSService
@@ -680,4 +681,251 @@ async def buscar_propiedades_avanzada(
             "total": total,
             "total_pages": (total + busqueda.limit - 1) // busqueda.limit
         }
+    )
+
+
+# ============================================
+# 🏢 GENERACIÓN MASIVA DE OFICINAS
+# ============================================
+
+@router.get("/edificios-disponibles", response_model=ResponseModel[List[EdificioDisponible]])
+async def listar_edificios_disponibles(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user)
+):
+    """
+    📋 Listar edificios disponibles para selector de padre
+
+    Retorna edificios que pueden tener oficinas hijas.
+    """
+    # Buscar tipo_inmueble_id para "Edificio" o similar
+    tipo_edificio = db.query(TipoInmueble).filter(
+        TipoInmueble.nombre.ilike("%edificio%")
+    ).first()
+
+    if not tipo_edificio:
+        return ResponseModel(
+            success=True,
+            data=[],
+            message="No se encontró el tipo 'Edificio' en el sistema"
+        )
+
+    # Query edificios sin padre (padre_registro_cab_id IS NULL)
+    edificios = db.query(Propiedad).filter(
+        Propiedad.tipo_inmueble_id == tipo_edificio.tipo_inmueble_id,
+        Propiedad.padre_registro_cab_id.is_(None)
+    ).all()
+
+    # Formatear respuesta con características de cantidad de pisos
+    edificios_list = []
+    for edificio in edificios:
+        # Buscar característica "Cantidad de Pisos"
+        cantidad_pisos = None
+        pisos_det = db.query(PropiedadDetalle).join(Caracteristica).filter(
+            PropiedadDetalle.registro_cab_id == edificio.registro_cab_id,
+            Caracteristica.nombre.ilike("%piso%")
+        ).first()
+
+        if pisos_det:
+            cantidad_pisos = pisos_det.valor
+
+        edificios_list.append(EdificioDisponible(
+            registro_cab_id=edificio.registro_cab_id,
+            nombre_inmueble=edificio.nombre_inmueble,
+            direccion=edificio.direccion,
+            cantidad_pisos=cantidad_pisos
+        ))
+
+    return ResponseModel(
+        success=True,
+        data=edificios_list,
+        message=f"{len(edificios_list)} edificios disponibles"
+    )
+
+
+@router.post("/generar-oficinas-masivo", response_model=ResponseModel[GenerarOficinasResponse])
+async def generar_oficinas_masivo(
+    request: GenerarOficinasRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_ofertante)
+):
+    """
+    🏢 Generar oficinas masivamente para un edificio
+
+    Crea múltiples oficinas en un solo paso basado en una plantilla:
+    - Piso desde/hasta: Rango de pisos
+    - Plantilla: Configuración de oficinas por piso (sufijo, área, características)
+
+    Todas las oficinas se crean en estado "borrador" para edición posterior.
+    """
+    # Validar que el edificio padre existe
+    edificio = db.query(Propiedad).filter(
+        Propiedad.registro_cab_id == request.edificio_id
+    ).first()
+
+    if not edificio:
+        raise NotFoundException("Edificio padre no encontrado")
+
+    # Validar que el propietario existe
+    propietario = db.query(Propietario).filter(
+        Propietario.propietario_id == request.propietario_id
+    ).first()
+
+    if not propietario:
+        raise NotFoundException("Propietario no encontrado")
+
+    # Validar rango de pisos
+    if request.piso_desde > request.piso_hasta:
+        raise BadRequestException("El piso inicial no puede ser mayor al piso final")
+
+    # Buscar característica "Piso" y "Número de Oficina"
+    caract_piso = db.query(Caracteristica).filter(
+        Caracteristica.nombre == "Piso"
+    ).first()
+
+    caract_numero = db.query(Caracteristica).filter(
+        Caracteristica.nombre == "Número de Oficina"
+    ).first()
+
+    try:
+        oficinas_creadas = []
+        total_oficinas = 0
+
+        # Iterar por cada piso
+        for piso_num in range(request.piso_desde, request.piso_hasta + 1):
+            # Iterar por cada plantilla de oficina
+            for plantilla in request.plantilla_oficinas:
+                # Generar nombre: "Oficina {PISO}{SUFIJO}"
+                nombre_oficina = f"Oficina {piso_num}{plantilla.sufijo}"
+
+                # Crear registro en CAB
+                nueva_oficina = Propiedad(
+                    usuario_id=current_user.usuario_id,
+                    propietario_id=request.propietario_id,
+                    padre_registro_cab_id=request.edificio_id,  # 🔥 Recursividad
+                    tipo_inmueble_id=edificio.tipo_inmueble_id,  # Mismo tipo que edificio
+                    distrito_id=request.distrito_id,
+                    nombre_inmueble=nombre_oficina,
+                    direccion=edificio.direccion,  # Heredar dirección del edificio
+                    latitud=edificio.latitud,
+                    longitud=edificio.longitud,
+                    area=plantilla.area,
+                    antiguedad=edificio.antiguedad,  # Heredar antigüedad
+                    transaccion=request.transaccion,
+                    precio_alquiler=request.precio_alquiler_base,
+                    precio_venta=request.precio_venta_base,
+                    moneda=request.moneda,
+                    titulo=f"{nombre_oficina} - {edificio.nombre_inmueble}",
+                    descripcion=f"Oficina en {edificio.nombre_inmueble}, Piso {piso_num}",
+                    estado="borrador",  # 🔥 Siempre borrador para edición posterior
+                    created_by=current_user.usuario_id
+                )
+
+                db.add(nueva_oficina)
+                db.flush()  # Para obtener el ID generado
+
+                # Agregar característica "Piso" a DET
+                if caract_piso:
+                    det_piso = PropiedadDetalle(
+                        registro_cab_id=nueva_oficina.registro_cab_id,
+                        caracteristica_id=caract_piso.caracteristica_id,
+                        valor=str(piso_num)
+                    )
+                    db.add(det_piso)
+
+                # Agregar característica "Número de Oficina" a DET
+                if caract_numero:
+                    det_numero = PropiedadDetalle(
+                        registro_cab_id=nueva_oficina.registro_cab_id,
+                        caracteristica_id=caract_numero.caracteristica_id,
+                        valor=plantilla.sufijo
+                    )
+                    db.add(det_numero)
+
+                # Agregar características personalizadas de la plantilla
+                for caract_plantilla in plantilla.caracteristicas:
+                    det_custom = PropiedadDetalle(
+                        registro_cab_id=nueva_oficina.registro_cab_id,
+                        caracteristica_id=caract_plantilla.caracteristica_id,
+                        valor=caract_plantilla.valor
+                    )
+                    db.add(det_custom)
+
+                # Agregar a la lista de respuesta
+                oficinas_creadas.append(OficinaGenerada(
+                    registro_cab_id=nueva_oficina.registro_cab_id,
+                    nombre_inmueble=nombre_oficina,
+                    piso=piso_num,
+                    area=plantilla.area
+                ))
+
+                total_oficinas += 1
+
+        # Commit final
+        db.commit()
+
+        return ResponseModel(
+            success=True,
+            message=f"Se generaron {total_oficinas} oficinas exitosamente",
+            data=GenerarOficinasResponse(
+                oficinas_creadas=total_oficinas,
+                edificio_padre=edificio.nombre_inmueble,
+                detalles=oficinas_creadas
+            )
+        )
+
+    except Exception as e:
+        db.rollback()
+        raise BadRequestException(f"Error al generar oficinas: {str(e)}")
+
+
+@router.get("/{edificio_id}/caracteristicas", response_model=ResponseModel[Dict[str, List[dict]]])
+async def obtener_caracteristicas_edificio(
+    edificio_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user)
+):
+    """
+    📋 Obtener características de un edificio agrupadas por categoría
+
+    Usado para mostrar detalles del edificio padre al registrar oficina.
+    """
+    # Validar que el edificio existe
+    edificio = db.query(Propiedad).filter(
+        Propiedad.registro_cab_id == edificio_id
+    ).first()
+
+    if not edificio:
+        raise NotFoundException("Edificio no encontrado")
+
+    # Obtener todas las características del edificio
+    detalles = db.query(PropiedadDetalle).filter(
+        PropiedadDetalle.registro_cab_id == edificio_id
+    ).all()
+
+    # Agrupar por categoría
+    caracteristicas_agrupadas = {}
+
+    for det in detalles:
+        caract = db.query(Caracteristica).filter(
+            Caracteristica.caracteristica_id == det.caracteristica_id
+        ).first()
+
+        if caract:
+            categoria = caract.categoria or "General"
+
+            if categoria not in caracteristicas_agrupadas:
+                caracteristicas_agrupadas[categoria] = []
+
+            caracteristicas_agrupadas[categoria].append({
+                "caracteristica_id": caract.caracteristica_id,
+                "nombre": caract.nombre,
+                "valor": det.valor,
+                "tipo_input": caract.tipo_input
+            })
+
+    return ResponseModel(
+        success=True,
+        data=caracteristicas_agrupadas,
+        message=f"Características del edificio {edificio.nombre_inmueble}"
     )
