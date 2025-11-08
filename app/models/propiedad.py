@@ -34,7 +34,8 @@ class Propiedad(Base):
     # Características básicas (solo transversales)
     area = Column(DECIMAL(10, 2), nullable=False)
     antiguedad = Column(Integer)
-    
+    implementacion = Column(Integer)  # Nivel de implementación/amoblamiento
+
     # Precios
     transaccion = Column(String(20))
     precio_venta = Column(DECIMAL(12, 2))
