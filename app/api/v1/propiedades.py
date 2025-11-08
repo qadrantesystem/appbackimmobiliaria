@@ -95,9 +95,9 @@ async def list_properties(
             direccion=prop.direccion,
             latitud=prop.latitud,  # 🗺️ Para mapa
             longitud=prop.longitud,  # 🗺️ Para mapa
-            telefono=prop.propietario_real_telefono or "",
-            email=prop.propietario_real_email or "",
-            propietario_nombre=prop.propietario_real_nombre or "",
+            telefono=prop.propietario.telefono if prop.propietario else "",
+            email=prop.propietario.email if prop.propietario else "",
+            propietario_nombre=prop.propietario.nombre if prop.propietario else "",
             transaccion=prop.transaccion,
             precio_alquiler=prop.precio_alquiler,
             precio_venta=prop.precio_venta,
@@ -169,9 +169,9 @@ async def my_properties(
             direccion=prop.direccion,
             latitud=prop.latitud,  # 🗺️ Para mapa
             longitud=prop.longitud,  # 🗺️ Para mapa
-            telefono=prop.propietario_real_telefono or "",
-            email=prop.propietario_real_email or "",
-            propietario_nombre=prop.propietario_real_nombre or "",
+            telefono=prop.propietario.telefono if prop.propietario else "",
+            email=prop.propietario.email if prop.propietario else "",
+            propietario_nombre=prop.propietario.nombre if prop.propietario else "",
             transaccion=prop.transaccion,
             precio_alquiler=prop.precio_alquiler,
             precio_venta=prop.precio_venta,
@@ -265,14 +265,14 @@ async def get_property_detail(
     
     # Propietario (incluye DNI si está autenticado y es dueño/admin)
     propietario = {
-        "nombre": propiedad.propietario_real_nombre or "",
-        "telefono": propiedad.propietario_real_telefono or "",
-        "email": propiedad.propietario_real_email or ""
+        "nombre": propiedad.propietario.nombre if propiedad.propietario else "",
+        "telefono": propiedad.propietario.telefono if propiedad.propietario else "",
+        "email": propiedad.propietario.email if propiedad.propietario else ""
     }
-    
+
     # Agregar DNI si es dueño o admin
     if current_user and (current_user.perfil_id == 4 or propiedad.usuario_id == current_user.usuario_id):
-        propietario["dni"] = propiedad.propietario_real_dni or ""
+        propietario["dni"] = propiedad.propietario.dni if propiedad.propietario else ""
     
     # Corredor (si aplica)
     corredor = None
@@ -365,20 +365,21 @@ async def contact_property(
     db.commit()
     
     # Enviar email al propietario
-    EmailService.send_property_contact_notification(
-        propietario_email=propiedad.propietario_real_email,
-        propietario_nombre=propiedad.propietario_real_nombre,
-        propiedad_titulo=propiedad.titulo,
-        contacto_nombre=nombre,
-        contacto_email=email,
-        contacto_telefono=telefono,
-        mensaje=mensaje
-    )
-    
+    if propiedad.propietario and propiedad.propietario.email:
+        EmailService.send_property_contact_notification(
+            propietario_email=propiedad.propietario.email,
+            propietario_nombre=propiedad.propietario.nombre,
+            propiedad_titulo=propiedad.titulo,
+            contacto_nombre=nombre,
+            contacto_email=email,
+            contacto_telefono=telefono,
+            mensaje=mensaje
+        )
+
     # Enviar SMS (opcional)
-    if propiedad.propietario_real_telefono:
+    if propiedad.propietario and propiedad.propietario.telefono:
         SMSService.send_property_contact_sms(
-            propietario_telefono=propiedad.propietario_real_telefono,
+            propietario_telefono=propiedad.propietario.telefono,
             propiedad_titulo=propiedad.titulo,
             contacto_nombre=nombre
         )
@@ -399,10 +400,7 @@ async def create_property(
     # Crear propiedad
     nueva_propiedad = Propiedad(
         usuario_id=current_user.usuario_id,
-        propietario_real_nombre=propiedad_data.propietario_real_nombre,
-        propietario_real_dni=propiedad_data.propietario_real_dni,
-        propietario_real_telefono=propiedad_data.propietario_real_telefono,
-        propietario_real_email=propiedad_data.propietario_real_email,
+        propietario_id=propiedad_data.propietario_id,
         tipo_inmueble_id=propiedad_data.tipo_inmueble_id,
         distrito_id=propiedad_data.distrito_id,
         nombre_inmueble=propiedad_data.nombre_inmueble,
@@ -635,17 +633,15 @@ async def buscar_propiedades_avanzada(
             direccion=prop.direccion,
             latitud=prop.latitud,
             longitud=prop.longitud,
-            telefono=prop.propietario_real_telefono or "",
-            email=prop.propietario_real_email or "",
-            propietario_nombre=prop.propietario_real_nombre or "",
+            telefono=prop.propietario.telefono if prop.propietario else "",
+            email=prop.propietario.email if prop.propietario else "",
+            propietario_nombre=prop.propietario.nombre if prop.propietario else "",
             transaccion=prop.transaccion,
             precio_alquiler=prop.precio_alquiler,
             precio_venta=prop.precio_venta,
             moneda=prop.moneda,
             area=prop.area,
-            habitaciones=prop.habitaciones,
-            banos=prop.banos,
-            parqueos=prop.parqueos,
+            implementacion=prop.implementacion,
             imagen_principal=prop.imagen_principal,
             imagenes=prop.imagenes or [],
             estado=prop.estado,
