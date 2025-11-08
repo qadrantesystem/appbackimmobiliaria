@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, DECIMAL, Boolean, TIMESTAMP, For
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
+from app.models.propietario import Propietario
 
 class Propiedad(Base):
     """Modelo de Propiedad (Cabecera)"""
@@ -11,12 +12,12 @@ class Propiedad(Base):
     
     # Usuario que registra
     usuario_id = Column(Integer, ForeignKey("usuarios.usuario_id"), nullable=False)
-    
-    # Propietario real (SIEMPRE obligatorio)
-    propietario_real_nombre = Column(String(200), nullable=False)
-    propietario_real_dni = Column(String(20), nullable=False)
-    propietario_real_telefono = Column(String(20), nullable=False)
-    propietario_real_email = Column(String(100))
+
+    # NUEVO: FK a propietarios (normalización)
+    propietario_id = Column(Integer, ForeignKey("propietarios.propietario_id"), nullable=True, index=True)
+
+    # NUEVO: Recursividad (edificio → oficinas)
+    padre_registro_cab_id = Column(Integer, ForeignKey("registro_x_inmueble_cab.registro_cab_id"), nullable=True, index=True)
     
     # Corredor asignado (si aplica)
     corredor_asignado_id = Column(Integer, ForeignKey("usuarios.usuario_id"))
@@ -30,11 +31,8 @@ class Propiedad(Base):
     latitud = Column(DECIMAL(10, 8))
     longitud = Column(DECIMAL(11, 8))
     
-    # Características básicas
+    # Características básicas (solo transversales)
     area = Column(DECIMAL(10, 2), nullable=False)
-    habitaciones = Column(Integer)
-    banos = Column(Integer)
-    parqueos = Column(Integer)
     antiguedad = Column(Integer)
     
     # Precios
@@ -87,6 +85,12 @@ class Propiedad(Base):
     corredor = relationship("Usuario", foreign_keys=[corredor_asignado_id], backref="propiedades_asignadas")
     tipo_inmueble = relationship("TipoInmueble", backref="propiedades")
     distrito = relationship("Distrito", backref="propiedades")
+
+    # NUEVO: Relación a propietario normalizado
+    propietario = relationship("Propietario", back_populates="inmuebles")
+
+    # NUEVO: Relación recursiva (padre → hijos)
+    padre = relationship("Propiedad", remote_side=[registro_cab_id], backref="hijos")
     
     def __repr__(self):
         return f"<Propiedad {self.titulo}>"

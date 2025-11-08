@@ -10,12 +10,12 @@ class CaracteristicaDetalle(BaseModel):
 
 class PropiedadBase(BaseModel):
     """Schema base de Propiedad"""
-    # Propietario real
-    propietario_real_nombre: str = Field(..., min_length=3, max_length=200)
-    propietario_real_dni: str = Field(..., min_length=8, max_length=20)
-    propietario_real_telefono: str = Field(..., min_length=9, max_length=20)
-    propietario_real_email: Optional[str] = Field(None, max_length=100)
-    
+    # NUEVO: FK a propietario normalizado
+    propietario_id: int = Field(..., description="ID del propietario (normalizado)")
+
+    # NUEVO: Recursividad (opcional para oficinas)
+    padre_registro_cab_id: Optional[int] = Field(None, description="ID del edificio padre (solo para oficinas)")
+
     # Datos del inmueble
     tipo_inmueble_id: int
     distrito_id: int
@@ -23,14 +23,11 @@ class PropiedadBase(BaseModel):
     direccion: str = Field(..., min_length=10, max_length=300)
     latitud: Optional[Decimal] = None
     longitud: Optional[Decimal] = None
-    
-    # Características básicas
+
+    # Características básicas (solo transversales)
     area: Decimal = Field(..., gt=0)
-    habitaciones: Optional[int] = Field(None, ge=0)
-    banos: Optional[int] = Field(None, ge=0)
-    parqueos: Optional[int] = Field(None, ge=0)
     antiguedad: Optional[int] = Field(None, ge=0)
-    
+
     # Precios
     transaccion: str = Field(..., pattern="^(alquiler|venta|ambos)$")
     precio_alquiler: Optional[Decimal] = Field(None, ge=0)
@@ -63,9 +60,7 @@ class PropiedadUpdate(BaseModel):
     nombre_inmueble: Optional[str] = Field(None, min_length=5, max_length=200)
     direccion: Optional[str] = Field(None, min_length=10, max_length=300)
     area: Optional[Decimal] = Field(None, gt=0)
-    habitaciones: Optional[int] = Field(None, ge=0)
-    banos: Optional[int] = Field(None, ge=0)
-    parqueos: Optional[int] = Field(None, ge=0)
+    antiguedad: Optional[int] = Field(None, ge=0)
     precio_alquiler: Optional[Decimal] = Field(None, ge=0)
     precio_venta: Optional[Decimal] = Field(None, ge=0)
     titulo: Optional[str] = Field(None, min_length=10, max_length=200)
@@ -94,9 +89,6 @@ class PropiedadResponse(BaseModel):
     precio_venta: Optional[Decimal]
     moneda: str
     area: Decimal
-    habitaciones: Optional[int]
-    banos: Optional[int]
-    parqueos: Optional[int]
     imagen_principal: Optional[str]
     imagenes: Optional[List[str]] = []  # 🔥 AGREGADO para carrusel
     estado: str

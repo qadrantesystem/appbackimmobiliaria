@@ -87,6 +87,13 @@ except ImportError as e:
     print(f"   ⚠️ Error cargando usuarios: {e}")
 
 try:
+    from app.api.v1 import propietarios
+    app.include_router(propietarios.router, prefix="/api/v1/propietarios", tags=["👤 Propietarios"])
+    print("   ✅ Propietarios")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando propietarios: {e}")
+
+try:
     from app.api.v1 import propiedades
     app.include_router(propiedades.router, prefix="/api/v1/propiedades", tags=["🏠 Propiedades"])
     print("   ✅ Propiedades")
@@ -211,5 +218,19 @@ try:
     print("   ✅ Dashboard")
 except ImportError as e:
     print(f"   ⚠️ Error cargando dashboard: {e}")
+
+try:
+    from app.api.v1 import pagos
+    app.include_router(pagos.router, prefix="/api/v1/pagos", tags=["💳 Pagos Culqi"])
+    print("   ✅ Pagos Culqi")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando pagos: {e}")
+
+try:
+    from app.api.v1 import autorizaciones
+    app.include_router(autorizaciones.router, prefix="/api/v1/autorizaciones", tags=["🔐 Autorizaciones"])
+    print("   ✅ Autorizaciones")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando autorizaciones: {e}")
 
 print("✅ Aplicación lista!")
