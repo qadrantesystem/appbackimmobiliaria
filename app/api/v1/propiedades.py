@@ -34,8 +34,12 @@ async def list_properties(
     Listar propiedades públicas con filtros
     Endpoint público - no requiere autenticación
     """
+    print("🚀 [DEBUG] GET /propiedades endpoint llamado")
+    print(f"📊 [DEBUG] Parámetros: page={page}, limit={limit}, tipo_inmueble_id={tipo_inmueble_id}")
+
     # Query base - solo propiedades publicadas
     query = db.query(Propiedad).filter(Propiedad.estado == "publicado")
+    print(f"🔍 [DEBUG] Query inicial creado")
     
     # Filtros
     if tipo_inmueble_id:
@@ -67,14 +71,16 @@ async def list_properties(
 
     # Total
     total = query.count()
-    
+    print(f"📈 [DEBUG] Total propiedades encontradas: {total}")
+
     # Ordenar por fecha (más recientes primero)
     query = query.order_by(Propiedad.created_at.desc())
-    
+
     # Paginación
     offset = (page - 1) * limit
     propiedades = query.offset(offset).limit(limit).all()
-    
+    print(f"📦 [DEBUG] Propiedades obtenidas después de paginación: {len(propiedades)}")
+
     # Formatear respuesta
     propiedades_list = []
     for prop in propiedades:
@@ -106,7 +112,10 @@ async def list_properties(
             contactos=prop.contactos,
             created_at=prop.created_at
         ))
-    
+
+    print(f"✅ [DEBUG] Propiedades formateadas: {len(propiedades_list)}")
+    print(f"🎯 [DEBUG] Retornando respuesta con {len(propiedades_list)} propiedades")
+
     return PaginatedResponse(
         success=True,
         data=propiedades_list,
