@@ -14,6 +14,7 @@ from app.models.caracteristica_x_inmueble import CaracteristicaXInmueble
 from app.models.estado_crm import EstadoCRM
 
 # 3. Transaccionales
+from app.models.propietario import Propietario
 from app.models.suscripcion import Suscripcion
 from app.models.propiedad import Propiedad
 from app.models.propiedad_detalle import PropiedadDetalle
@@ -35,6 +36,7 @@ __all__ = [
     "CaracteristicaXInmueble",
     "EstadoCRM",
     # Transaccionales
+    "Propietario",
     "Suscripcion",
     "Propiedad",
     "PropiedadDetalle",
