@@ -28,9 +28,6 @@ async def list_properties(
     precio_max: Optional[Decimal] = None,
     area_min: Optional[Decimal] = None,
     area_max: Optional[Decimal] = None,
-    habitaciones: Optional[str] = None,  # "2,3"
-    banos: Optional[str] = None,
-    parqueos: Optional[int] = None,
     db: Session = Depends(get_db)
 ):
     """
@@ -67,18 +64,7 @@ async def list_properties(
         query = query.filter(Propiedad.area >= area_min)
     if area_max:
         query = query.filter(Propiedad.area <= area_max)
-    
-    if habitaciones:
-        hab_list = [int(h) for h in habitaciones.split(",")]
-        query = query.filter(Propiedad.habitaciones.in_(hab_list))
-    
-    if banos:
-        ban_list = [int(b) for b in banos.split(",")]
-        query = query.filter(Propiedad.banos.in_(ban_list))
-    
-    if parqueos:
-        query = query.filter(Propiedad.parqueos >= parqueos)
-    
+
     # Total
     total = query.count()
     
@@ -111,9 +97,7 @@ async def list_properties(
             precio_venta=prop.precio_venta,
             moneda=prop.moneda,
             area=prop.area,
-            habitaciones=prop.habitaciones,
-            banos=prop.banos,
-            parqueos=prop.parqueos,
+            implementacion=prop.implementacion,  # 🏗️ Nivel de implementación
             imagen_principal=prop.imagen_principal,
             imagenes=prop.imagenes or [],  # 🔥 AGREGADO para carrusel
             estado=prop.estado,
@@ -184,9 +168,7 @@ async def my_properties(
             precio_venta=prop.precio_venta,
             moneda=prop.moneda,
             area=prop.area,
-            habitaciones=prop.habitaciones,
-            banos=prop.banos,
-            parqueos=prop.parqueos,
+            implementacion=prop.implementacion,  # 🏗️ Nivel de implementación
             imagen_principal=prop.imagen_principal,
             imagenes=prop.imagenes or [],  # 🔥 AGREGADO para carrusel
             estado=prop.estado,
@@ -315,9 +297,7 @@ async def get_property_detail(
             precio_venta=propiedad.precio_venta,
             moneda=propiedad.moneda,
             area=propiedad.area,
-            habitaciones=propiedad.habitaciones,
-            banos=propiedad.banos,
-            parqueos=propiedad.parqueos,
+            implementacion=propiedad.implementacion,  # 🏗️ Nivel de implementación
             imagen_principal=propiedad.imagen_principal,
             estado=propiedad.estado,
             vistas=propiedad.vistas,
@@ -421,9 +401,6 @@ async def create_property(
         latitud=propiedad_data.latitud,
         longitud=propiedad_data.longitud,
         area=propiedad_data.area,
-        habitaciones=propiedad_data.habitaciones,
-        banos=propiedad_data.banos,
-        parqueos=propiedad_data.parqueos,
         antiguedad=propiedad_data.antiguedad,
         transaccion=propiedad_data.transaccion,
         precio_alquiler=propiedad_data.precio_alquiler,
@@ -524,9 +501,7 @@ async def buscar_propiedades_avanzada(
         "filtros_basicos": {
             "area": 100,
             "precio": 500000,
-            "habitaciones": [2, 3],
-            "banos": [2],
-            "parqueos": 1
+            "antiguedad": 10
         },
         "filtros_avanzados": [
             {
@@ -928,4 +903,90 @@ async def obtener_caracteristicas_edificio(
         success=True,
         data=caracteristicas_agrupadas,
         message=f"Características del edificio {edificio.nombre_inmueble}"
+    )
+
+
+# ============================================
+# 👤 ASIGNACIÓN DE CORREDOR
+# ============================================
+
+class AsignarCorredorRequest(BaseModel):
+    corredor_id: int
+    estado_crm: Optional[str] = None
+    comision: Optional[float] = None
+
+
+@router.patch("/{propiedad_id}/asignar-corredor", response_model=ResponseModel[dict])
+async def asignar_corredor(
+    propiedad_id: int,
+    data: AsignarCorredorRequest,
+    current_user: Usuario = Depends(require_ofertante),
+    db: Session = Depends(get_db)
+):
+    """
+    👤 Asignar corredor a una propiedad
+
+    Solo usuarios con perfil de ofertante o admin pueden asignar corredores.
+
+    Body:
+    {
+        "corredor_id": 123,
+        "estado_crm": "contactado",  // opcional
+        "comision": 5.5  // opcional, porcentaje
+    }
+    """
+    # Validar que la propiedad existe
+    propiedad = db.query(Propiedad).filter(
+        Propiedad.registro_cab_id == propiedad_id
+    ).first()
+
+    if not propiedad:
+        raise NotFoundException("Propiedad no encontrada")
+
+    # Verificar permisos: Admin puede asignar a cualquier propiedad
+    # Ofertante solo puede asignar corredor a sus propias propiedades
+    if current_user.perfil_id != 4 and propiedad.usuario_id != current_user.usuario_id:
+        raise ForbiddenException("No tienes permiso para asignar corredor a esta propiedad")
+
+    # Validar que el corredor existe y tiene perfil de corredor (perfil_id = 3)
+    corredor = db.query(Usuario).filter(
+        Usuario.usuario_id == data.corredor_id,
+        Usuario.perfil_id == 3  # Perfil de corredor
+    ).first()
+
+    if not corredor:
+        raise NotFoundException("Corredor no encontrado o no tiene perfil de corredor")
+
+    # Asignar corredor
+    propiedad.corredor_asignado_id = data.corredor_id
+
+    # Actualizar estado CRM si se proporciona
+    if data.estado_crm:
+        # Validar que el estado es válido
+        estados_validos = ['lead', 'contactado', 'visita_programada', 'negociacion',
+                          'cerrado_ganado', 'cerrado_perdido', 'nuevo_lead',
+                          'en_negociacion', 'calificado', 'propuesta_enviada']
+        if data.estado_crm not in estados_validos:
+            raise BadRequestException(f"Estado CRM inválido. Estados válidos: {', '.join(estados_validos)}")
+        propiedad.estado_crm = data.estado_crm
+
+    # Actualizar comisión si se proporciona
+    if data.comision is not None:
+        if data.comision < 0 or data.comision > 100:
+            raise BadRequestException("La comisión debe estar entre 0 y 100%")
+        propiedad.comision_corredor = data.comision
+
+    db.commit()
+    db.refresh(propiedad)
+
+    return ResponseModel(
+        success=True,
+        message=f"Corredor {corredor.nombre} {corredor.apellido} asignado exitosamente",
+        data={
+            "registro_cab_id": propiedad.registro_cab_id,
+            "corredor_asignado_id": propiedad.corredor_asignado_id,
+            "corredor_nombre": f"{corredor.nombre} {corredor.apellido}",
+            "estado_crm": propiedad.estado_crm,
+            "comision_corredor": float(propiedad.comision_corredor) if propiedad.comision_corredor else None
+        }
     )
