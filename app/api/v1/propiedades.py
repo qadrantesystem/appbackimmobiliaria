@@ -219,6 +219,110 @@ async def my_properties(
         }
     )
 
+@router.get("/edificios-disponibles", response_model=ResponseModel[List[EdificioDisponible]])
+async def listar_edificios_disponibles(
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user)
+):
+    """
+    📋 Listar edificios disponibles para selector de padre
+
+    Retorna edificios que pueden tener oficinas hijas.
+    """
+    # Buscar tipo_inmueble_id para "Edificio" o similar
+    tipo_edificio = db.query(TipoInmueble).filter(
+        TipoInmueble.nombre.ilike("%edificio%")
+    ).first()
+
+    if not tipo_edificio:
+        return ResponseModel(
+            success=True,
+            data=[],
+            message="No se encontró el tipo 'Edificio' en el sistema"
+        )
+
+    # Query edificios sin padre (padre_registro_cab_id IS NULL)
+    edificios = db.query(Propiedad).filter(
+        Propiedad.tipo_inmueble_id == tipo_edificio.tipo_inmueble_id,
+        Propiedad.padre_registro_cab_id.is_(None)
+    ).all()
+
+    # Formatear respuesta con características de cantidad de pisos
+    edificios_list = []
+    for edificio in edificios:
+        # Buscar característica "Cantidad de Pisos"
+        cantidad_pisos = None
+        pisos_det = db.query(PropiedadDetalle).join(Caracteristica).filter(
+            PropiedadDetalle.registro_cab_id == edificio.registro_cab_id,
+            Caracteristica.nombre.ilike("%piso%")
+        ).first()
+
+        if pisos_det:
+            cantidad_pisos = pisos_det.valor
+
+        edificios_list.append(EdificioDisponible(
+            registro_cab_id=edificio.registro_cab_id,
+            nombre_inmueble=edificio.nombre_inmueble,
+            direccion=edificio.direccion,
+            cantidad_pisos=cantidad_pisos
+        ))
+
+    return ResponseModel(
+        success=True,
+        data=edificios_list,
+        message=f"{len(edificios_list)} edificios disponibles"
+    )
+@router.get("/{edificio_id}/caracteristicas", response_model=ResponseModel[Dict[str, List[dict]]])
+async def obtener_caracteristicas_edificio(
+    edificio_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user)
+):
+    """
+    📋 Obtener características de un edificio agrupadas por categoría
+
+    Usado para mostrar detalles del edificio padre al registrar oficina.
+    """
+    # Validar que el edificio existe
+    edificio = db.query(Propiedad).filter(
+        Propiedad.registro_cab_id == edificio_id
+    ).first()
+
+    if not edificio:
+        raise NotFoundException("Edificio no encontrado")
+
+    # Obtener todas las características del edificio
+    detalles = db.query(PropiedadDetalle).filter(
+        PropiedadDetalle.registro_cab_id == edificio_id
+    ).all()
+
+    # Agrupar por categoría
+    caracteristicas_agrupadas = {}
+
+    for det in detalles:
+        caract = db.query(Caracteristica).filter(
+            Caracteristica.caracteristica_id == det.caracteristica_id
+        ).first()
+
+        if caract:
+            categoria = caract.categoria or "General"
+
+            if categoria not in caracteristicas_agrupadas:
+                caracteristicas_agrupadas[categoria] = []
+
+            caracteristicas_agrupadas[categoria].append({
+                "caracteristica_id": caract.caracteristica_id,
+                "nombre": caract.nombre,
+                "valor": det.valor,
+                "tipo_input": caract.tipo_input
+            })
+
+    return ResponseModel(
+        success=True,
+        data=caracteristicas_agrupadas,
+        message=f"Características del edificio {edificio.nombre_inmueble}"
+    )
+
 @router.get("/{propiedad_id}", response_model=ResponseModel[PropiedadDetalleResponse])
 async def get_property_detail(
     propiedad_id: int,
@@ -668,59 +772,6 @@ async def buscar_propiedades_avanzada(
 # 🏢 GENERACIÓN MASIVA DE OFICINAS
 # ============================================
 
-@router.get("/edificios-disponibles", response_model=ResponseModel[List[EdificioDisponible]])
-async def listar_edificios_disponibles(
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_active_user)
-):
-    """
-    📋 Listar edificios disponibles para selector de padre
-
-    Retorna edificios que pueden tener oficinas hijas.
-    """
-    # Buscar tipo_inmueble_id para "Edificio" o similar
-    tipo_edificio = db.query(TipoInmueble).filter(
-        TipoInmueble.nombre.ilike("%edificio%")
-    ).first()
-
-    if not tipo_edificio:
-        return ResponseModel(
-            success=True,
-            data=[],
-            message="No se encontró el tipo 'Edificio' en el sistema"
-        )
-
-    # Query edificios sin padre (padre_registro_cab_id IS NULL)
-    edificios = db.query(Propiedad).filter(
-        Propiedad.tipo_inmueble_id == tipo_edificio.tipo_inmueble_id,
-        Propiedad.padre_registro_cab_id.is_(None)
-    ).all()
-
-    # Formatear respuesta con características de cantidad de pisos
-    edificios_list = []
-    for edificio in edificios:
-        # Buscar característica "Cantidad de Pisos"
-        cantidad_pisos = None
-        pisos_det = db.query(PropiedadDetalle).join(Caracteristica).filter(
-            PropiedadDetalle.registro_cab_id == edificio.registro_cab_id,
-            Caracteristica.nombre.ilike("%piso%")
-        ).first()
-
-        if pisos_det:
-            cantidad_pisos = pisos_det.valor
-
-        edificios_list.append(EdificioDisponible(
-            registro_cab_id=edificio.registro_cab_id,
-            nombre_inmueble=edificio.nombre_inmueble,
-            direccion=edificio.direccion,
-            cantidad_pisos=cantidad_pisos
-        ))
-
-    return ResponseModel(
-        success=True,
-        data=edificios_list,
-        message=f"{len(edificios_list)} edificios disponibles"
-    )
 
 
 @router.post("/generar-oficinas-masivo", response_model=ResponseModel[GenerarOficinasResponse])
@@ -859,56 +910,6 @@ async def generar_oficinas_masivo(
         raise BadRequestException(f"Error al generar oficinas: {str(e)}")
 
 
-@router.get("/{edificio_id}/caracteristicas", response_model=ResponseModel[Dict[str, List[dict]]])
-async def obtener_caracteristicas_edificio(
-    edificio_id: int,
-    db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_active_user)
-):
-    """
-    📋 Obtener características de un edificio agrupadas por categoría
-
-    Usado para mostrar detalles del edificio padre al registrar oficina.
-    """
-    # Validar que el edificio existe
-    edificio = db.query(Propiedad).filter(
-        Propiedad.registro_cab_id == edificio_id
-    ).first()
-
-    if not edificio:
-        raise NotFoundException("Edificio no encontrado")
-
-    # Obtener todas las características del edificio
-    detalles = db.query(PropiedadDetalle).filter(
-        PropiedadDetalle.registro_cab_id == edificio_id
-    ).all()
-
-    # Agrupar por categoría
-    caracteristicas_agrupadas = {}
-
-    for det in detalles:
-        caract = db.query(Caracteristica).filter(
-            Caracteristica.caracteristica_id == det.caracteristica_id
-        ).first()
-
-        if caract:
-            categoria = caract.categoria or "General"
-
-            if categoria not in caracteristicas_agrupadas:
-                caracteristicas_agrupadas[categoria] = []
-
-            caracteristicas_agrupadas[categoria].append({
-                "caracteristica_id": caract.caracteristica_id,
-                "nombre": caract.nombre,
-                "valor": det.valor,
-                "tipo_input": caract.tipo_input
-            })
-
-    return ResponseModel(
-        success=True,
-        data=caracteristicas_agrupadas,
-        message=f"Características del edificio {edificio.nombre_inmueble}"
-    )
 
 
 # ============================================
