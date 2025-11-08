@@ -29,16 +29,16 @@ class CaracteristicaInput(BaseModel):
     valor: str
 
 class PropiedadCreateWithImages(BaseModel):
-    # Propietario real
-    propietario_real_nombre: str
-    propietario_real_dni: str
-    propietario_real_telefono: str
-    propietario_real_email: Optional[str] = None
-    
+    # NUEVO: FK a propietario normalizado
+    propietario_id: int = Field(..., description="ID del propietario (normalizado)")
+
+    # NUEVO: Recursividad (opcional para oficinas dentro de edificio)
+    padre_registro_cab_id: Optional[int] = Field(None, description="ID del edificio padre (solo para oficinas)")
+
     # Corredor (opcional)
     corredor_asignado_id: Optional[int] = None
     comision_corredor: Optional[Decimal] = None
-    
+
     # Datos del inmueble
     tipo_inmueble_id: int
     distrito_id: int
@@ -46,24 +46,22 @@ class PropiedadCreateWithImages(BaseModel):
     direccion: str
     latitud: Optional[Decimal] = None
     longitud: Optional[Decimal] = None
-    
-    # Características básicas
+
+    # Características básicas (solo transversales)
     area: Decimal
-    habitaciones: Optional[int] = None
-    banos: Optional[int] = None
-    parqueos: Optional[int] = None
     antiguedad: Optional[int] = None
-    
+    implementacion: Optional[int] = Field(None, ge=1, le=4, description="Nivel de implementación/amoblamiento (1-4)")
+
     # Transacción y precios
     transaccion: str = Field(..., pattern="^(venta|alquiler|ambos)$")
     precio_venta: Optional[Decimal] = None
     precio_alquiler: Optional[Decimal] = None
     moneda: str = "PEN"
-    
+
     # Descripción
     titulo: str
     descripcion: Optional[str] = None
-    
+
     # Características detalladas
     caracteristicas: Optional[List[CaracteristicaInput]] = []
     
@@ -174,13 +172,11 @@ async def crear_propiedad_con_imagenes(
         
         # 5. Crear registro en registro_x_inmueble_cab
         logger.info(f"💾 Guardando propiedad en base de datos...")
-        
+
         nueva_propiedad = Propiedad(
             usuario_id=current_user.usuario_id,
-            propietario_real_nombre=propiedad_data.propietario_real_nombre,
-            propietario_real_dni=propiedad_data.propietario_real_dni,
-            propietario_real_telefono=propiedad_data.propietario_real_telefono,
-            propietario_real_email=propiedad_data.propietario_real_email,
+            propietario_id=propiedad_data.propietario_id,
+            padre_registro_cab_id=propiedad_data.padre_registro_cab_id,
             corredor_asignado_id=propiedad_data.corredor_asignado_id,
             comision_corredor=propiedad_data.comision_corredor,
             tipo_inmueble_id=propiedad_data.tipo_inmueble_id,
@@ -190,10 +186,8 @@ async def crear_propiedad_con_imagenes(
             latitud=propiedad_data.latitud,
             longitud=propiedad_data.longitud,
             area=propiedad_data.area,
-            habitaciones=propiedad_data.habitaciones,
-            banos=propiedad_data.banos,
-            parqueos=propiedad_data.parqueos,
             antiguedad=propiedad_data.antiguedad,
+            implementacion=propiedad_data.implementacion,
             transaccion=propiedad_data.transaccion,
             precio_venta=propiedad_data.precio_venta,
             precio_alquiler=propiedad_data.precio_alquiler,
@@ -350,16 +344,16 @@ async def actualizar_imagenes_propiedad(
 
 class PropiedadUpdateComplete(BaseModel):
     """Schema para actualización completa (todos los campos opcionales)"""
-    # Propietario real
-    propietario_real_nombre: Optional[str] = None
-    propietario_real_dni: Optional[str] = None
-    propietario_real_telefono: Optional[str] = None
-    propietario_real_email: Optional[str] = None
-    
+    # NUEVO: FK a propietario normalizado
+    propietario_id: Optional[int] = None
+
+    # NUEVO: Recursividad (opcional para oficinas)
+    padre_registro_cab_id: Optional[int] = None
+
     # Corredor (opcional)
     corredor_asignado_id: Optional[int] = None
     comision_corredor: Optional[Decimal] = None
-    
+
     # Datos del inmueble
     tipo_inmueble_id: Optional[int] = None
     distrito_id: Optional[int] = None
@@ -367,24 +361,22 @@ class PropiedadUpdateComplete(BaseModel):
     direccion: Optional[str] = None
     latitud: Optional[Decimal] = None
     longitud: Optional[Decimal] = None
-    
-    # Características básicas
+
+    # Características básicas (solo transversales)
     area: Optional[Decimal] = None
-    habitaciones: Optional[int] = None
-    banos: Optional[int] = None
-    parqueos: Optional[int] = None
     antiguedad: Optional[int] = None
-    
+    implementacion: Optional[int] = Field(None, ge=1, le=4, description="Nivel de implementación/amoblamiento (1-4)")
+
     # Transacción y precios
     transaccion: Optional[str] = Field(None, pattern="^(venta|alquiler|ambos)$")
     precio_venta: Optional[Decimal] = None
     precio_alquiler: Optional[Decimal] = None
     moneda: Optional[str] = None
-    
+
     # Descripción
     titulo: Optional[str] = None
     descripcion: Optional[str] = None
-    
+
     # Características detalladas (si se envían, se reemplazan todas)
     caracteristicas: Optional[List[CaracteristicaInput]] = None
     
@@ -453,20 +445,16 @@ async def actualizar_propiedad_completa(
             datos_actualizacion = PropiedadUpdateComplete.model_validate_json(propiedad_json)
             
             # Actualizar solo los campos que vienen en el JSON
-            if datos_actualizacion.propietario_real_nombre is not None:
-                propiedad.propietario_real_nombre = datos_actualizacion.propietario_real_nombre
-            if datos_actualizacion.propietario_real_dni is not None:
-                propiedad.propietario_real_dni = datos_actualizacion.propietario_real_dni
-            if datos_actualizacion.propietario_real_telefono is not None:
-                propiedad.propietario_real_telefono = datos_actualizacion.propietario_real_telefono
-            if datos_actualizacion.propietario_real_email is not None:
-                propiedad.propietario_real_email = datos_actualizacion.propietario_real_email
-            
+            if datos_actualizacion.propietario_id is not None:
+                propiedad.propietario_id = datos_actualizacion.propietario_id
+            if datos_actualizacion.padre_registro_cab_id is not None:
+                propiedad.padre_registro_cab_id = datos_actualizacion.padre_registro_cab_id
+
             if datos_actualizacion.corredor_asignado_id is not None:
                 propiedad.corredor_asignado_id = datos_actualizacion.corredor_asignado_id
             if datos_actualizacion.comision_corredor is not None:
                 propiedad.comision_corredor = datos_actualizacion.comision_corredor
-            
+
             if datos_actualizacion.tipo_inmueble_id is not None:
                 propiedad.tipo_inmueble_id = datos_actualizacion.tipo_inmueble_id
             if datos_actualizacion.distrito_id is not None:
@@ -479,18 +467,14 @@ async def actualizar_propiedad_completa(
                 propiedad.latitud = datos_actualizacion.latitud
             if datos_actualizacion.longitud is not None:
                 propiedad.longitud = datos_actualizacion.longitud
-            
+
             if datos_actualizacion.area is not None:
                 propiedad.area = datos_actualizacion.area
-            if datos_actualizacion.habitaciones is not None:
-                propiedad.habitaciones = datos_actualizacion.habitaciones
-            if datos_actualizacion.banos is not None:
-                propiedad.banos = datos_actualizacion.banos
-            if datos_actualizacion.parqueos is not None:
-                propiedad.parqueos = datos_actualizacion.parqueos
             if datos_actualizacion.antiguedad is not None:
                 propiedad.antiguedad = datos_actualizacion.antiguedad
-            
+            if datos_actualizacion.implementacion is not None:
+                propiedad.implementacion = datos_actualizacion.implementacion
+
             if datos_actualizacion.transaccion is not None:
                 propiedad.transaccion = datos_actualizacion.transaccion
             if datos_actualizacion.precio_venta is not None:
@@ -499,7 +483,7 @@ async def actualizar_propiedad_completa(
                 propiedad.precio_alquiler = datos_actualizacion.precio_alquiler
             if datos_actualizacion.moneda is not None:
                 propiedad.moneda = datos_actualizacion.moneda
-            
+
             if datos_actualizacion.titulo is not None:
                 propiedad.titulo = datos_actualizacion.titulo
             if datos_actualizacion.descripcion is not None:
