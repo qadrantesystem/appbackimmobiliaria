@@ -496,6 +496,7 @@ async def get_property_detail(
         titulo=propiedad.titulo,
         nombre_inmueble=propiedad.nombre_inmueble,
         tipo_inmueble=tipo.nombre if tipo else "N/A",
+        tipo_inmueble_id=propiedad.tipo_inmueble_id,  # ✅ ID para filtros
         distrito=distrito.nombre if distrito else "N/A",
         transaccion=propiedad.transaccion,
         precio_alquiler=propiedad.precio_alquiler,
