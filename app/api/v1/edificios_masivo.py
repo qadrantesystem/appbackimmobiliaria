@@ -54,6 +54,7 @@ class OficinaInput(BaseModel):
     numero_oficina: int
     nombre: str
     area: Decimal
+    caracteristicas: List[CaracteristicaInput] = []  # 🆕 Equipamiento por oficina
 
 class SotanoInput(BaseModel):
     """Datos de un sótano"""
@@ -219,8 +220,8 @@ async def crear_edificio_completo(
                 moneda=edificio_data.edificio.moneda,
                 titulo=f"{oficina_data.nombre} - {edificio_data.edificio.nombre_inmueble}",
                 descripcion=f"Oficina ubicada en el piso {oficina_data.piso} del edificio {edificio_data.edificio.nombre_inmueble}",
-                imagen_principal=url_imagen_principal,  # Misma imagen del edificio
-                imagenes=urls_galeria if urls_galeria else None,
+                imagen_principal=None,  # ✅ Las oficinas NO deben tener imágenes propias
+                imagenes=None,  # ✅ Sin galería (heredan visualmente del edificio)
                 estado="borrador",
                 created_by=current_user.usuario_id
             )
@@ -228,7 +229,7 @@ async def crear_edificio_completo(
             db.add(oficina)
             db.flush()  # Para obtener el ID sin hacer commit
 
-            # Agregar características de la oficina (piso, número)
+            # Agregar características de la oficina (piso)
             detalle_piso = PropiedadDetalle(
                 registro_cab_id=oficina.registro_cab_id,
                 caracteristica_id=110,  # ID característica "Cantidad Pisos Edificio" (reutilizado)
@@ -236,11 +237,23 @@ async def crear_edificio_completo(
             )
             db.add(detalle_piso)
 
+            # 🆕 Agregar EQUIPAMIENTO de la oficina (si tiene)
+            if oficina_data.caracteristicas:
+                logger.info(f"   💡 Oficina {oficina_data.numero_oficina}: {len(oficina_data.caracteristicas)} equipamientos")
+                for caract in oficina_data.caracteristicas:
+                    detalle_equip = PropiedadDetalle(
+                        registro_cab_id=oficina.registro_cab_id,
+                        caracteristica_id=caract.caracteristica_id,
+                        valor=caract.valor
+                    )
+                    db.add(detalle_equip)
+
             oficinas_creadas.append({
                 "id": oficina.registro_cab_id,
                 "nombre": oficina_data.nombre,
                 "piso": oficina_data.piso,
-                "area": float(oficina_data.area)
+                "area": float(oficina_data.area),
+                "equipamientos": len(oficina_data.caracteristicas)  # 🆕 Mostrar en respuesta
             })
 
         db.commit()
@@ -290,3 +303,276 @@ async def crear_edificio_completo(
             status_code=500,
             detail=f"Error al crear edificio completo: {str(e)}"
         )
+
+
+@router.put("/edificio-completo/{edificio_id}", status_code=200)
+async def actualizar_edificio_completo(
+    edificio_id: int,
+    # JSON con todos los datos
+    edificio_json: str = Form(..., description="JSON con edificio y oficinas actualizadas"),
+    
+    # Imágenes opcionales (solo si se cambian)
+    imagen_principal: Optional[UploadFile] = File(None, description="Nueva foto principal (opcional)"),
+    imagenes_galeria: List[UploadFile] = File(default=[], description="Nuevas fotos galería (opcional)"),
+    
+    # Autenticación
+    current_user: Usuario = Depends(require_ofertante),
+    db: Session = Depends(get_db)
+):
+    """
+    🔄 Actualizar edificio completo con todas sus oficinas en una transacción
+    
+    **Flujo:**
+    1. Actualizar datos del edificio padre
+    2. Comparar oficinas existentes con nuevas
+    3. Crear oficinas nuevas
+    4. Actualizar oficinas existentes
+    5. Eliminar oficinas que ya no existen
+    6. Actualizar características y equipamiento
+    7. Actualizar imágenes solo si se envían nuevas
+    """
+    try:
+        # 1. Validar que el edificio existe
+        edificio = db.query(Propiedad).filter(
+            Propiedad.registro_cab_id == edificio_id
+        ).first()
+        
+        if not edificio:
+            raise HTTPException(status_code=404, detail="Edificio no encontrado")
+        
+        # Verificar permisos
+        if edificio.usuario_id != current_user.usuario_id and current_user.perfil_id != 4:
+            raise HTTPException(status_code=403, detail="No tienes permiso para modificar este edificio")
+        
+        # 2. Parsear datos
+        logger.info(f"📝 Actualizando edificio {edificio_id}...")
+        edificio_data = EdificioCompletoInput.model_validate(json.loads(edificio_json))
+        
+        # 3. Actualizar edificio principal
+        logger.info(f"🏢 Actualizando datos del edificio principal...")
+        edificio.nombre_inmueble = edificio_data.edificio.nombre_inmueble
+        edificio.direccion = edificio_data.edificio.direccion
+        edificio.latitud = edificio_data.edificio.latitud
+        edificio.longitud = edificio_data.edificio.longitud
+        edificio.area = edificio_data.edificio.area
+        edificio.antiguedad = edificio_data.edificio.antiguedad
+        edificio.implementacion = edificio_data.edificio.implementacion
+        edificio.transaccion = edificio_data.edificio.transaccion
+        edificio.precio_venta = edificio_data.edificio.precio_venta
+        edificio.precio_alquiler = edificio_data.edificio.precio_alquiler
+        edificio.moneda = edificio_data.edificio.moneda
+        edificio.titulo = edificio_data.edificio.titulo
+        edificio.descripcion = edificio_data.edificio.descripcion
+        edificio.updated_by = current_user.usuario_id
+        
+        # 4. Actualizar imágenes solo si se envían nuevas
+        if imagen_principal:
+            logger.info(f"📸 Actualizando imagen principal...")
+            imagen_principal_content = await imagen_principal.read()
+            filename_principal = f"edificio_{current_user.usuario_id}_{edificio_data.edificio.nombre_inmueble.replace(' ', '_')}_principal"
+            
+            resultado_principal = imagekit_service.upload_image(
+                file_content=imagen_principal_content,
+                file_name=filename_principal,
+                folder="/edificios"
+            )
+            
+            if resultado_principal and resultado_principal.get('url'):
+                edificio.imagen_principal = resultado_principal['url']
+        
+        if imagenes_galeria and len(imagenes_galeria) > 0:
+            logger.info(f"📸 Actualizando galería ({len(imagenes_galeria)} imágenes)...")
+            urls_galeria = []
+            
+            for idx, imagen in enumerate(imagenes_galeria, 1):
+                imagen_content = await imagen.read()
+                filename_galeria = f"edificio_{current_user.usuario_id}_{edificio_data.edificio.nombre_inmueble.replace(' ', '_')}_galeria_{idx}"
+                
+                resultado_galeria = imagekit_service.upload_image(
+                    file_content=imagen_content,
+                    file_name=filename_galeria,
+                    folder="/edificios"
+                )
+                
+                if resultado_galeria and resultado_galeria.get('url'):
+                    urls_galeria.append(resultado_galeria['url'])
+            
+            if urls_galeria:
+                edificio.imagenes = urls_galeria
+        
+        db.flush()
+        
+        # 5. Actualizar características del edificio
+        if edificio_data.edificio.caracteristicas:
+            # Eliminar características anteriores
+            db.query(PropiedadDetalle).filter(
+                PropiedadDetalle.registro_cab_id == edificio_id
+            ).delete()
+            
+            # Agregar nuevas características
+            for caract in edificio_data.edificio.caracteristicas:
+                detalle = PropiedadDetalle(
+                    registro_cab_id=edificio_id,
+                    caracteristica_id=caract.caracteristica_id,
+                    valor=caract.valor
+                )
+                db.add(detalle)
+        
+        # 6. Gestionar oficinas: comparar existentes vs nuevas
+        logger.info(f"🏢 Gestionando oficinas...")
+        
+        # Obtener oficinas actuales con número de oficina
+        oficinas_actuales = db.query(Propiedad).filter(
+            Propiedad.padre_registro_cab_id == edificio_id
+        ).all()
+        
+        # Mapear oficinas actuales por piso+número para identificarlas
+        oficinas_actuales_map = {}
+        for oficina_actual in oficinas_actuales:
+            # Obtener piso de la oficina
+            piso_det = db.query(PropiedadDetalle).filter(
+                PropiedadDetalle.registro_cab_id == oficina_actual.registro_cab_id,
+                PropiedadDetalle.caracteristica_id == 110
+            ).first()
+            
+            piso_num = int(piso_det.valor) if piso_det else 0
+            key = f"{piso_num}_{oficina_actual.nombre_inmueble}"
+            oficinas_actuales_map[key] = oficina_actual
+        
+        # Mapear oficinas nuevas
+        oficinas_nuevas_keys = set()
+        tipo_inmueble_oficina_id = 1
+        
+        for oficina_data in edificio_data.oficinas:
+            key = f"{oficina_data.piso}_{oficina_data.nombre}"
+            oficinas_nuevas_keys.add(key)
+            
+            if key in oficinas_actuales_map:
+                # ACTUALIZAR oficina existente
+                logger.info(f"   ♻️ Actualizando {oficina_data.nombre}...")
+                oficina_existente = oficinas_actuales_map[key]
+                
+                oficina_existente.area = oficina_data.area
+                oficina_existente.titulo = f"{oficina_data.nombre} - {edificio_data.edificio.nombre_inmueble}"
+                oficina_existente.descripcion = f"Oficina ubicada en el piso {oficina_data.piso} del edificio {edificio_data.edificio.nombre_inmueble}"
+                oficina_existente.transaccion = edificio_data.edificio.transaccion
+                oficina_existente.moneda = edificio_data.edificio.moneda
+                
+                # Actualizar características (eliminar y recrear)
+                db.query(PropiedadDetalle).filter(
+                    PropiedadDetalle.registro_cab_id == oficina_existente.registro_cab_id
+                ).delete()
+                
+                # Agregar piso
+                detalle_piso = PropiedadDetalle(
+                    registro_cab_id=oficina_existente.registro_cab_id,
+                    caracteristica_id=110,
+                    valor=str(oficina_data.piso)
+                )
+                db.add(detalle_piso)
+                
+                # Agregar equipamiento
+                if oficina_data.caracteristicas:
+                    for caract in oficina_data.caracteristicas:
+                        detalle_equip = PropiedadDetalle(
+                            registro_cab_id=oficina_existente.registro_cab_id,
+                            caracteristica_id=caract.caracteristica_id,
+                            valor=caract.valor
+                        )
+                        db.add(detalle_equip)
+            else:
+                # CREAR oficina nueva
+                logger.info(f"   ➕ Creando nueva {oficina_data.nombre}...")
+                nueva_oficina = Propiedad(
+                    usuario_id=current_user.usuario_id,
+                    propietario_id=edificio_data.edificio.propietario_id,
+                    padre_registro_cab_id=edificio_id,
+                    tipo_inmueble_id=tipo_inmueble_oficina_id,
+                    distrito_id=edificio_data.edificio.distrito_id,
+                    nombre_inmueble=oficina_data.nombre,
+                    direccion=edificio_data.edificio.direccion,
+                    latitud=edificio_data.edificio.latitud,
+                    longitud=edificio_data.edificio.longitud,
+                    area=oficina_data.area,
+                    transaccion=edificio_data.edificio.transaccion,
+                    moneda=edificio_data.edificio.moneda,
+                    titulo=f"{oficina_data.nombre} - {edificio_data.edificio.nombre_inmueble}",
+                    descripcion=f"Oficina ubicada en el piso {oficina_data.piso} del edificio {edificio_data.edificio.nombre_inmueble}",
+                    imagen_principal=None,
+                    imagenes=None,
+                    estado="borrador",
+                    created_by=current_user.usuario_id
+                )
+                
+                db.add(nueva_oficina)
+                db.flush()
+                
+                # Agregar piso
+                detalle_piso = PropiedadDetalle(
+                    registro_cab_id=nueva_oficina.registro_cab_id,
+                    caracteristica_id=110,
+                    valor=str(oficina_data.piso)
+                )
+                db.add(detalle_piso)
+                
+                # Agregar equipamiento
+                if oficina_data.caracteristicas:
+                    for caract in oficina_data.caracteristicas:
+                        detalle_equip = PropiedadDetalle(
+                            registro_cab_id=nueva_oficina.registro_cab_id,
+                            caracteristica_id=caract.caracteristica_id,
+                            valor=caract.valor
+                        )
+                        db.add(detalle_equip)
+        
+        # 7. ELIMINAR oficinas que ya no existen
+        oficinas_a_eliminar = set(oficinas_actuales_map.keys()) - oficinas_nuevas_keys
+        
+        for key_eliminar in oficinas_a_eliminar:
+            oficina_eliminar = oficinas_actuales_map[key_eliminar]
+            logger.info(f"   🗑️ Eliminando {oficina_eliminar.nombre_inmueble}...")
+            
+            # Eliminar características
+            db.query(PropiedadDetalle).filter(
+                PropiedadDetalle.registro_cab_id == oficina_eliminar.registro_cab_id
+            ).delete()
+            
+            # Eliminar oficina
+            db.delete(oficina_eliminar)
+        
+        # 8. Commit final
+        db.commit()
+        db.refresh(edificio)
+        
+        # Contar oficinas finales
+        total_oficinas = db.query(Propiedad).filter(
+            Propiedad.padre_registro_cab_id == edificio_id
+        ).count()
+        
+        logger.info(f"✅ Edificio actualizado: {total_oficinas} oficinas")
+        
+        return {
+            "success": True,
+            "message": "Edificio completo actualizado exitosamente",
+            "data": {
+                "edificio": {
+                    "id": edificio.registro_cab_id,
+                    "nombre": edificio.nombre_inmueble,
+                    "imagen_principal": edificio.imagen_principal,
+                    "total_imagenes_galeria": len(edificio.imagenes) if edificio.imagenes else 0
+                },
+                "total_oficinas": total_oficinas,
+                "oficinas_creadas": len(oficinas_nuevas_keys - set(oficinas_actuales_map.keys())),
+                "oficinas_actualizadas": len(oficinas_nuevas_keys & set(oficinas_actuales_map.keys())),
+                "oficinas_eliminadas": len(oficinas_a_eliminar)
+            }
+        }
+    
+    except json.JSONDecodeError as e:
+        logger.error(f"❌ Error parseando JSON: {e}")
+        raise HTTPException(status_code=400, detail=f"JSON inválido: {str(e)}")
+    except Exception as e:
+        db.rollback()
+        logger.error(f"❌ Error actualizando edificio completo: {e}")
+        logger.exception(e)
+        raise HTTPException(status_code=500, detail=f"Error al actualizar edificio completo: {str(e)}")

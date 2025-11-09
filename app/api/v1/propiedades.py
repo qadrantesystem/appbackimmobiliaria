@@ -219,6 +219,91 @@ async def my_properties(
         }
     )
 
+@router.get("/{edificio_id}/oficinas", response_model=ResponseModel[List[dict]])
+async def get_oficinas_edificio(
+    edificio_id: int,
+    current_user: Usuario = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """
+    🏬 Retorna todas las oficinas hijas de un edificio con sus características
+    
+    Returns:
+    {
+        "data": [
+            {
+                "registro_cab_id": 31,
+                "numero_oficina": 901,
+                "piso": 9,
+                "nombre": "Oficina 901",
+                "area": 50.0,
+                "caracteristicas": [
+                    {"caracteristica_id": 124, "nombre": "AAC", "valor": "true"},
+                    {"caracteristica_id": 128, "nombre": "Mobiliario", "valor": "true"}
+                ]
+            },
+            ...
+        ]
+    }
+    """
+    # Validar que el edificio existe
+    edificio = db.query(Propiedad).filter(
+        Propiedad.registro_cab_id == edificio_id
+    ).first()
+    
+    if not edificio:
+        raise NotFoundException("Edificio no encontrado")
+    
+    # Obtener oficinas hijas
+    oficinas = db.query(Propiedad).filter(
+        Propiedad.padre_registro_cab_id == edificio_id
+    ).order_by(Propiedad.registro_cab_id).all()
+    
+    oficinas_list = []
+    for oficina in oficinas:
+        # Obtener piso desde características (caracteristica_id = 110)
+        piso_det = db.query(PropiedadDetalle).filter(
+            PropiedadDetalle.registro_cab_id == oficina.registro_cab_id,
+            PropiedadDetalle.caracteristica_id == 110
+        ).first()
+        
+        piso = int(piso_det.valor) if piso_det else None
+        
+        # Obtener características de equipamiento (IDs 122-130)
+        caracteristicas = []
+        equip_dets = db.query(
+            PropiedadDetalle.caracteristica_id,
+            PropiedadDetalle.valor,
+            Caracteristica.nombre
+        ).join(
+            Caracteristica, 
+            PropiedadDetalle.caracteristica_id == Caracteristica.caracteristica_id
+        ).filter(
+            PropiedadDetalle.registro_cab_id == oficina.registro_cab_id,
+            PropiedadDetalle.caracteristica_id.between(122, 130)
+        ).all()
+        
+        for det in equip_dets:
+            caracteristicas.append({
+                "caracteristica_id": det.caracteristica_id,
+                "nombre": det.nombre,
+                "valor": det.valor
+            })
+        
+        oficinas_list.append({
+            "registro_cab_id": oficina.registro_cab_id,
+            "nombre": oficina.nombre_inmueble,
+            "piso": piso,
+            "area": float(oficina.area) if oficina.area else None,
+            "caracteristicas": caracteristicas
+        })
+    
+    return ResponseModel(
+        success=True,
+        data=oficinas_list,
+        message=f"{len(oficinas_list)} oficinas encontradas"
+    )
+
 @router.get("/edificios-disponibles", response_model=ResponseModel[List[EdificioDisponible]])
 async def listar_edificios_disponibles(
     db: Session = Depends(get_db),
@@ -397,39 +482,51 @@ async def get_property_detail(
             Favorito.registro_cab_id == propiedad_id
         ).first() is not None
     
-    return ResponseModel(
-        success=True,
-        data=PropiedadDetalleResponse(
-            registro_cab_id=propiedad.registro_cab_id,
-            titulo=propiedad.titulo,
-            nombre_inmueble=propiedad.nombre_inmueble,
-            tipo_inmueble=tipo.nombre if tipo else "N/A",
-            distrito=distrito.nombre if distrito else "N/A",
-            transaccion=propiedad.transaccion,
-            precio_alquiler=propiedad.precio_alquiler,
-            precio_venta=propiedad.precio_venta,
-            moneda=propiedad.moneda,
-            area=propiedad.area,
-            implementacion=propiedad.implementacion,  # 🏗️ Nivel de implementación
-            imagen_principal=propiedad.imagen_principal,
-            estado=propiedad.estado,
-            vistas=propiedad.vistas,
-            contactos=propiedad.contactos,
-            created_at=propiedad.created_at,
-            descripcion=propiedad.descripcion,
-            direccion=propiedad.direccion,
-            latitud=propiedad.latitud,
-            longitud=propiedad.longitud,
-            antiguedad=propiedad.antiguedad,
-            imagenes=propiedad.imagenes or [],
-            propietario=propietario,
-            corredor=corredor,
-            caracteristicas=caracteristicas,
-            estado_crm=propiedad.estado_crm,
-            compartidos=propiedad.compartidos,
-            es_favorito=es_favorito
-        )
+    # 🏢 Si es Edificio Completo (tipo_inmueble_id == 12), agregar conteo de oficinas
+    total_oficinas = None
+    if tipo and "edificio" in tipo.nombre.lower() and propiedad.padre_registro_cab_id is None:
+        total_oficinas = db.query(func.count()).select_from(Propiedad).filter(
+            Propiedad.padre_registro_cab_id == propiedad_id
+        ).scalar()
+    
+    response_data = PropiedadDetalleResponse(
+        registro_cab_id=propiedad.registro_cab_id,
+        titulo=propiedad.titulo,
+        nombre_inmueble=propiedad.nombre_inmueble,
+        tipo_inmueble=tipo.nombre if tipo else "N/A",
+        distrito=distrito.nombre if distrito else "N/A",
+        transaccion=propiedad.transaccion,
+        precio_alquiler=propiedad.precio_alquiler,
+        precio_venta=propiedad.precio_venta,
+        moneda=propiedad.moneda,
+        area=propiedad.area,
+        implementacion=propiedad.implementacion,  # 🏗️ Nivel de implementación
+        imagen_principal=propiedad.imagen_principal,
+        estado=propiedad.estado,
+        vistas=propiedad.vistas,
+        contactos=propiedad.contactos,
+        created_at=propiedad.created_at,
+        descripcion=propiedad.descripcion,
+        direccion=propiedad.direccion,
+        latitud=propiedad.latitud,
+        longitud=propiedad.longitud,
+        antiguedad=propiedad.antiguedad,
+        imagenes=propiedad.imagenes or [],
+        propietario=propietario,
+        corredor=corredor,
+        caracteristicas=caracteristicas,
+        estado_crm=propiedad.estado_crm,
+        compartidos=propiedad.compartidos,
+        es_favorito=es_favorito
     )
+    
+    # Agregar total_oficinas como campo extra si aplica
+    result = ResponseModel(success=True, data=response_data)
+    if total_oficinas is not None:
+        # Añadir info extra al response
+        result.data.__dict__['total_oficinas'] = total_oficinas
+    
+    return result
 
 @router.post("/{propiedad_id}/vista", response_model=ResponseModel[dict])
 async def increment_view(
@@ -573,6 +670,73 @@ async def update_property_status(
         success=True,
         message=f"Estado actualizado a {estado_data.estado}",
         data={"registro_cab_id": propiedad_id, "estado": estado_data.estado}
+    )
+
+
+@router.delete("/{oficina_id}/oficina", response_model=ResponseModel[dict])
+async def eliminar_oficina(
+    oficina_id: int,
+    current_user: Usuario = Depends(require_ofertante),
+    db: Session = Depends(get_db)
+):
+    """
+    🗑️ Eliminar una oficina individual (solo si pertenece a un edificio)
+    
+    Validaciones:
+    - La oficina debe tener padre_registro_cab_id
+    - El propietario debe ser dueño del edificio padre
+    - No puede eliminar si es la última oficina del edificio
+    """
+    # Validar que la oficina existe
+    oficina = db.query(Propiedad).filter(
+        Propiedad.registro_cab_id == oficina_id
+    ).first()
+    
+    if not oficina:
+        raise NotFoundException("Oficina no encontrada")
+    
+    # Validar que es una oficina de edificio (tiene padre)
+    if not oficina.padre_registro_cab_id:
+        raise BadRequestException("Esta no es una oficina de edificio, no se puede eliminar mediante este endpoint")
+    
+    # Obtener edificio padre
+    edificio = db.query(Propiedad).filter(
+        Propiedad.registro_cab_id == oficina.padre_registro_cab_id
+    ).first()
+    
+    if not edificio:
+        raise NotFoundException("Edificio padre no encontrado")
+    
+    # Verificar permisos: debe ser dueño del edificio o admin
+    if edificio.usuario_id != current_user.usuario_id and current_user.perfil_id != 4:
+        raise ForbiddenException("No tienes permiso para eliminar esta oficina")
+    
+    # Contar oficinas restantes del edificio
+    oficinas_count = db.query(func.count()).select_from(Propiedad).filter(
+        Propiedad.padre_registro_cab_id == edificio.registro_cab_id
+    ).scalar()
+    
+    if oficinas_count <= 1:
+        raise BadRequestException("No puedes eliminar la última oficina del edificio. Elimina el edificio completo en su lugar.")
+    
+    # Eliminar características de la oficina
+    db.query(PropiedadDetalle).filter(
+        PropiedadDetalle.registro_cab_id == oficina_id
+    ).delete()
+    
+    # Eliminar oficina
+    oficina_nombre = oficina.nombre_inmueble
+    db.delete(oficina)
+    db.commit()
+    
+    return ResponseModel(
+        success=True,
+        message=f"Oficina '{oficina_nombre}' eliminada exitosamente",
+        data={
+            "oficina_eliminada": oficina_id,
+            "edificio_padre": edificio.registro_cab_id,
+            "oficinas_restantes": oficinas_count - 1
+        }
     )
 
 
