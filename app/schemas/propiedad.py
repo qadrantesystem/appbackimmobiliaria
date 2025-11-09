@@ -130,6 +130,7 @@ class PropiedadDetalleResponse(PropiedadResponse):
     caracteristicas: List[dict]
     estado_crm: str
     compartidos: int
+    padre_registro_cab_id: Optional[int] = None  # ID del edificio padre (para oficinas)
     
     class Config:
         from_attributes = True

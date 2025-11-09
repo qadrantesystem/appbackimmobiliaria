@@ -517,7 +517,8 @@ async def get_property_detail(
         caracteristicas=caracteristicas,
         estado_crm=propiedad.estado_crm,
         compartidos=propiedad.compartidos,
-        es_favorito=es_favorito
+        es_favorito=es_favorito,
+        padre_registro_cab_id=propiedad.padre_registro_cab_id
     )
     
     # Agregar total_oficinas como campo extra si aplica
