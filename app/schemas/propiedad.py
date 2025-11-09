@@ -77,6 +77,7 @@ class PropiedadResponse(BaseModel):
     registro_cab_id: int
     titulo: str
     tipo_inmueble: str
+    tipo_inmueble_id: int  # ✅ ID del tipo de inmueble (para filtros)
     distrito: str
     direccion: str
     latitud: Optional[Decimal]  # 🗺️ Para mapa

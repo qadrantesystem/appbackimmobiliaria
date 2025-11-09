@@ -91,6 +91,7 @@ async def list_properties(
             registro_cab_id=prop.registro_cab_id,
             titulo=prop.titulo,
             tipo_inmueble=tipo.nombre if tipo else "N/A",
+            tipo_inmueble_id=prop.tipo_inmueble_id,  # ✅ ID para filtros en frontend
             distrito=distrito.nombre if distrito else "N/A",
             direccion=prop.direccion,
             latitud=prop.latitud,  # 🗺️ Para mapa
@@ -165,6 +166,7 @@ async def my_properties(
             registro_cab_id=prop.registro_cab_id,
             titulo=prop.titulo,
             tipo_inmueble=tipo.nombre if tipo else "N/A",
+            tipo_inmueble_id=prop.tipo_inmueble_id,  # ✅ ID para filtros en frontend
             distrito=distrito.nombre if distrito else "N/A",
             direccion=prop.direccion,
             latitud=prop.latitud,  # 🗺️ Para mapa
@@ -898,6 +900,7 @@ async def buscar_propiedades_avanzada(
             registro_cab_id=prop.registro_cab_id,
             titulo=prop.titulo,
             tipo_inmueble=tipo.nombre if tipo else "N/A",
+            tipo_inmueble_id=prop.tipo_inmueble_id,  # ✅ ID para filtros en frontend
             distrito=distrito.nombre if distrito else "N/A",
             direccion=prop.direccion,
             latitud=prop.latitud,
