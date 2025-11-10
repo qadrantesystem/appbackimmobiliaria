@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query, UploadFile, File, Body
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, and_, func
 from typing import Optional, List, Dict, Any
 from decimal import Decimal
@@ -37,9 +37,11 @@ async def list_properties(
     print("🚀 [DEBUG] GET /propiedades endpoint llamado")
     print(f"📊 [DEBUG] Parámetros: page={page}, limit={limit}, tipo_inmueble_id={tipo_inmueble_id}")
 
-    # Query base - solo propiedades publicadas
-    query = db.query(Propiedad).filter(Propiedad.estado == "publicado")
-    print(f"🔍 [DEBUG] Query inicial creado")
+    # Query base - solo propiedades publicadas + eager load propietario
+    query = db.query(Propiedad).options(
+        joinedload(Propiedad.propietario)
+    ).filter(Propiedad.estado == "publicado")
+    print(f"🔍 [DEBUG] Query inicial creado con eager loading de propietario")
     
     # Filtros
     if tipo_inmueble_id:
@@ -140,9 +142,9 @@ async def my_properties(
     """Mis propiedades (Ofertante/Corredor) - Admin ve TODAS"""
     # 🔥 Admin (perfil_id == 4) puede ver TODAS las propiedades
     if current_user.perfil_id == 4:
-        query = db.query(Propiedad)  # Sin filtro de usuario
+        query = db.query(Propiedad).options(joinedload(Propiedad.propietario))  # Sin filtro de usuario
     else:
-        query = db.query(Propiedad).filter(Propiedad.usuario_id == current_user.usuario_id)
+        query = db.query(Propiedad).options(joinedload(Propiedad.propietario)).filter(Propiedad.usuario_id == current_user.usuario_id)
 
     if estado:
         query = query.filter(Propiedad.estado == estado)
@@ -792,8 +794,10 @@ async def buscar_propiedades_avanzada(
         "limit": 12
     }
     """
-    # Query base - solo propiedades publicadas
-    query = db.query(Propiedad).filter(Propiedad.estado == "publicado")
+    # Query base - solo propiedades publicadas + eager load propietario
+    query = db.query(Propiedad).options(
+        joinedload(Propiedad.propietario)
+    ).filter(Propiedad.estado == "publicado")
 
     # ============================================
     # 1️⃣ FILTROS GENÉRICOS (registro_x_inmueble_cab)
