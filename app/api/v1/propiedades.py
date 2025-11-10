@@ -318,21 +318,22 @@ async def listar_edificios_disponibles(
 
     Retorna edificios que pueden tener oficinas hijas.
     """
-    # Buscar tipo_inmueble_id para "Edificio" o similar
+    # Buscar tipo_inmueble_id = 12 (Edificio Completo)
+    # NO usar LIKE porque captura "Oficina en Edificio" (tipo 1)
     tipo_edificio = db.query(TipoInmueble).filter(
-        TipoInmueble.nombre.ilike("%edificio%")
+        TipoInmueble.tipo_inmueble_id == 12  # Edificio Completo
     ).first()
 
     if not tipo_edificio:
         return ResponseModel(
             success=True,
             data=[],
-            message="No se encontró el tipo 'Edificio' en el sistema"
+            message="No se encontró el tipo 'Edificio Completo' (ID 12) en el sistema"
         )
 
     # Query edificios sin padre (padre_registro_cab_id IS NULL)
     edificios = db.query(Propiedad).filter(
-        Propiedad.tipo_inmueble_id == tipo_edificio.tipo_inmueble_id,
+        Propiedad.tipo_inmueble_id == 12,  # Directamente tipo 12
         Propiedad.padre_registro_cab_id.is_(None)
     ).all()
 
