@@ -37,11 +37,11 @@ async def list_properties(
     print("🚀 [DEBUG] GET /propiedades endpoint llamado")
     print(f"📊 [DEBUG] Parámetros: page={page}, limit={limit}, tipo_inmueble_id={tipo_inmueble_id}")
 
-    # Query base - solo propiedades publicadas + eager load propietario
+    # Query base - solo propiedades publicadas + eager load propietario (LEFT JOIN)
     query = db.query(Propiedad).options(
-        joinedload(Propiedad.propietario)
+        joinedload(Propiedad.propietario, innerjoin=False)
     ).filter(Propiedad.estado == "publicado")
-    print(f"🔍 [DEBUG] Query inicial creado con eager loading de propietario")
+    print(f"🔍 [DEBUG] Query inicial creado con eager loading de propietario (LEFT JOIN)")
     
     # Filtros
     if tipo_inmueble_id:
@@ -142,9 +142,9 @@ async def my_properties(
     """Mis propiedades (Ofertante/Corredor) - Admin ve TODAS"""
     # 🔥 Admin (perfil_id == 4) puede ver TODAS las propiedades
     if current_user.perfil_id == 4:
-        query = db.query(Propiedad).options(joinedload(Propiedad.propietario))  # Sin filtro de usuario
+        query = db.query(Propiedad).options(joinedload(Propiedad.propietario, innerjoin=False))  # Sin filtro de usuario
     else:
-        query = db.query(Propiedad).options(joinedload(Propiedad.propietario)).filter(Propiedad.usuario_id == current_user.usuario_id)
+        query = db.query(Propiedad).options(joinedload(Propiedad.propietario, innerjoin=False)).filter(Propiedad.usuario_id == current_user.usuario_id)
 
     if estado:
         query = query.filter(Propiedad.estado == estado)
@@ -794,9 +794,9 @@ async def buscar_propiedades_avanzada(
         "limit": 12
     }
     """
-    # Query base - solo propiedades publicadas + eager load propietario
+    # Query base - solo propiedades publicadas + eager load propietario (LEFT JOIN)
     query = db.query(Propiedad).options(
-        joinedload(Propiedad.propietario)
+        joinedload(Propiedad.propietario, innerjoin=False)
     ).filter(Propiedad.estado == "publicado")
 
     # ============================================
