@@ -47,6 +47,7 @@ class EdificioDisponible(BaseModel):
     registro_cab_id: int
     nombre_inmueble: str
     direccion: str
+    tipo_inmueble_id: int  # ✅ ID del tipo de inmueble (para filtros)
     cantidad_pisos: Optional[str] = None  # Viene de características
 
     class Config:

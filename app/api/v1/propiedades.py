@@ -353,6 +353,7 @@ async def listar_edificios_disponibles(
             registro_cab_id=edificio.registro_cab_id,
             nombre_inmueble=edificio.nombre_inmueble,
             direccion=edificio.direccion,
+            tipo_inmueble_id=edificio.tipo_inmueble_id,  # ✅ Para filtros en frontend
             cantidad_pisos=cantidad_pisos
         ))
 
