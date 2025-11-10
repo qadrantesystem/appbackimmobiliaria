@@ -687,6 +687,46 @@ async def update_property_status(
         data={"registro_cab_id": propiedad_id, "estado": estado_data.estado}
     )
 
+@router.put("/{propiedad_id}/publicar", response_model=ResponseModel[dict])
+async def publicar_propiedad(
+    propiedad_id: int,
+    current_user: Usuario = Depends(require_ofertante),
+    db: Session = Depends(get_db)
+):
+    """
+    🚀 Publicar propiedad (cambiar de borrador a publicado)
+    
+    Permisos:
+    - Admin (perfil 4): Puede publicar cualquier propiedad
+    - Ofertante/Corredor: Solo puede publicar sus propiedades
+    """
+    propiedad = db.query(Propiedad).filter(Propiedad.registro_cab_id == propiedad_id).first()
+    if not propiedad:
+        raise NotFoundException("Propiedad no encontrada")
+    
+    # Verificar permisos: Admin puede publicar cualquier propiedad
+    if current_user.perfil_id != 4 and propiedad.usuario_id != current_user.usuario_id:
+        raise ForbiddenException("No tienes permiso para publicar esta propiedad")
+    
+    # Verificar que está en borrador
+    if propiedad.estado != "borrador":
+        raise BadRequestException(f"La propiedad ya está en estado '{propiedad.estado}'")
+    
+    # Cambiar estado a publicado
+    propiedad.estado = "publicado"
+    db.commit()
+    db.refresh(propiedad)
+    
+    return ResponseModel(
+        success=True,
+        message="Propiedad publicada exitosamente",
+        data={
+            "registro_cab_id": propiedad.registro_cab_id,
+            "titulo": propiedad.titulo,
+            "estado": propiedad.estado,
+            "updated_at": propiedad.updated_at
+        }
+    )
 
 @router.delete("/{oficina_id}/oficina", response_model=ResponseModel[dict])
 async def eliminar_oficina(
