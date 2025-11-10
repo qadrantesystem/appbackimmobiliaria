@@ -134,18 +134,25 @@ async def list_properties(
 @router.get("/mis-propiedades", response_model=PaginatedResponse[PropiedadResponse])
 async def my_properties(
     page: int = Query(1, ge=1),
-    limit: int = Query(10, ge=1, le=100),
-    estado: Optional[str] = None,
+    limit: int = Query(50, ge=1, le=500),  # Límite por defecto 50, máximo 500
+    estado: Optional[str] = None,  # ✅ Opcional: NO filtra por defecto (incluye borradores)
     current_user: Usuario = Depends(require_ofertante),
     db: Session = Depends(get_db)
 ):
-    """Mis propiedades (Ofertante/Corredor) - Admin ve TODAS"""
+    """
+    Mis propiedades con paginación
+    - Admin (perfil_id == 4): Ve TODAS las propiedades de todos los usuarios
+    - Ofertantes/Corredores (perfil_id 2,3): Solo ven SUS propiedades
+    - Por defecto incluye TODOS los estados (publicado, borrador, pausado)
+    """
     # 🔥 Admin (perfil_id == 4) puede ver TODAS las propiedades
     if current_user.perfil_id == 4:
-        query = db.query(Propiedad).options(joinedload(Propiedad.propietario, innerjoin=False))  # Sin filtro de usuario
+        query = db.query(Propiedad).options(joinedload(Propiedad.propietario, innerjoin=False))  # Admin: TODAS
     else:
+        # Ofertantes/Corredores: Solo sus propiedades
         query = db.query(Propiedad).options(joinedload(Propiedad.propietario, innerjoin=False)).filter(Propiedad.usuario_id == current_user.usuario_id)
 
+    # Filtro opcional por estado (si no se especifica, trae TODOS)
     if estado:
         query = query.filter(Propiedad.estado == estado)
 
