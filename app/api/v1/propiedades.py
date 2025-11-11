@@ -519,7 +519,9 @@ async def get_property_detail(
     oficinas_list = []
     
     # Usar tipo_inmueble_id == 12 (más robusto que buscar en nombre)
+    print(f"🔍 DEBUG: tipo_inmueble_id = {propiedad.tipo_inmueble_id}, padre_registro_cab_id = {propiedad.padre_registro_cab_id}")
     if propiedad.tipo_inmueble_id == 12 and propiedad.padre_registro_cab_id is None:
+        print(f"✅ Condición cumplida, buscando oficinas para edificio {propiedad_id}")
         # Obtener oficinas hijas
         oficinas = db.query(Propiedad).filter(
             Propiedad.padre_registro_cab_id == propiedad_id
@@ -612,10 +614,14 @@ async def get_property_detail(
     
     # Agregar oficinas como campo extra si aplica
     result = ResponseModel(success=True, data=response_data)
+    print(f"🔍 DEBUG: total_oficinas = {total_oficinas}, len(oficinas_list) = {len(oficinas_list)}")
     if total_oficinas is not None:
         # Añadir info extra al response
         result.data.__dict__['total_oficinas'] = total_oficinas
         result.data.__dict__['oficinas'] = oficinas_list  # ✅ Array de oficinas con características
+        print(f"✅ DEBUG: Oficinas agregadas al response: {len(oficinas_list)} oficinas")
+    else:
+        print(f"❌ DEBUG: total_oficinas es None, no se agregaron oficinas")
     
     return result
 
