@@ -514,12 +514,67 @@ async def get_property_detail(
             Favorito.registro_cab_id == propiedad_id
         ).first() is not None
     
-    # 🏢 Si es Edificio Completo (tipo_inmueble_id == 12), agregar conteo de oficinas
+    # 🏢 Si es Edificio Completo (tipo_inmueble_id == 12), agregar oficinas hijas
     total_oficinas = None
+    oficinas_list = []
+    
     if tipo and "edificio" in tipo.nombre.lower() and propiedad.padre_registro_cab_id is None:
-        total_oficinas = db.query(func.count()).select_from(Propiedad).filter(
+        # Obtener oficinas hijas
+        oficinas = db.query(Propiedad).filter(
             Propiedad.padre_registro_cab_id == propiedad_id
-        ).scalar()
+        ).order_by(Propiedad.registro_cab_id).all()
+        
+        total_oficinas = len(oficinas)
+        
+        # Para cada oficina, obtener sus características
+        for oficina in oficinas:
+            # Buscar características específicas: Piso y Número de Oficina
+            caract_oficina = db.query(
+                PropiedadDetalle.caracteristica_id,
+                PropiedadDetalle.valor,
+                Caracteristica.nombre
+            ).join(
+                Caracteristica,
+                PropiedadDetalle.caracteristica_id == Caracteristica.caracteristica_id
+            ).filter(
+                PropiedadDetalle.registro_cab_id == oficina.registro_cab_id
+            ).all()
+            
+            # Extraer piso y número de oficina de las características
+            piso = None
+            numero_oficina = None
+            caracteristicas_oficina = []
+            
+            for c in caract_oficina:
+                caracteristicas_oficina.append({
+                    "caracteristica_id": c.caracteristica_id,
+                    "nombre": c.nombre,
+                    "valor": c.valor
+                })
+                
+                if c.nombre.lower() == "piso":
+                    try:
+                        piso = int(c.valor)
+                    except:
+                        piso = c.valor
+                        
+                if "oficina" in c.nombre.lower() and "número" in c.nombre.lower():
+                    try:
+                        numero_oficina = int(c.valor)
+                    except:
+                        numero_oficina = c.valor
+            
+            oficinas_list.append({
+                "registro_cab_id": oficina.registro_cab_id,
+                "nombre_inmueble": oficina.nombre_inmueble,
+                "piso": piso,
+                "numero_oficina": numero_oficina,
+                "area": float(oficina.area) if oficina.area else None,
+                "estado": oficina.estado,
+                "precio_venta": float(oficina.precio_venta) if oficina.precio_venta else None,
+                "precio_alquiler": float(oficina.precio_alquiler) if oficina.precio_alquiler else None,
+                "caracteristicas": caracteristicas_oficina
+            })
     
     response_data = PropiedadDetalleResponse(
         registro_cab_id=propiedad.registro_cab_id,
@@ -554,11 +609,12 @@ async def get_property_detail(
         padre_registro_cab_id=propiedad.padre_registro_cab_id
     )
     
-    # Agregar total_oficinas como campo extra si aplica
+    # Agregar oficinas como campo extra si aplica
     result = ResponseModel(success=True, data=response_data)
     if total_oficinas is not None:
         # Añadir info extra al response
         result.data.__dict__['total_oficinas'] = total_oficinas
+        result.data.__dict__['oficinas'] = oficinas_list  # ✅ Array de oficinas con características
     
     return result
 
