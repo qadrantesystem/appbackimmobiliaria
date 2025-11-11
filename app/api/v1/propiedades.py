@@ -518,7 +518,8 @@ async def get_property_detail(
     total_oficinas = None
     oficinas_list = []
     
-    if tipo and "edificio" in tipo.nombre.lower() and propiedad.padre_registro_cab_id is None:
+    # Usar tipo_inmueble_id == 12 (más robusto que buscar en nombre)
+    if propiedad.tipo_inmueble_id == 12 and propiedad.padre_registro_cab_id is None:
         # Obtener oficinas hijas
         oficinas = db.query(Propiedad).filter(
             Propiedad.padre_registro_cab_id == propiedad_id
