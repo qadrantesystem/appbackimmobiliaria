@@ -24,7 +24,8 @@ class CaracteristicaBase(BaseModel):
     descripcion: Optional[str] = None
     tipo_input: Optional[str] = Field(None, max_length=50)
     unidad: Optional[str] = Field(None, max_length=20)
-    categoria: Optional[str] = Field(None, max_length=50)
+    categoria_id: Optional[int] = None  # ✅ Usar ID en lugar de nombre
+    categoria: Optional[str] = Field(None, max_length=50)  # ⚠️ DEPRECATED: mantener por compatibilidad
     orden: int = 0
     activo: bool = True
 
@@ -36,7 +37,8 @@ class CaracteristicaUpdate(BaseModel):
     descripcion: Optional[str] = None
     tipo_input: Optional[str] = Field(None, max_length=50)
     unidad: Optional[str] = Field(None, max_length=20)
-    categoria: Optional[str] = Field(None, max_length=50)
+    categoria_id: Optional[int] = None  # ✅ Usar ID en lugar de nombre
+    categoria: Optional[str] = Field(None, max_length=50)  # ⚠️ DEPRECATED
     orden: Optional[int] = None
     activo: Optional[bool] = None
 
@@ -63,7 +65,7 @@ class CaracteristicaPaginada(BaseModel):
 @router.get("/", response_model=List[CaracteristicaResponse])
 async def listar_caracteristicas(
     activo: Optional[bool] = Query(None),
-    categoria: Optional[str] = Query(None),
+    categoria_id: Optional[int] = Query(None),  # ✅ Cambiar a categoria_id
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_optional_user)
 ):
@@ -74,10 +76,10 @@ async def listar_caracteristicas(
         if activo is not None:
             query = query.filter(Caracteristica.activo == activo)
         
-        if categoria:
-            query = query.filter(Caracteristica.categoria == categoria)
+        if categoria_id:
+            query = query.filter(Caracteristica.categoria_id == categoria_id)  # ✅ Usar categoria_id
         
-        caracteristicas = query.order_by(Caracteristica.categoria, Caracteristica.orden, Caracteristica.nombre).all()
+        caracteristicas = query.order_by(Caracteristica.categoria_id, Caracteristica.orden, Caracteristica.nombre).all()
         
         return caracteristicas
         
@@ -120,7 +122,7 @@ async def listar_caracteristicas_paginado(
         # Paginación
         offset = (page - 1) * page_size
         caracteristicas = query.order_by(
-            Caracteristica.categoria, 
+            Caracteristica.categoria_id,  # ✅ Usar categoria_id
             Caracteristica.orden, 
             Caracteristica.nombre
         ).offset(offset).limit(page_size).all()

@@ -16,7 +16,7 @@ class Categoria(Base):
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
     # Relación con Características
-    # caracteristicas = relationship("Caracteristica", back_populates="categoria")
+    caracteristicas = relationship("Caracteristica", back_populates="categoria_obj")
 
     def __repr__(self):
         return f"<Categoria {self.nombre}>"
