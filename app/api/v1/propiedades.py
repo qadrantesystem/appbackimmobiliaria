@@ -389,31 +389,38 @@ async def obtener_caracteristicas_edificio(
     if not edificio:
         raise NotFoundException("Edificio no encontrado")
 
-    # Obtener todas las características del edificio
-    detalles = db.query(PropiedadDetalle).filter(
+    # Obtener características con JOIN optimizado (evita N+1 queries)
+    caracteristicas_query = db.query(
+        PropiedadDetalle.caracteristica_id,
+        PropiedadDetalle.valor,
+        Caracteristica.nombre,
+        Caracteristica.tipo_input,
+        Caracteristica.categoria_id,
+        Caracteristica.categoria  # DEPRECATED: para agrupar temporalmente
+    ).join(
+        Caracteristica,
+        PropiedadDetalle.caracteristica_id == Caracteristica.caracteristica_id
+    ).filter(
         PropiedadDetalle.registro_cab_id == edificio_id
     ).all()
 
     # Agrupar por categoría
     caracteristicas_agrupadas = {}
+    
+    for c in caracteristicas_query:
+        # Usar categoria_id como clave (más adelante se puede mapear a nombre)
+        categoria = c.categoria or "General"
 
-    for det in detalles:
-        caract = db.query(Caracteristica).filter(
-            Caracteristica.caracteristica_id == det.caracteristica_id
-        ).first()
+        if categoria not in caracteristicas_agrupadas:
+            caracteristicas_agrupadas[categoria] = []
 
-        if caract:
-            categoria = caract.categoria or "General"
-
-            if categoria not in caracteristicas_agrupadas:
-                caracteristicas_agrupadas[categoria] = []
-
-            caracteristicas_agrupadas[categoria].append({
-                "caracteristica_id": caract.caracteristica_id,
-                "nombre": caract.nombre,
-                "valor": det.valor,
-                "tipo_input": caract.tipo_input
-            })
+        caracteristicas_agrupadas[categoria].append({
+            "caracteristica_id": c.caracteristica_id,
+            "nombre": c.nombre,
+            "valor": c.valor,
+            "tipo_input": c.tipo_input,
+            "categoria_id": c.categoria_id  # ✅ Incluir categoria_id
+        })
 
     return ResponseModel(
         success=True,
@@ -452,18 +459,30 @@ async def get_property_detail(
     tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == propiedad.tipo_inmueble_id).first()
     distrito = db.query(Distrito).filter(Distrito.distrito_id == propiedad.distrito_id).first()
     
-    # Obtener características
-    detalles = db.query(PropiedadDetalle).filter(PropiedadDetalle.registro_cab_id == propiedad_id).all()
-    caracteristicas = []
-    for det in detalles:
-        caract = db.query(Caracteristica).filter(Caracteristica.caracteristica_id == det.caracteristica_id).first()
-        if caract:
-            caracteristicas.append({
-                "caracteristica_id": caract.caracteristica_id,
-                "nombre": caract.nombre,
-                "valor": det.valor,
-                "categoria": caract.categoria
-            })
+    # Obtener características con JOIN optimizado (evita N+1 queries)
+    caracteristicas_query = db.query(
+        PropiedadDetalle.caracteristica_id,
+        PropiedadDetalle.valor,
+        Caracteristica.nombre,
+        Caracteristica.categoria_id,  # ✅ Usar categoria_id (INTEGER)
+        Caracteristica.categoria      # ⚠️ DEPRECATED: mantener por compatibilidad
+    ).join(
+        Caracteristica,
+        PropiedadDetalle.caracteristica_id == Caracteristica.caracteristica_id
+    ).filter(
+        PropiedadDetalle.registro_cab_id == propiedad_id
+    ).all()
+    
+    caracteristicas = [
+        {
+            "caracteristica_id": c.caracteristica_id,
+            "nombre": c.nombre,
+            "valor": c.valor,
+            "categoria_id": c.categoria_id,  # ✅ Incluir categoria_id
+            "categoria": c.categoria         # ⚠️ DEPRECATED
+        }
+        for c in caracteristicas_query
+    ]
     
     # Propietario (incluye DNI si está autenticado y es dueño/admin)
     propietario = {
