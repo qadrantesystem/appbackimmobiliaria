@@ -280,7 +280,7 @@ async def get_oficinas_edificio(
         
         piso = int(piso_det.valor) if piso_det else None
         
-        # Obtener características de equipamiento (IDs 122-130)
+        # Obtener TODAS las características de la oficina (excepto piso que ya está extraído)
         caracteristicas = []
         equip_dets = db.query(
             PropiedadDetalle.caracteristica_id,
@@ -291,7 +291,7 @@ async def get_oficinas_edificio(
             PropiedadDetalle.caracteristica_id == Caracteristica.caracteristica_id
         ).filter(
             PropiedadDetalle.registro_cab_id == oficina.registro_cab_id,
-            PropiedadDetalle.caracteristica_id.between(122, 130)
+            PropiedadDetalle.caracteristica_id != 110  # Excluir piso (ya está extraído)
         ).all()
         
         for det in equip_dets:
