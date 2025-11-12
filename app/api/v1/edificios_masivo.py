@@ -229,13 +229,21 @@ async def crear_edificio_completo(
             db.add(oficina)
             db.flush()  # Para obtener el ID sin hacer commit
 
-            # Agregar características de la oficina (piso)
+            # Agregar características de la oficina (piso y número)
             detalle_piso = PropiedadDetalle(
                 registro_cab_id=oficina.registro_cab_id,
-                caracteristica_id=110,  # ID característica "Cantidad Pisos Edificio" (reutilizado)
+                caracteristica_id=110,  # ID característica "Piso"
                 valor=str(oficina_data.piso)
             )
             db.add(detalle_piso)
+            
+            # Agregar número de oficina
+            detalle_numero = PropiedadDetalle(
+                registro_cab_id=oficina.registro_cab_id,
+                caracteristica_id=111,  # ID característica "Número de Oficina"
+                valor=str(oficina_data.numero_oficina)
+            )
+            db.add(detalle_numero)
 
             # 🆕 Agregar EQUIPAMIENTO de la oficina (si tiene)
             if oficina_data.caracteristicas:
