@@ -1,0 +1,330 @@
+﻿{
+    "success":  true,
+    "message":  "36 oficinas encontradas",
+    "data":  [
+                 {
+                     "registro_cab_id":  59,
+                     "nombre":  "Oficina 901",
+                     "piso":  9,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  60,
+                     "nombre":  "Oficina 902",
+                     "piso":  9,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  61,
+                     "nombre":  "Oficina 903",
+                     "piso":  9,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  62,
+                     "nombre":  "Oficina 904",
+                     "piso":  9,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  63,
+                     "nombre":  "Oficina 801",
+                     "piso":  8,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  64,
+                     "nombre":  "Oficina 802",
+                     "piso":  8,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  65,
+                     "nombre":  "Oficina 803",
+                     "piso":  8,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  66,
+                     "nombre":  "Oficina 804",
+                     "piso":  8,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  67,
+                     "nombre":  "Oficina 701",
+                     "piso":  7,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  68,
+                     "nombre":  "Oficina 702",
+                     "piso":  7,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  69,
+                     "nombre":  "Oficina 703",
+                     "piso":  7,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  70,
+                     "nombre":  "Oficina 704",
+                     "piso":  7,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  71,
+                     "nombre":  "Oficina 601",
+                     "piso":  6,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  72,
+                     "nombre":  "Oficina 602",
+                     "piso":  6,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  73,
+                     "nombre":  "Oficina 603",
+                     "piso":  6,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  74,
+                     "nombre":  "Oficina 604",
+                     "piso":  6,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  75,
+                     "nombre":  "Oficina 501",
+                     "piso":  5,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  76,
+                     "nombre":  "Oficina 502",
+                     "piso":  5,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  77,
+                     "nombre":  "Oficina 503",
+                     "piso":  5,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  78,
+                     "nombre":  "Oficina 504",
+                     "piso":  5,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  79,
+                     "nombre":  "Oficina 401",
+                     "piso":  4,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  80,
+                     "nombre":  "Oficina 402",
+                     "piso":  4,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  81,
+                     "nombre":  "Oficina 403",
+                     "piso":  4,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  82,
+                     "nombre":  "Oficina 404",
+                     "piso":  4,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  83,
+                     "nombre":  "Oficina 301",
+                     "piso":  3,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  84,
+                     "nombre":  "Oficina 302",
+                     "piso":  3,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  85,
+                     "nombre":  "Oficina 303",
+                     "piso":  3,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  86,
+                     "nombre":  "Oficina 304",
+                     "piso":  3,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  87,
+                     "nombre":  "Oficina 201",
+                     "piso":  2,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  88,
+                     "nombre":  "Oficina 202",
+                     "piso":  2,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  89,
+                     "nombre":  "Oficina 203",
+                     "piso":  2,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  90,
+                     "nombre":  "Oficina 204",
+                     "piso":  2,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  91,
+                     "nombre":  "Oficina 101",
+                     "piso":  1,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  92,
+                     "nombre":  "Oficina 102",
+                     "piso":  1,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  93,
+                     "nombre":  "Oficina 103",
+                     "piso":  1,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 },
+                 {
+                     "registro_cab_id":  94,
+                     "nombre":  "Oficina 104",
+                     "piso":  1,
+                     "area":  50.0,
+                     "caracteristicas":  [
+
+                                         ]
+                 }
+             ]
+}

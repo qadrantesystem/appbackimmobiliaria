@@ -479,6 +479,14 @@ async def actualizar_edificio_completo(
                 )
                 db.add(detalle_piso)
                 
+                # Agregar número de oficina
+                detalle_numero = PropiedadDetalle(
+                    registro_cab_id=oficina_existente.registro_cab_id,
+                    caracteristica_id=111,
+                    valor=str(oficina_data.numero_oficina)
+                )
+                db.add(detalle_numero)
+                
                 # Agregar equipamiento
                 if oficina_data.caracteristicas:
                     for caract in oficina_data.caracteristicas:
@@ -522,6 +530,14 @@ async def actualizar_edificio_completo(
                     valor=str(oficina_data.piso)
                 )
                 db.add(detalle_piso)
+                
+                # Agregar número de oficina
+                detalle_numero = PropiedadDetalle(
+                    registro_cab_id=nueva_oficina.registro_cab_id,
+                    caracteristica_id=111,
+                    valor=str(oficina_data.numero_oficina)
+                )
+                db.add(detalle_numero)
                 
                 # Agregar equipamiento
                 if oficina_data.caracteristicas:
