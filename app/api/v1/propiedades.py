@@ -1300,3 +1300,96 @@ async def asignar_corredor(
             "comision_corredor": float(propiedad.comision_corredor) if propiedad.comision_corredor else None
         }
     )
+
+# ============================================
+# 🔄 ACTUALIZAR CORREDOR Y COMISIÓN
+# ============================================
+
+class ActualizarCorredorRequest(BaseModel):
+    corredor_asignado_id: Optional[int] = None
+    comision_corredor: Optional[Decimal] = None
+
+@router.put("/{propiedad_id}/corredor", response_model=ResponseModel[dict])
+async def actualizar_corredor_comision(
+    propiedad_id: int,
+    data: ActualizarCorredorRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user)
+):
+    """
+    🔄 Actualizar corredor asignado y/o comisión de una propiedad
+    
+    **Permite:**
+    - Actualizar solo el corredor
+    - Actualizar solo la comisión
+    - Actualizar ambos
+    - Remover corredor (enviando null)
+    
+    **Permisos:**
+    - Admin puede actualizar cualquier propiedad
+    - Ofertante solo puede actualizar sus propias propiedades
+    """
+    # 1. Buscar propiedad
+    propiedad = db.query(Propiedad).filter(
+        Propiedad.registro_cab_id == propiedad_id
+    ).first()
+    
+    if not propiedad:
+        raise NotFoundException(f"Propiedad {propiedad_id} no encontrada")
+    
+    # 2. Verificar permisos
+    if current_user.perfil_id != 4 and propiedad.usuario_id != current_user.usuario_id:
+        raise ForbiddenException("No tienes permiso para modificar esta propiedad")
+    
+    # 3. Validar corredor si se proporciona
+    corredor = None
+    if data.corredor_asignado_id is not None:
+        corredor = db.query(Usuario).filter(
+            Usuario.usuario_id == data.corredor_asignado_id,
+            Usuario.perfil_id == 2  # Perfil corredor
+        ).first()
+        
+        if not corredor:
+            raise BadRequestException(f"Corredor {data.corredor_asignado_id} no encontrado o no tiene perfil de corredor")
+    
+    # 4. Actualizar campos
+    cambios = []
+    
+    if data.corredor_asignado_id is not None:
+        propiedad.corredor_asignado_id = data.corredor_asignado_id
+        if corredor:
+            cambios.append(f"Corredor asignado: {corredor.nombre} {corredor.apellido}")
+        else:
+            cambios.append("Corredor removido")
+    
+    if data.comision_corredor is not None:
+        propiedad.comision_corredor = data.comision_corredor
+        cambios.append(f"Comisión actualizada: {float(data.comision_corredor)}%")
+    
+    if not cambios:
+        raise BadRequestException("Debe proporcionar al menos un campo para actualizar")
+    
+    propiedad.updated_by = current_user.usuario_id
+    db.commit()
+    db.refresh(propiedad)
+    
+    # 5. Preparar respuesta
+    corredor_nombre = None
+    if propiedad.corredor_asignado_id:
+        corredor_actual = db.query(Usuario).filter(
+            Usuario.usuario_id == propiedad.corredor_asignado_id
+        ).first()
+        if corredor_actual:
+            corredor_nombre = f"{corredor_actual.nombre} {corredor_actual.apellido}"
+    
+    return ResponseModel(
+        success=True,
+        message=f"Propiedad actualizada: {', '.join(cambios)}",
+        data={
+            "registro_cab_id": propiedad.registro_cab_id,
+            "corredor_asignado_id": propiedad.corredor_asignado_id,
+            "corredor_nombre": corredor_nombre,
+            "comision_corredor": float(propiedad.comision_corredor) if propiedad.comision_corredor else None,
+            "cambios": cambios
+        }
+    )
