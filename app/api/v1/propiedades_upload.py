@@ -397,7 +397,7 @@ async def actualizar_propiedad_completa(
     
     # Imágenes opcionales
     imagen_principal: Optional[UploadFile] = File(None, description="Nueva imagen principal (opcional)"),
-    imagenes_galeria: Optional[List[UploadFile]] = File(None, description="Nueva galería (opcional, hasta 5 fotos)"),
+    imagenes_galeria: List[UploadFile] = File(default=[], description="Nueva galería (opcional, hasta 5 fotos)"),
     
     # Autenticación
     current_user: Usuario = Depends(require_ofertante),
@@ -533,7 +533,7 @@ async def actualizar_propiedad_completa(
         
         # 6. Actualizar galería (si se envió)
         urls_galeria_nueva = None
-        if imagenes_galeria:
+        if imagenes_galeria and len(imagenes_galeria) > 0:
             if len(imagenes_galeria) > 5:
                 raise HTTPException(
                     status_code=400,
