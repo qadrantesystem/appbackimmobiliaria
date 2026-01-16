@@ -39,7 +39,12 @@ class Settings:
     TWILIO_ACCOUNT_SID: str = config("TWILIO_ACCOUNT_SID", default="")
     TWILIO_AUTH_TOKEN: str = config("TWILIO_AUTH_TOKEN", default="")
     TWILIO_PHONE_NUMBER: str = config("TWILIO_PHONE_NUMBER", default="")
-    
+
+    # 📱 WhatsApp Configuration (Twilio WhatsApp API o Meta Business API)
+    WHATSAPP_API_URL: str = config("WHATSAPP_API_URL", default="https://api.twilio.com/2010-04-01/Accounts/")
+    WHATSAPP_API_TOKEN: str = config("WHATSAPP_API_TOKEN", default="")
+    WHATSAPP_FROM_NUMBER: str = config("WHATSAPP_FROM_NUMBER", default="+51999999999")
+
     # 🌐 CORS
     ALLOWED_HOSTS: List[str] = ["*"]
     

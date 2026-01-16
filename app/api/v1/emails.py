@@ -9,6 +9,8 @@ from typing import List, Optional
 from app.services.email_service import email_service
 from app.database import get_db
 from app.models.propiedad import Propiedad
+from app.dependencies import get_current_active_user
+from app.models.usuario import Usuario
 import logging
 import io
 from reportlab.lib.pagesizes import A4
@@ -35,10 +37,14 @@ class EnviarFichasRequest(BaseModel):
 @router.post("/enviar-fichas")
 async def enviar_fichas_por_correo(
     request: EnviarFichasRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user)
 ):
     """
     📧 Enviar fichas PDF de propiedades por correo
+
+    Requiere autenticación.
+    Perfiles permitidos: TODOS (demandante, ofertante, corredor, admin)
 
     - Recibe lista de IDs de propiedades
     - Genera fichas PDF profesionales (A4)
@@ -48,6 +54,7 @@ async def enviar_fichas_por_correo(
     Args:
         request: Datos del correo (destinatario, asunto, mensaje, IDs)
         db: Sesión de base de datos
+        current_user: Usuario autenticado
 
     Returns:
         Dict con resultado del envío
@@ -57,11 +64,11 @@ async def enviar_fichas_por_correo(
         if not request.propiedad_ids:
             raise HTTPException(status_code=400, detail="Debe seleccionar al menos una propiedad")
 
-        # Limitar a 4 propiedades máximo (para no saturar el correo)
-        if len(request.propiedad_ids) > 4:
+        # Limitar a 10 propiedades máximo (para no saturar el correo)
+        if len(request.propiedad_ids) > 10:
             raise HTTPException(
                 status_code=400,
-                detail="Máximo 4 propiedades permitidas por correo"
+                detail="Máximo 10 propiedades permitidas por correo"
             )
 
         # Consultar propiedades
@@ -227,9 +234,9 @@ def generar_ficha_pdf(propiedad: Propiedad) -> bytes:
 
     # Datos de la tabla
     data = [
-        ['Área Total', f"{propiedad.area or 'N/A'} m²", 'Precio', f"$ {'{:,.0f}'.format(propiedad.precio_venta or 0)}"],
-        ['Habitaciones', str(propiedad.habitaciones or 'N/A'), 'Baños', str(propiedad.banos or 'N/A')],
-        ['Parqueos', str(propiedad.parqueos or '0'), 'Antigüedad', f"{propiedad.antiguedad or 'N/A'} años"],
+        ['Área Total', f"{propiedad.area or 'N/A'} m²", 'Precio Venta', f"$ {'{:,.0f}'.format(propiedad.precio_venta or 0)}"],
+        ['Precio Alquiler', f"$ {'{:,.0f}'.format(propiedad.precio_alquiler or 0)}", 'Antigüedad', f"{propiedad.antiguedad or 'N/A'} años"],
+        ['Transacción', propiedad.transaccion or 'N/A', 'Moneda', propiedad.moneda or 'PEN'],
     ]
 
     table = Table(data, colWidths=[40*mm, 40*mm, 40*mm, 40*mm])
@@ -292,10 +299,16 @@ def construir_html_correo(propiedades: List[Propiedad], mensaje_personal: str) -
             distrito_nombre = ''
         ubicacion = f"{prop.direccion or ''}, {distrito_nombre}"
 
+        # Thumbnail de imagen si existe
+        thumbnail_html = ""
+        if prop.imagen_principal:
+            thumbnail_html = f'<img src="{prop.imagen_principal}" style="width: 100px; height: 75px; object-fit: cover; border-radius: 8px; border: 2px solid #e0e0e0;" alt="Propiedad" />'
+
         props_html += f"""
         <tr>
             <td style="padding: 15px; border-bottom: 1px solid #e0e0e0;">
                 <div style="display: flex; gap: 15px; align-items: start;">
+                    {thumbnail_html}
                     <div style="flex: 1;">
                         <div style="font-size: 16px; font-weight: 600; color: #2C5282; margin-bottom: 5px;">
                             {codigo} - {titulo}
@@ -306,6 +319,7 @@ def construir_html_correo(propiedades: List[Propiedad], mensaje_personal: str) -
                         <div style="display: flex; gap: 15px; font-size: 13px; color: #374151;">
                             <span><strong>Precio:</strong> {precio}</span>
                             <span><strong>Área:</strong> {area}</span>
+                            <span><strong>Transacción:</strong> {prop.transaccion.title() if prop.transaccion else 'N/A'}</span>
                         </div>
                     </div>
                 </div>

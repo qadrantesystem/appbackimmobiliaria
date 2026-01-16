@@ -213,6 +213,13 @@ except ImportError as e:
     print(f"   ⚠️ Error cargando emails: {e}")
 
 try:
+    from app.api.v1 import compartir
+    app.include_router(compartir.router, prefix="/api/v1/propiedades/compartir", tags=["📤 Compartir Propiedades"])
+    print("   ✅ Compartir Propiedades")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando compartir: {e}")
+
+try:
     from app.api.v1 import tracking
     app.include_router(tracking.router, prefix="/api/v1/tracking", tags=["📊 Tracking CRM"])
     print("   ✅ Tracking CRM")
@@ -239,5 +246,38 @@ try:
     print("   ✅ Autorizaciones")
 except ImportError as e:
     print(f"   ⚠️ Error cargando autorizaciones: {e}")
+
+# ==========================================
+# 🛠️ ADMIN - MANTENIMIENTOS
+# ==========================================
+print("📦 Cargando módulos de Administración...")
+
+try:
+    from app.api.v1.admin import tipos_inmueble as admin_tipos
+    app.include_router(admin_tipos.router, prefix="/api/v1/admin/tipos-inmueble", tags=["🛠️ Admin - Tipos de Inmueble"])
+    print("   ✅ Admin - Tipos de Inmueble")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando admin tipos inmueble: {e}")
+
+try:
+    from app.api.v1.admin import distritos as admin_distritos
+    app.include_router(admin_distritos.router, prefix="/api/v1/admin/distritos", tags=["🛠️ Admin - Distritos"])
+    print("   ✅ Admin - Distritos")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando admin distritos: {e}")
+
+try:
+    from app.api.v1.admin import estados_crm as admin_estados_crm
+    app.include_router(admin_estados_crm.router, prefix="/api/v1/admin/estados-crm", tags=["🛠️ Admin - Estados CRM"])
+    print("   ✅ Admin - Estados CRM")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando admin estados CRM: {e}")
+
+try:
+    from app.api.v1.admin import carac_x_inmueble as admin_carac_x_inmueble
+    app.include_router(admin_carac_x_inmueble.router, prefix="/api/v1/admin/caracteristicas-x-inmueble", tags=["🛠️ Admin - Carac x Inmueble"])
+    print("   ✅ Admin - Características x Inmueble")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando admin carac x inmueble: {e}")
 
 print("✅ Aplicación lista!")
