@@ -209,7 +209,7 @@ class BusquedaInteligenteService:
         """Obtiene el número de piso de una oficina"""
         detalle = self.db.query(PropiedadDetalle).filter(
             PropiedadDetalle.registro_cab_id == registro_cab_id,
-            PropiedadDetalle.caracteristica_id == 110  # 110 = Piso
+            PropiedadDetalle.caracteristica_id == 112  # 112 = Piso (número de piso de la oficina)
         ).first()
 
         if detalle and detalle.valor:
