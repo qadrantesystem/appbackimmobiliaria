@@ -267,6 +267,11 @@ class BusquedaInteligenteService:
                 # Generar combinación
                 piso = self._obtener_piso(combo[0].registro_cab_id)
 
+                # Obtener coordenadas del edificio padre
+                edificio = self.db.query(Propiedad).filter(
+                    Propiedad.registro_cab_id == combo[0].padre_registro_cab_id
+                ).first()
+
                 resultados.append({
                     "tipo": "combinacion",
                     "cantidad_oficinas": n,
@@ -277,9 +282,12 @@ class BusquedaInteligenteService:
                     "moneda": combo[0].moneda,
                     "glosa": self._generar_glosa(combo),
                     "edificio_id": combo[0].padre_registro_cab_id,
+                    "edificio_nombre": edificio.titulo if edificio else None,
                     "piso": piso,
                     "distrito": combo[0].distrito.nombre if combo[0].distrito else None,
                     "distrito_id": combo[0].distrito_id,
+                    "latitud": str(edificio.latitud) if edificio and edificio.latitud else None,
+                    "longitud": str(edificio.longitud) if edificio and edificio.longitud else None,
                     "oficinas": [self._serializar_oficina_simple(ofi) for ofi in combo]
                 })
 
