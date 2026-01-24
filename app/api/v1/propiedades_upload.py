@@ -34,6 +34,7 @@ class PropiedadCreateWithImages(BaseModel):
 
     # NUEVO: Recursividad (opcional para oficinas dentro de edificio)
     padre_registro_cab_id: Optional[int] = Field(None, description="ID del edificio padre (solo para oficinas)")
+    piso: Optional[int] = Field(None, description="Número de piso (solo para oficinas/departamentos)")
 
     # Corredor (opcional)
     corredor_asignado_id: Optional[int] = None
@@ -177,6 +178,7 @@ async def crear_propiedad_con_imagenes(
             usuario_id=current_user.usuario_id,
             propietario_id=propiedad_data.propietario_id,
             padre_registro_cab_id=propiedad_data.padre_registro_cab_id,
+            piso=propiedad_data.piso,  # ✅ Guardar piso en cabecera
             corredor_asignado_id=propiedad_data.corredor_asignado_id,
             comision_corredor=propiedad_data.comision_corredor,
             tipo_inmueble_id=propiedad_data.tipo_inmueble_id,
@@ -349,6 +351,7 @@ class PropiedadUpdateComplete(BaseModel):
 
     # NUEVO: Recursividad (opcional para oficinas)
     padre_registro_cab_id: Optional[int] = None
+    piso: Optional[int] = Field(None, description="Número de piso (solo para oficinas/departamentos)")
 
     # Corredor (opcional)
     corredor_asignado_id: Optional[int] = None
@@ -449,6 +452,8 @@ async def actualizar_propiedad_completa(
                 propiedad.propietario_id = datos_actualizacion.propietario_id
             if datos_actualizacion.padre_registro_cab_id is not None:
                 propiedad.padre_registro_cab_id = datos_actualizacion.padre_registro_cab_id
+            if datos_actualizacion.piso is not None:
+                propiedad.piso = datos_actualizacion.piso
 
             if datos_actualizacion.corredor_asignado_id is not None:
                 propiedad.corredor_asignado_id = datos_actualizacion.corredor_asignado_id

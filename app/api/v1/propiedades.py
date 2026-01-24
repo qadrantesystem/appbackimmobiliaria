@@ -611,30 +611,25 @@ async def get_property_detail(
                 PropiedadDetalle.registro_cab_id == oficina.registro_cab_id
             ).all()
             
-            # Extraer piso y número de oficina de las características
-            piso = None
+            # ✅ Obtener piso directamente de la columna de la oficina
+            piso = oficina.piso
             numero_oficina = None
             caracteristicas_oficina = []
-            
+
             for c in caract_oficina:
                 caracteristicas_oficina.append({
                     "caracteristica_id": c.caracteristica_id,
                     "nombre": c.nombre,
                     "valor": c.valor
                 })
-                
-                if c.nombre.lower() == "piso":
-                    try:
-                        piso = int(c.valor)
-                    except:
-                        piso = c.valor
-                        
+
+                # Número de oficina aún viene de características
                 if "oficina" in c.nombre.lower() and "número" in c.nombre.lower():
                     try:
                         numero_oficina = int(c.valor)
                     except:
                         numero_oficina = c.valor
-            
+
             oficinas_list.append({
                 "registro_cab_id": oficina.registro_cab_id,
                 "nombre_inmueble": oficina.nombre_inmueble,
@@ -677,7 +672,8 @@ async def get_property_detail(
         estado_crm=propiedad.estado_crm,
         compartidos=propiedad.compartidos,
         es_favorito=es_favorito,
-        padre_registro_cab_id=propiedad.padre_registro_cab_id
+        padre_registro_cab_id=propiedad.padre_registro_cab_id,
+        piso=propiedad.piso
     )
     
     # Agregar oficinas como campo extra si aplica
@@ -767,6 +763,8 @@ async def create_property(
     nueva_propiedad = Propiedad(
         usuario_id=current_user.usuario_id,
         propietario_id=propiedad_data.propietario_id,
+        padre_registro_cab_id=propiedad_data.padre_registro_cab_id,
+        piso=propiedad_data.piso,
         tipo_inmueble_id=propiedad_data.tipo_inmueble_id,
         distrito_id=propiedad_data.distrito_id,
         nombre_inmueble=propiedad_data.nombre_inmueble,

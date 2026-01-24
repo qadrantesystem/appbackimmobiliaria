@@ -15,6 +15,7 @@ class PropiedadBase(BaseModel):
 
     # NUEVO: Recursividad (opcional para oficinas)
     padre_registro_cab_id: Optional[int] = Field(None, description="ID del edificio padre (solo para oficinas)")
+    piso: Optional[int] = Field(None, description="Número de piso (solo para oficinas/departamentos)")
 
     # Datos del inmueble
     tipo_inmueble_id: int
@@ -67,6 +68,7 @@ class PropiedadUpdate(BaseModel):
     descripcion: Optional[str] = None
     imagen_principal: Optional[str] = None
     imagenes: Optional[List[str]] = None
+    piso: Optional[int] = Field(None, description="Número de piso (solo para oficinas/departamentos)")
 
 class PropiedadEstadoUpdate(BaseModel):
     """Schema para cambiar estado de propiedad"""
@@ -132,7 +134,8 @@ class PropiedadDetalleResponse(PropiedadResponse):
     estado_crm: str
     compartidos: int
     padre_registro_cab_id: Optional[int] = None  # ID del edificio padre (para oficinas)
-    
+    piso: Optional[int] = None  # Número de piso (para oficinas/departamentos)
+
     class Config:
         from_attributes = True
 

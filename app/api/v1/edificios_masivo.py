@@ -209,6 +209,7 @@ async def crear_edificio_completo(
                 usuario_id=current_user.usuario_id,
                 propietario_id=edificio_data.edificio.propietario_id,  # Mismo propietario
                 padre_registro_cab_id=edificio_principal.registro_cab_id,  # 🔗 FK al edificio padre
+                piso=oficina_data.piso,  # ✅ Guardar piso directamente en cabecera
                 tipo_inmueble_id=tipo_inmueble_oficina_id,
                 distrito_id=edificio_data.edificio.distrito_id,  # Mismo distrito
                 nombre_inmueble=oficina_data.nombre,
@@ -229,14 +230,6 @@ async def crear_edificio_completo(
             db.add(oficina)
             db.flush()  # Para obtener el ID sin hacer commit
 
-            # Agregar características de la oficina (piso y número)
-            detalle_piso = PropiedadDetalle(
-                registro_cab_id=oficina.registro_cab_id,
-                caracteristica_id=110,  # ID característica "Piso"
-                valor=str(oficina_data.piso)
-            )
-            db.add(detalle_piso)
-            
             # Agregar número de oficina
             detalle_numero = PropiedadDetalle(
                 registro_cab_id=oficina.registro_cab_id,
@@ -437,13 +430,8 @@ async def actualizar_edificio_completo(
         # Mapear oficinas actuales por piso+número para identificarlas
         oficinas_actuales_map = {}
         for oficina_actual in oficinas_actuales:
-            # Obtener piso de la oficina
-            piso_det = db.query(PropiedadDetalle).filter(
-                PropiedadDetalle.registro_cab_id == oficina_actual.registro_cab_id,
-                PropiedadDetalle.caracteristica_id == 110
-            ).first()
-            
-            piso_num = int(piso_det.valor) if piso_det else 0
+            # ✅ Obtener piso directamente de la columna (no de característica)
+            piso_num = oficina_actual.piso or 0
             key = f"{piso_num}_{oficina_actual.nombre_inmueble}"
             oficinas_actuales_map[key] = oficina_actual
         
@@ -459,26 +447,19 @@ async def actualizar_edificio_completo(
                 # ACTUALIZAR oficina existente
                 logger.info(f"   ♻️ Actualizando {oficina_data.nombre}...")
                 oficina_existente = oficinas_actuales_map[key]
-                
+
                 oficina_existente.area = oficina_data.area
+                oficina_existente.piso = oficina_data.piso  # ✅ Actualizar piso en cabecera
                 oficina_existente.titulo = f"{oficina_data.nombre} - {edificio_data.edificio.nombre_inmueble}"
                 oficina_existente.descripcion = f"Oficina ubicada en el piso {oficina_data.piso} del edificio {edificio_data.edificio.nombre_inmueble}"
                 oficina_existente.transaccion = edificio_data.edificio.transaccion
                 oficina_existente.moneda = edificio_data.edificio.moneda
-                
+
                 # Actualizar características (eliminar y recrear)
                 db.query(PropiedadDetalle).filter(
                     PropiedadDetalle.registro_cab_id == oficina_existente.registro_cab_id
                 ).delete()
-                
-                # Agregar piso
-                detalle_piso = PropiedadDetalle(
-                    registro_cab_id=oficina_existente.registro_cab_id,
-                    caracteristica_id=110,
-                    valor=str(oficina_data.piso)
-                )
-                db.add(detalle_piso)
-                
+
                 # Agregar número de oficina
                 detalle_numero = PropiedadDetalle(
                     registro_cab_id=oficina_existente.registro_cab_id,
@@ -503,6 +484,7 @@ async def actualizar_edificio_completo(
                     usuario_id=current_user.usuario_id,
                     propietario_id=edificio_data.edificio.propietario_id,
                     padre_registro_cab_id=edificio_id,
+                    piso=oficina_data.piso,  # ✅ Guardar piso directamente en cabecera
                     tipo_inmueble_id=tipo_inmueble_oficina_id,
                     distrito_id=edificio_data.edificio.distrito_id,
                     nombre_inmueble=oficina_data.nombre,
@@ -519,18 +501,10 @@ async def actualizar_edificio_completo(
                     estado="borrador",
                     created_by=current_user.usuario_id
                 )
-                
+
                 db.add(nueva_oficina)
                 db.flush()
-                
-                # Agregar piso
-                detalle_piso = PropiedadDetalle(
-                    registro_cab_id=nueva_oficina.registro_cab_id,
-                    caracteristica_id=110,
-                    valor=str(oficina_data.piso)
-                )
-                db.add(detalle_piso)
-                
+
                 # Agregar número de oficina
                 detalle_numero = PropiedadDetalle(
                     registro_cab_id=nueva_oficina.registro_cab_id,

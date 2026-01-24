@@ -18,7 +18,8 @@ class Propiedad(Base):
 
     # NUEVO: Recursividad (edificio → oficinas)
     padre_registro_cab_id = Column(Integer, ForeignKey("registro_x_inmueble_cab.registro_cab_id"), nullable=True, index=True)
-    
+    piso = Column(Integer, nullable=True)  # Número de piso (solo para oficinas/departamentos)
+
     # Corredor asignado (si aplica)
     corredor_asignado_id = Column(Integer, ForeignKey("usuarios.usuario_id"))
     comision_corredor = Column(DECIMAL(5, 2))
