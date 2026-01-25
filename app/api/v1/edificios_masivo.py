@@ -66,6 +66,7 @@ class EdificioCompletoInput(BaseModel):
     edificio: EdificioBase
     oficinas: List[OficinaInput]
     sotanos: Optional[List[SotanoInput]] = []
+    oficinas_para_eliminar: Optional[List[int]] = []  # 🗑️ IDs de oficinas a eliminar
 
 # ============================================
 # 📌 ENDPOINTS
@@ -419,10 +420,38 @@ async def actualizar_edificio_completo(
                 )
                 db.add(detalle)
         
-        # 6. Gestionar oficinas: comparar existentes vs nuevas
+        # 6. 🗑️ ELIMINAR oficinas marcadas para eliminar
+        oficinas_eliminadas = 0
+        if edificio_data.oficinas_para_eliminar and len(edificio_data.oficinas_para_eliminar) > 0:
+            logger.info(f"🗑️ Eliminando {len(edificio_data.oficinas_para_eliminar)} oficinas marcadas...")
+
+            for oficina_id in edificio_data.oficinas_para_eliminar:
+                # Verificar que la oficina pertenece a este edificio
+                oficina_a_eliminar = db.query(Propiedad).filter(
+                    Propiedad.registro_cab_id == oficina_id,
+                    Propiedad.padre_registro_cab_id == edificio_id
+                ).first()
+
+                if oficina_a_eliminar:
+                    # Eliminar primero las características/detalles de la oficina
+                    db.query(PropiedadDetalle).filter(
+                        PropiedadDetalle.registro_cab_id == oficina_id
+                    ).delete()
+
+                    # Eliminar la oficina
+                    db.delete(oficina_a_eliminar)
+                    oficinas_eliminadas += 1
+                    logger.info(f"   🗑️ Eliminada: {oficina_a_eliminar.nombre_inmueble} (ID: {oficina_id})")
+                else:
+                    logger.warning(f"   ⚠️ Oficina {oficina_id} no encontrada o no pertenece a este edificio")
+
+            db.flush()
+            logger.info(f"✅ {oficinas_eliminadas} oficinas eliminadas correctamente")
+
+        # 7. Gestionar oficinas: comparar existentes vs nuevas
         logger.info(f"🏢 Gestionando oficinas...")
-        
-        # Obtener oficinas actuales con número de oficina
+
+        # Obtener oficinas actuales con número de oficina (después de eliminar las marcadas)
         oficinas_actuales = db.query(Propiedad).filter(
             Propiedad.padre_registro_cab_id == edificio_id
         ).all()
@@ -523,9 +552,9 @@ async def actualizar_edificio_completo(
                         )
                         db.add(detalle_equip)
         
-        # 7. ELIMINAR oficinas que ya no existen
+        # 8. ELIMINAR oficinas que ya no existen en la lista (adicional a las marcadas)
         oficinas_a_eliminar = set(oficinas_actuales_map.keys()) - oficinas_nuevas_keys
-        
+
         for key_eliminar in oficinas_a_eliminar:
             oficina_eliminar = oficinas_actuales_map[key_eliminar]
             logger.info(f"   🗑️ Eliminando {oficina_eliminar.nombre_inmueble}...")
@@ -562,7 +591,7 @@ async def actualizar_edificio_completo(
                 "total_oficinas": total_oficinas,
                 "oficinas_creadas": len(oficinas_nuevas_keys - set(oficinas_actuales_map.keys())),
                 "oficinas_actualizadas": len(oficinas_nuevas_keys & set(oficinas_actuales_map.keys())),
-                "oficinas_eliminadas": len(oficinas_a_eliminar)
+                "oficinas_eliminadas": oficinas_eliminadas + len(oficinas_a_eliminar)  # Marcadas + automáticas
             }
         }
     
