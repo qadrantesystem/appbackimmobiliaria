@@ -1,3 +1,4 @@
+import re
 from fastapi import APIRouter, Depends, Query, UploadFile, File, Body
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import or_, and_, func
@@ -340,40 +341,52 @@ async def get_oficinas_edificio(
     
     oficinas_list = []
     for oficina in oficinas:
-        # Obtener piso desde características (caracteristica_id = 110)
-        piso_det = db.query(PropiedadDetalle).filter(
-            PropiedadDetalle.registro_cab_id == oficina.registro_cab_id,
-            PropiedadDetalle.caracteristica_id == 110
-        ).first()
-        
-        piso = int(piso_det.valor) if piso_det else None
-        
-        # Obtener TODAS las características de la oficina (excepto piso que ya está extraído)
+        # ✅ Obtener piso desde columna cabecera (preferido) o fallback a característica 110
+        piso = oficina.piso  # Campo de cabecera (nuevo)
+        if piso is None:
+            # Fallback: buscar en características (para oficinas antiguas)
+            piso_det = db.query(PropiedadDetalle).filter(
+                PropiedadDetalle.registro_cab_id == oficina.registro_cab_id,
+                PropiedadDetalle.caracteristica_id == 110
+            ).first()
+            piso = int(piso_det.valor) if piso_det else None
+
+        # Extraer numero_oficina del nombre si existe (ej: "Oficina 901" -> 901)
+        numero_oficina = None
+        if oficina.nombre_inmueble:
+            match = re.search(r'(\d+)', oficina.nombre_inmueble)
+            if match:
+                numero_oficina = int(match.group(1))
+
+        # Obtener TODAS las características de la oficina
         caracteristicas = []
         equip_dets = db.query(
             PropiedadDetalle.caracteristica_id,
             PropiedadDetalle.valor,
             Caracteristica.nombre
         ).join(
-            Caracteristica, 
+            Caracteristica,
             PropiedadDetalle.caracteristica_id == Caracteristica.caracteristica_id
         ).filter(
-            PropiedadDetalle.registro_cab_id == oficina.registro_cab_id,
-            PropiedadDetalle.caracteristica_id != 110  # Excluir piso (ya está extraído)
+            PropiedadDetalle.registro_cab_id == oficina.registro_cab_id
         ).all()
-        
+
         for det in equip_dets:
             caracteristicas.append({
                 "caracteristica_id": det.caracteristica_id,
                 "nombre": det.nombre,
                 "valor": det.valor
             })
-        
+
         oficinas_list.append({
             "registro_cab_id": oficina.registro_cab_id,
             "nombre": oficina.nombre_inmueble,
+            "numero_oficina": numero_oficina,
             "piso": piso,
             "area": float(oficina.area) if oficina.area else None,
+            "estado": oficina.estado,
+            "precio_venta": float(oficina.precio_venta) if oficina.precio_venta else None,
+            "precio_alquiler": float(oficina.precio_alquiler) if oficina.precio_alquiler else None,
             "caracteristicas": caracteristicas
         })
     
