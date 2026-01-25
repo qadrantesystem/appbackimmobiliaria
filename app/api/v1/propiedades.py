@@ -430,6 +430,9 @@ async def listar_edificios_disponibles(
             nombre_inmueble=edificio.nombre_inmueble,
             direccion=edificio.direccion,
             tipo_inmueble_id=edificio.tipo_inmueble_id,  # ✅ Para filtros en frontend
+            distrito_id=edificio.distrito_id,  # ✅ Para herencia
+            latitud=str(edificio.latitud) if edificio.latitud else None,  # ✅ Para herencia
+            longitud=str(edificio.longitud) if edificio.longitud else None,  # ✅ Para herencia
             cantidad_pisos=cantidad_pisos
         ))
 

@@ -48,6 +48,9 @@ class EdificioDisponible(BaseModel):
     nombre_inmueble: str
     direccion: str
     tipo_inmueble_id: int  # ✅ ID del tipo de inmueble (para filtros)
+    distrito_id: Optional[int] = None  # ✅ Para herencia de distrito
+    latitud: Optional[str] = None  # ✅ Para herencia de coordenadas
+    longitud: Optional[str] = None  # ✅ Para herencia de coordenadas
     cantidad_pisos: Optional[str] = None  # Viene de características
 
     class Config:
