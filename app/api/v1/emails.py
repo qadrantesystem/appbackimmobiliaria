@@ -32,6 +32,8 @@ class EnviarFichasRequest(BaseModel):
     message: Optional[str] = ""
     propiedad_ids: List[int]
     send_copy: bool = False
+    client_name: Optional[str] = None
+    tabla_resumen: Optional[str] = None  # HTML de tabla resumen desde frontend
 
 
 @router.post("/enviar-fichas")
@@ -104,7 +106,12 @@ async def enviar_fichas_por_correo(
             raise HTTPException(status_code=500, detail="No se pudieron generar los PDFs")
 
         # Construir HTML del correo
-        html_content = construir_html_correo(propiedades, request.message)
+        html_content = construir_html_correo(
+            propiedades=propiedades,
+            mensaje_personal=request.message,
+            tabla_resumen=request.tabla_resumen,
+            client_name=request.client_name
+        )
 
         # Enviar correo
         result = await email_service.send_email_with_attachments(
@@ -275,102 +282,132 @@ def generar_ficha_pdf(propiedad: Propiedad) -> bytes:
     return buffer.getvalue()
 
 
-def construir_html_correo(propiedades: List[Propiedad], mensaje_personal: str) -> str:
+def construir_html_correo(
+    propiedades: List[Propiedad],
+    mensaje_personal: str,
+    tabla_resumen: str = None,
+    client_name: str = None
+) -> str:
     """
     Construir HTML del correo con lista de propiedades
 
     Args:
         propiedades: Lista de propiedades
-        mensaje_personal: Mensaje opcional del usuario
+        mensaje_personal: Mensaje con narrativa de búsqueda
+        tabla_resumen: HTML de tabla resumen desde frontend
+        client_name: Nombre del cliente para saludo
 
     Returns:
         HTML del correo
     """
-    # Lista de propiedades
-    props_html = ""
-    for prop in propiedades:
-        codigo = f"PROP-{prop.registro_cab_id}"
-        titulo = prop.titulo or prop.nombre_inmueble or "Propiedad"
-        precio = f"${'{:,.0f}'.format(prop.precio_venta or 0)}"
-        area = f"{prop.area or 'N/A'} m²"
-        try:
-            distrito_nombre = prop.distrito.nombre if prop.distrito else ''
-        except:
-            distrito_nombre = ''
-        ubicacion = f"{prop.direccion or ''}, {distrito_nombre}"
+    # Saludo personalizado
+    saludo = f"Hola {client_name}," if client_name else "Hola,"
 
-        # Thumbnail de imagen si existe
-        thumbnail_html = ""
-        if prop.imagen_principal:
-            thumbnail_html = f'<img src="{prop.imagen_principal}" style="width: 100px; height: 75px; object-fit: cover; border-radius: 8px; border: 2px solid #e0e0e0;" alt="Propiedad" />'
+    # Convertir mensaje a HTML (reemplazar saltos de línea)
+    mensaje_html = ""
+    if mensaje_personal:
+        # Convertir saltos de línea a <br> y preservar espacios
+        mensaje_html = mensaje_personal.replace('\n', '<br>')
+        # Convertir emojis de bullets a listas
+        mensaje_html = mensaje_html.replace('• ', '&bull; ')
+        mensaje_html = mensaje_html.replace('📋', '📋')
+        mensaje_html = mensaje_html.replace('🔗', '🔗')
+        mensaje_html = mensaje_html.replace('📍', '📍')
+        mensaje_html = mensaje_html.replace('📐', '📐')
+        mensaje_html = mensaje_html.replace('💰', '💰')
+        mensaje_html = mensaje_html.replace('📎', '📎')
 
-        props_html += f"""
-        <tr>
-            <td style="padding: 15px; border-bottom: 1px solid #e0e0e0;">
-                <div style="display: flex; gap: 15px; align-items: start;">
-                    {thumbnail_html}
-                    <div style="flex: 1;">
-                        <div style="font-size: 16px; font-weight: 600; color: #2C5282; margin-bottom: 5px;">
-                            {codigo} - {titulo}
-                        </div>
-                        <div style="font-size: 14px; color: #6B7280; margin-bottom: 8px;">
-                            📍 {ubicacion}
-                        </div>
-                        <div style="display: flex; gap: 15px; font-size: 13px; color: #374151;">
-                            <span><strong>Precio:</strong> {precio}</span>
-                            <span><strong>Área:</strong> {area}</span>
-                            <span><strong>Transacción:</strong> {prop.transaccion.title() if prop.transaccion else 'N/A'}</span>
-                        </div>
-                    </div>
-                </div>
-            </td>
-        </tr>
+    # Usar tabla del frontend si existe, sino generar una básica
+    tabla_html = ""
+    if tabla_resumen:
+        tabla_html = tabla_resumen
+    else:
+        # Generar tabla básica de propiedades
+        props_html = ""
+        for prop in propiedades:
+            codigo = f"PROP-{prop.registro_cab_id}"
+            titulo = prop.titulo or prop.nombre_inmueble or "Propiedad"
+            precio = f"${'{:,.0f}'.format(prop.precio_venta or 0)}"
+            area = f"{prop.area or 'N/A'} m²"
+            try:
+                distrito_nombre = prop.distrito.nombre if prop.distrito else ''
+            except:
+                distrito_nombre = ''
+
+            props_html += f"""
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">{codigo}</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{titulo}</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{distrito_nombre}</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{area}</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">{precio}</td>
+            </tr>
+            """
+
+        tabla_html = f"""
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+            <thead>
+                <tr style="background: #0066CC; color: white;">
+                    <th style="padding: 10px; border: 1px solid #0066CC;">Código</th>
+                    <th style="padding: 10px; border: 1px solid #0066CC;">Propiedad</th>
+                    <th style="padding: 10px; border: 1px solid #0066CC;">Distrito</th>
+                    <th style="padding: 10px; border: 1px solid #0066CC;">Área</th>
+                    <th style="padding: 10px; border: 1px solid #0066CC;">Precio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {props_html}
+            </tbody>
+        </table>
         """
 
     html = f"""
     <!DOCTYPE html>
     <html>
     <head>
+        <meta charset="UTF-8">
         <style>
             body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; margin: 0; padding: 20px; }}
-            .container {{ max-width: 650px; margin: 0 auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }}
-            .header {{ background: linear-gradient(135deg, #2C5282 0%, #1e3a5f 100%); color: white; padding: 40px 30px; text-align: center; }}
+            .container {{ max-width: 750px; margin: 0 auto; background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }}
+            .header {{ background: linear-gradient(135deg, #2C5282 0%, #1e3a5f 100%); color: white; padding: 30px; text-align: center; }}
             .content {{ padding: 30px; }}
-            .message-box {{ background: #f9fafb; border-left: 4px solid #2C5282; padding: 20px; margin: 20px 0; border-radius: 5px; }}
-            .properties-list {{ margin: 20px 0; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }}
+            .message-section {{ background: #f8f9fa; border-radius: 10px; padding: 25px; margin: 20px 0; line-height: 1.8; font-size: 14px; color: #333; }}
+            .table-section {{ margin: 25px 0; }}
             .footer {{ background: #f8f9fa; padding: 25px; text-align: center; color: #6c757d; font-size: 13px; }}
-            .btn {{ display: inline-block; background: #2C5282; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 15px 0; }}
         </style>
     </head>
     <body>
         <div class="container">
             <div class="header">
                 <h1 style="margin: 0; font-size: 28px;">🏠 QUADRANTE</h1>
-                <p style="margin: 10px 0 0 0; font-size: 16px;">Propiedades Seleccionadas para Ti</p>
+                <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Propiedades Seleccionadas para Ti</p>
             </div>
+
             <div class="content">
-                <p>Hola,</p>
-                <p>Te enviamos la información detallada de <strong>{len(propiedades)} {'propiedad' if len(propiedades) == 1 else 'propiedades'}</strong> que podrían interesarte.</p>
+                <!-- Mensaje narrativo con formato -->
+                <div class="message-section">
+                    {mensaje_html if mensaje_html else f"<p>{saludo}</p><p>Te enviamos información de {len(propiedades)} propiedad(es) que podrían interesarte.</p>"}
+                </div>
 
-                {f'<div class="message-box"><p style="margin: 0; color: #374151;">{mensaje_personal}</p></div>' if mensaje_personal else ''}
+                <!-- Tabla resumen -->
+                <div class="table-section">
+                    <h3 style="color: #2C5282; margin-bottom: 15px;">📊 Resumen de Propiedades</h3>
+                    {tabla_html}
+                </div>
 
-                <h3 style="color: #2C5282; margin-top: 25px;">Propiedades Adjuntas:</h3>
-                <table class="properties-list" style="width: 100%; border-collapse: collapse;">
-                    {props_html}
-                </table>
-
-                <p style="margin-top: 25px; text-align: center;">
-                    <strong>📎 Revisa los archivos PDF adjuntos para más detalles</strong>
-                </p>
-
-                <p style="text-align: center; margin-top: 30px; color: #6B7280; font-size: 14px;">
-                    ¿Tienes preguntas? Contáctanos, estamos para ayudarte.
-                </p>
+                <div style="background: #E8F5E9; border-radius: 8px; padding: 15px; margin-top: 25px; text-align: center;">
+                    <p style="margin: 0; color: #2e7d32; font-weight: 600;">
+                        📎 Revisa los archivos PDF adjuntos para ver las fichas detalladas de cada oficina
+                    </p>
+                </div>
             </div>
+
             <div class="footer">
                 <p style="margin: 0;"><strong>QUADRANTE</strong> - Sistema Inmobiliario Profesional</p>
                 <p style="margin: 5px 0;">www.quadrante.com | contacto@quadrante.com</p>
-                <p style="margin-top: 15px; font-size: 11px;">Este es un correo automático, por favor no responder directamente.</p>
+                <p style="margin-top: 15px; font-size: 11px; color: #999;">
+                    Este es un correo automático generado desde el sistema Quadrante.
+                </p>
             </div>
         </div>
     </body>
