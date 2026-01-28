@@ -21,6 +21,9 @@ from reportlab.platypus import Table, TableStyle
 import base64
 from datetime import datetime
 from app.services.imagekit_service import imagekit_service
+import requests
+from reportlab.lib.utils import ImageReader
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -330,7 +333,80 @@ def generar_ficha_pdf(propiedad: Propiedad) -> bytes:
     c.setFillColor(COLOR_AZUL_CLARO)
     c.circle(margin + 2*mm, y + 1.5*mm, 1.5*mm, fill=1, stroke=0)
 
-    y -= 12*mm
+    y -= 10*mm
+
+    # ===== GALERÍA DE FOTOS (hasta 3 en una fila) =====
+    imagenes_urls = []
+
+    # Agregar imagen principal si existe
+    if propiedad.imagen_principal:
+        imagenes_urls.append(propiedad.imagen_principal)
+
+    # Agregar imágenes adicionales
+    if propiedad.imagenes and isinstance(propiedad.imagenes, list):
+        for img_url in propiedad.imagenes[:2]:  # Máximo 2 adicionales
+            if img_url and img_url not in imagenes_urls:
+                imagenes_urls.append(img_url)
+
+    # Limitar a 3 imágenes
+    imagenes_urls = imagenes_urls[:3]
+
+    if imagenes_urls:
+        img_height = 35*mm
+        img_spacing = 3*mm
+        num_images = len(imagenes_urls)
+        img_width = (content_width - (num_images - 1) * img_spacing) / num_images
+
+        for i, img_url in enumerate(imagenes_urls):
+            try:
+                # Descargar imagen
+                response = requests.get(img_url, timeout=5)
+                if response.status_code == 200:
+                    img_data = io.BytesIO(response.content)
+                    img = Image.open(img_data)
+
+                    # Convertir a RGB si es necesario (para evitar errores con PNG transparentes)
+                    if img.mode in ('RGBA', 'P'):
+                        img = img.convert('RGB')
+
+                    # Guardar en buffer
+                    img_buffer = io.BytesIO()
+                    img.save(img_buffer, format='JPEG', quality=85)
+                    img_buffer.seek(0)
+
+                    # Calcular posición
+                    x_pos = margin + i * (img_width + img_spacing)
+
+                    # Dibujar fondo gris claro como placeholder
+                    c.setFillColor(COLOR_GRIS_CLARO)
+                    c.roundRect(x_pos, y - img_height, img_width, img_height, 2*mm, fill=1, stroke=0)
+
+                    # Dibujar imagen
+                    c.drawImage(
+                        ImageReader(img_buffer),
+                        x_pos + 1*mm,
+                        y - img_height + 1*mm,
+                        width=img_width - 2*mm,
+                        height=img_height - 2*mm,
+                        preserveAspectRatio=True,
+                        mask='auto'
+                    )
+
+                    logger.info(f"✅ Imagen {i+1} agregada al PDF")
+
+            except Exception as img_error:
+                logger.warning(f"⚠️ No se pudo cargar imagen {i+1}: {img_error}")
+                # Dibujar placeholder
+                x_pos = margin + i * (img_width + img_spacing)
+                c.setFillColor(COLOR_GRIS_CLARO)
+                c.roundRect(x_pos, y - img_height, img_width, img_height, 2*mm, fill=1, stroke=0)
+                c.setFillColor(COLOR_GRIS)
+                c.setFont("Helvetica", 8)
+                c.drawCentredString(x_pos + img_width/2, y - img_height/2, "Sin imagen")
+
+        y -= img_height + 8*mm
+    else:
+        y -= 2*mm
 
     # ===== INFORMACIÓN PRINCIPAL (Cards) =====
     # Card de Precio
