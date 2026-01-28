@@ -312,6 +312,16 @@ class BusquedaInteligenteService:
     def _serializar_propiedad_individual(self, prop: Propiedad, usuario_id: Optional[int]) -> Dict:
         """Convierte propiedad a dict completo"""
         # TODO: Agregar lógica de favoritos si usuario_id está presente
+
+        # Obtener edificio padre si existe
+        edificio_nombre = None
+        if prop.padre_registro_cab_id:
+            edificio = self.db.query(Propiedad).filter(
+                Propiedad.registro_cab_id == prop.padre_registro_cab_id
+            ).first()
+            if edificio:
+                edificio_nombre = edificio.nombre_inmueble or edificio.titulo
+
         return {
             "tipo": "individual",
             "registro_cab_id": prop.registro_cab_id,
@@ -329,5 +339,7 @@ class BusquedaInteligenteService:
             "imagen_principal": prop.imagen_principal,
             "imagenes": prop.imagenes,
             "vistas": prop.vistas,
-            "estado": prop.estado
+            "estado": prop.estado,
+            "padre_registro_cab_id": prop.padre_registro_cab_id,
+            "edificio_nombre": edificio_nombre
         }
