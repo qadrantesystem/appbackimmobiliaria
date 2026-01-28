@@ -20,6 +20,7 @@ from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle
 import base64
 from datetime import datetime
+from app.services.imagekit_service import imagekit_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -34,6 +35,11 @@ class EnviarFichasRequest(BaseModel):
     send_copy: bool = False
     client_name: Optional[str] = None
     tabla_resumen: Optional[str] = None  # HTML de tabla resumen desde frontend
+
+
+class GenerarFichasRequest(BaseModel):
+    """Schema para generar fichas PDF y obtener URLs"""
+    propiedad_ids: List[int]
 
 
 @router.post("/enviar-fichas")
@@ -135,6 +141,102 @@ async def enviar_fichas_por_correo(
         raise
     except Exception as e:
         logger.error(f"❌ Error en envío de fichas: {e}")
+        logger.exception(e)
+        raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
+
+
+@router.post("/generar-fichas-urls")
+async def generar_fichas_urls(
+    request: GenerarFichasRequest,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user)
+):
+    """
+    📄 Generar fichas PDF y obtener URLs de descarga (para WhatsApp)
+
+    Requiere autenticación.
+
+    - Recibe lista de IDs de propiedades
+    - Genera fichas PDF profesionales
+    - Sube a ImageKit
+    - Retorna URLs de descarga
+
+    Args:
+        request: Lista de IDs de propiedades
+        db: Sesión de base de datos
+        current_user: Usuario autenticado
+
+    Returns:
+        Dict con URLs de descarga de los PDFs
+    """
+    try:
+        # Validar que haya propiedades
+        if not request.propiedad_ids:
+            raise HTTPException(status_code=400, detail="Debe seleccionar al menos una propiedad")
+
+        # Limitar a 10 propiedades máximo
+        if len(request.propiedad_ids) > 10:
+            raise HTTPException(
+                status_code=400,
+                detail="Máximo 10 propiedades permitidas"
+            )
+
+        # Consultar propiedades
+        propiedades = db.query(Propiedad).filter(
+            Propiedad.registro_cab_id.in_(request.propiedad_ids)
+        ).all()
+
+        if not propiedades:
+            raise HTTPException(status_code=404, detail="No se encontraron las propiedades")
+
+        logger.info(f"📄 Generando fichas PDF para WhatsApp: {len(propiedades)} propiedades")
+
+        # Generar PDFs y subir a ImageKit
+        fichas_urls = []
+        for propiedad in propiedades:
+            try:
+                # Generar PDF
+                pdf_bytes = generar_ficha_pdf(propiedad)
+                codigo = f"PROP_{propiedad.registro_cab_id}"
+                filename = f"Ficha_{codigo}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+
+                # Subir a ImageKit
+                upload_result = imagekit_service.upload_image(
+                    file_content=pdf_bytes,
+                    file_name=filename,
+                    folder="inmobiliaria/fichas-propiedades"
+                )
+
+                if upload_result and upload_result.get("url"):
+                    fichas_urls.append({
+                        "propiedad_id": propiedad.registro_cab_id,
+                        "codigo": codigo,
+                        "titulo": propiedad.titulo or propiedad.nombre_inmueble or f"Propiedad {codigo}",
+                        "url": upload_result["url"],
+                        "file_id": upload_result.get("file_id")
+                    })
+                    logger.info(f"✅ PDF subido a ImageKit: {filename}")
+                else:
+                    logger.warning(f"⚠️ Error subiendo PDF para {codigo}")
+
+            except Exception as e:
+                logger.error(f"❌ Error generando/subiendo PDF para propiedad {propiedad.registro_cab_id}: {e}")
+                continue
+
+        if not fichas_urls:
+            raise HTTPException(status_code=500, detail="No se pudieron generar los PDFs")
+
+        return {
+            "success": True,
+            "message": f"Se generaron {len(fichas_urls)} fichas PDF",
+            "fichas": fichas_urls,
+            "total": len(fichas_urls)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Error generando fichas URLs: {e}")
         logger.exception(e)
         raise HTTPException(status_code=500, detail=f"Error inesperado: {str(e)}")
 
