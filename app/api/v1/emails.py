@@ -244,6 +244,7 @@ async def generar_fichas_urls(
 def generar_ficha_pdf(propiedad: Propiedad) -> bytes:
     """
     Generar ficha PDF profesional de una propiedad
+    Diseño moderno y compacto con header elegante
 
     Args:
         propiedad: Modelo de propiedad
@@ -256,63 +257,187 @@ def generar_ficha_pdf(propiedad: Propiedad) -> bytes:
     width, height = A4  # 210mm x 297mm
 
     # Colores corporativos
+    COLOR_AZUL_OSCURO = colors.HexColor('#1E3A5F')
     COLOR_AZUL = colors.HexColor('#2C5282')
+    COLOR_AZUL_CLARO = colors.HexColor('#3182CE')
     COLOR_GRIS = colors.HexColor('#6B7280')
+    COLOR_GRIS_CLARO = colors.HexColor('#F3F4F6')
+    COLOR_VERDE = colors.HexColor('#10B981')
+    COLOR_DORADO = colors.HexColor('#D4AF37')
 
     # Márgenes
-    margin = 20 * mm
-    y = height - margin
+    margin = 15 * mm
+    content_width = width - 2 * margin
 
-    # ===== HEADER CON LOGO =====
-    c.setFillColor(COLOR_AZUL)
-    c.rect(0, height - 50*mm, width, 50*mm, fill=1, stroke=0)
+    # ===== HEADER ELEGANTE =====
+    # Fondo degradado simulado (dos rectángulos)
+    c.setFillColor(COLOR_AZUL_OSCURO)
+    c.rect(0, height - 35*mm, width, 35*mm, fill=1, stroke=0)
 
-    # Título "QUADRANTE" (simulando logo)
+    # Línea decorativa dorada
+    c.setStrokeColor(COLOR_DORADO)
+    c.setLineWidth(2)
+    c.line(0, height - 35*mm, width, height - 35*mm)
+
+    # Logo QUADRANTE estilizado
     c.setFillColor(colors.white)
-    c.setFont("Helvetica-Bold", 24)
-    c.drawString(margin, height - 35*mm, "QUADRANTE")
+    c.setFont("Helvetica-Bold", 22)
+    c.drawString(margin, height - 18*mm, "QUADRANTE")
 
-    # Código y fecha
-    codigo = f"PROP-{propiedad.registro_cab_id}"
-    c.setFont("Helvetica-Bold", 18)
-    c.drawRightString(width - margin, height - 30*mm, codigo)
+    # Subtítulo
+    c.setFont("Helvetica", 8)
+    c.setFillColor(COLOR_DORADO)
+    c.drawString(margin, height - 24*mm, "SISTEMA INMOBILIARIO PROFESIONAL")
 
-    c.setFont("Helvetica", 10)
-    fecha = datetime.now().strftime("%d/%m/%Y")
-    c.drawRightString(width - margin, height - 40*mm, fecha)
+    # Código de propiedad (badge)
+    codigo = f"COD: {propiedad.registro_cab_id}"
+    c.setFillColor(COLOR_DORADO)
+    c.roundRect(width - margin - 45*mm, height - 22*mm, 45*mm, 10*mm, 2*mm, fill=1, stroke=0)
+    c.setFillColor(COLOR_AZUL_OSCURO)
+    c.setFont("Helvetica-Bold", 11)
+    c.drawCentredString(width - margin - 22.5*mm, height - 19*mm, codigo)
 
-    y = height - 60*mm
+    # Fecha
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica", 9)
+    fecha = datetime.now().strftime("%d de %B, %Y")
+    c.drawRightString(width - margin, height - 30*mm, fecha)
+
+    y = height - 45*mm
 
     # ===== TÍTULO Y UBICACIÓN =====
-    c.setFillColor(COLOR_AZUL)
+    # Nombre del edificio/propiedad
+    c.setFillColor(COLOR_AZUL_OSCURO)
     c.setFont("Helvetica-Bold", 16)
-    titulo = propiedad.titulo or propiedad.nombre_inmueble or "Propiedad en Venta/Alquiler"
-    c.drawString(margin, y, titulo[:60])  # Limitar longitud
-    y -= 8*mm
+    titulo = propiedad.titulo or propiedad.nombre_inmueble or "Oficina en Venta/Alquiler"
+    c.drawString(margin, y, titulo[:55])
+    y -= 7*mm
 
-    c.setFillColor(COLOR_GRIS)
-    c.setFont("Helvetica", 11)
+    # Ubicación con ícono
     try:
         distrito_nombre = propiedad.distrito.nombre if propiedad.distrito else ''
     except:
         distrito_nombre = ''
-    ubicacion = f"📍 {propiedad.direccion or ''}, {distrito_nombre}"
-    c.drawString(margin, y, ubicacion[:80])
-    y -= 15*mm
+
+    c.setFillColor(COLOR_GRIS)
+    c.setFont("Helvetica", 10)
+    ubicacion = f"{propiedad.direccion or 'Sin dirección'}"
+    if distrito_nombre:
+        ubicacion += f" - {distrito_nombre}"
+    c.drawString(margin + 5*mm, y, ubicacion[:70])
+
+    # Ícono de ubicación (círculo con punto)
+    c.setFillColor(COLOR_AZUL_CLARO)
+    c.circle(margin + 2*mm, y + 1.5*mm, 1.5*mm, fill=1, stroke=0)
+
+    y -= 12*mm
+
+    # ===== INFORMACIÓN PRINCIPAL (Cards) =====
+    # Card de Precio
+    card_height = 22*mm
+    card_width = (content_width - 5*mm) / 2
+
+    # Card 1: Precio Venta
+    c.setFillColor(COLOR_GRIS_CLARO)
+    c.roundRect(margin, y - card_height, card_width, card_height, 3*mm, fill=1, stroke=0)
+
+    c.setFillColor(COLOR_GRIS)
+    c.setFont("Helvetica", 8)
+    c.drawString(margin + 4*mm, y - 6*mm, "PRECIO VENTA")
+
+    c.setFillColor(COLOR_AZUL_OSCURO)
+    c.setFont("Helvetica-Bold", 16)
+    precio_venta = propiedad.precio_venta or 0
+    c.drawString(margin + 4*mm, y - 14*mm, f"USD {'{:,.0f}'.format(precio_venta)}")
+
+    # Card 2: Precio Alquiler
+    c.setFillColor(COLOR_GRIS_CLARO)
+    c.roundRect(margin + card_width + 5*mm, y - card_height, card_width, card_height, 3*mm, fill=1, stroke=0)
+
+    c.setFillColor(COLOR_GRIS)
+    c.setFont("Helvetica", 8)
+    c.drawString(margin + card_width + 9*mm, y - 6*mm, "PRECIO ALQUILER")
+
+    c.setFillColor(COLOR_AZUL_OSCURO)
+    c.setFont("Helvetica-Bold", 16)
+    precio_alquiler = propiedad.precio_alquiler or 0
+    c.drawString(margin + card_width + 9*mm, y - 14*mm, f"USD {'{:,.0f}'.format(precio_alquiler)}/mes")
+
+    y -= card_height + 8*mm
+
+    # ===== CARACTERÍSTICAS EN GRID =====
+    c.setFillColor(COLOR_AZUL_OSCURO)
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(margin, y, "CARACTERÍSTICAS")
+
+    # Línea decorativa
+    c.setStrokeColor(COLOR_DORADO)
+    c.setLineWidth(2)
+    c.line(margin, y - 2*mm, margin + 35*mm, y - 2*mm)
+
+    y -= 10*mm
+
+    # Grid de características (3 columnas x 2 filas)
+    char_data = [
+        ('Área Total', f"{propiedad.area or 0} m²"),
+        ('Antigüedad', f"{propiedad.antiguedad or 'N/A'} años"),
+        ('Transacción', (propiedad.transaccion or 'venta').capitalize()),
+        ('Moneda', propiedad.moneda or 'USD'),
+        ('Piso', f"{propiedad.piso or 'N/A'}"),
+        ('Estado', 'Disponible'),
+    ]
+
+    col_width = content_width / 3
+    row_height = 12*mm
+
+    for i, (label, value) in enumerate(char_data):
+        col = i % 3
+        row = i // 3
+        x = margin + col * col_width
+        current_y = y - row * row_height
+
+        # Fondo alternado
+        if row % 2 == 0:
+            c.setFillColor(COLOR_GRIS_CLARO)
+            c.rect(x, current_y - row_height + 2*mm, col_width - 2*mm, row_height - 1*mm, fill=1, stroke=0)
+
+        # Label
+        c.setFillColor(COLOR_GRIS)
+        c.setFont("Helvetica", 8)
+        c.drawString(x + 3*mm, current_y - 4*mm, label)
+
+        # Value
+        c.setFillColor(COLOR_AZUL_OSCURO)
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(x + 3*mm, current_y - 9*mm, str(value)[:15])
+
+    y -= 2 * row_height + 8*mm
 
     # ===== DESCRIPCIÓN =====
     if propiedad.descripcion:
-        c.setFillColor(colors.black)
-        c.setFont("Helvetica-Bold", 12)
-        c.drawString(margin, y, "Descripción")
-        y -= 6*mm
+        c.setFillColor(COLOR_AZUL_OSCURO)
+        c.setFont("Helvetica-Bold", 11)
+        c.drawString(margin, y, "DESCRIPCIÓN")
 
-        # Recortar descripción a 300 caracteres
-        desc = propiedad.descripcion[:300] + "..." if len(propiedad.descripcion) > 300 else propiedad.descripcion
+        # Línea decorativa
+        c.setStrokeColor(COLOR_DORADO)
+        c.setLineWidth(2)
+        c.line(margin, y - 2*mm, margin + 28*mm, y - 2*mm)
 
-        # Texto multi-línea
+        y -= 8*mm
+
+        # Borde izquierdo decorativo
+        c.setFillColor(COLOR_AZUL_CLARO)
+        c.rect(margin, y - 25*mm, 2*mm, 25*mm, fill=1, stroke=0)
+
+        # Texto de descripción
+        desc = propiedad.descripcion[:400] + "..." if len(propiedad.descripcion) > 400 else propiedad.descripcion
+
+        c.setFillColor(COLOR_GRIS)
         c.setFont("Helvetica", 9)
-        text_width = width - 2 * margin
+
+        # Wrap text
+        text_width = content_width - 10*mm
         lines = []
         words = desc.split()
         current_line = ""
@@ -325,56 +450,40 @@ def generar_ficha_pdf(propiedad: Propiedad) -> bytes:
                 if current_line:
                     lines.append(current_line)
                 current_line = word
-
         if current_line:
             lines.append(current_line)
 
-        for line in lines[:4]:  # Máximo 4 líneas
-            c.drawString(margin, y, line)
+        for line in lines[:6]:  # Máximo 6 líneas
+            c.drawString(margin + 5*mm, y, line)
             y -= 4*mm
 
         y -= 5*mm
 
-    # ===== TABLA DE CARACTERÍSTICAS =====
-    c.setFillColor(COLOR_AZUL)
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(margin, y, "Características Principales")
-    y -= 8*mm
+    # ===== FOOTER ELEGANTE =====
+    footer_height = 20*mm
 
-    # Datos de la tabla
-    data = [
-        ['Área Total', f"{propiedad.area or 'N/A'} m²", 'Precio Venta', f"$ {'{:,.0f}'.format(propiedad.precio_venta or 0)}"],
-        ['Precio Alquiler', f"$ {'{:,.0f}'.format(propiedad.precio_alquiler or 0)}", 'Antigüedad', f"{propiedad.antiguedad or 'N/A'} años"],
-        ['Transacción', propiedad.transaccion or 'N/A', 'Moneda', propiedad.moneda or 'PEN'],
-    ]
+    # Fondo del footer
+    c.setFillColor(COLOR_AZUL_OSCURO)
+    c.rect(0, 0, width, footer_height, fill=1, stroke=0)
 
-    table = Table(data, colWidths=[40*mm, 40*mm, 40*mm, 40*mm])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, -1), colors.whitesmoke),
-        ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-        ('FONTNAME', (2, 0), (2, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ('BOT TOMPADDING', (0, 0), (-1, -1), 8),
-        ('TOPPADDING', (0, 0), (-1, -1), 8),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-    ]))
+    # Línea dorada superior
+    c.setStrokeColor(COLOR_DORADO)
+    c.setLineWidth(1.5)
+    c.line(0, footer_height, width, footer_height)
 
-    table_width, table_height = table.wrap(0, 0)
-    table.drawOn(c, margin, y - table_height)
-    y -= table_height + 10*mm
+    # Texto del footer
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica-Bold", 9)
+    c.drawCentredString(width/2, 12*mm, "QUADRANTE - Tu Socio Inmobiliario de Confianza")
 
-    # ===== FOOTER =====
-    c.setFillColor(colors.lightgrey)
-    c.rect(0, 0, width, 25*mm, fill=1, stroke=0)
+    c.setFont("Helvetica", 7)
+    c.setFillColor(COLOR_DORADO)
+    c.drawCentredString(width/2, 7*mm, "www.quadrante.com  |  contacto@quadrante.com  |  Lima, Perú")
 
-    c.setFillColor(COLOR_GRIS)
-    c.setFont("Helvetica-Bold", 10)
-    c.drawCentredString(width/2, 15*mm, "QUADRANTE - Sistema Inmobiliario Profesional")
-
-    c.setFont("Helvetica", 8)
-    c.drawCentredString(width/2, 10*mm, "www.quadrante.com | contacto@quadrante.com")
+    # Pequeño detalle decorativo
+    c.setFillColor(COLOR_DORADO)
+    c.circle(margin, 10*mm, 2*mm, fill=1, stroke=0)
+    c.circle(width - margin, 10*mm, 2*mm, fill=1, stroke=0)
 
     # Finalizar PDF
     c.showPage()
