@@ -313,14 +313,26 @@ class BusquedaInteligenteService:
         """Convierte propiedad a dict completo"""
         # TODO: Agregar lógica de favoritos si usuario_id está presente
 
-        # Obtener edificio padre si existe
+        # Obtener edificio padre si existe (para nombre y coordenadas)
         edificio_nombre = None
+        edificio_latitud = None
+        edificio_longitud = None
+        edificio_direccion = None
+
         if prop.padre_registro_cab_id:
             edificio = self.db.query(Propiedad).filter(
                 Propiedad.registro_cab_id == prop.padre_registro_cab_id
             ).first()
             if edificio:
                 edificio_nombre = edificio.nombre_inmueble or edificio.titulo
+                edificio_latitud = str(edificio.latitud) if edificio.latitud else None
+                edificio_longitud = str(edificio.longitud) if edificio.longitud else None
+                edificio_direccion = edificio.direccion
+
+        # Usar coordenadas propias o heredar del edificio padre
+        latitud = str(prop.latitud) if prop.latitud else edificio_latitud
+        longitud = str(prop.longitud) if prop.longitud else edificio_longitud
+        direccion = prop.direccion or edificio_direccion
 
         return {
             "tipo": "individual",
@@ -330,7 +342,7 @@ class BusquedaInteligenteService:
             "tipo_inmueble_id": prop.tipo_inmueble_id,
             "distrito": prop.distrito.nombre if prop.distrito else None,
             "distrito_id": prop.distrito_id,
-            "direccion": prop.direccion,
+            "direccion": direccion,
             "area": float(prop.area),
             "precio_venta": float(prop.precio_venta) if prop.precio_venta else None,
             "precio_alquiler": float(prop.precio_alquiler) if prop.precio_alquiler else None,
@@ -341,5 +353,7 @@ class BusquedaInteligenteService:
             "vistas": prop.vistas,
             "estado": prop.estado,
             "padre_registro_cab_id": prop.padre_registro_cab_id,
-            "edificio_nombre": edificio_nombre
+            "edificio_nombre": edificio_nombre,
+            "latitud": latitud,
+            "longitud": longitud
         }
