@@ -1231,6 +1231,200 @@ async def buscar_propiedades_avanzada(
 
 
 # ============================================
+# 🔓 BÚSQUEDA AVANZADA PÚBLICA (Sin Autenticación)
+# ============================================
+
+@router.post("/buscar-avanzada-publica")
+async def buscar_propiedades_avanzada_publica(
+    busqueda: BusquedaAvanzadaRequest = Body(...),
+    db: Session = Depends(get_db)
+):
+    """
+    🔍 Búsqueda Avanzada Pública con Combinaciones Inteligentes (NO requiere Token)
+
+    Endpoint para usuarios invitados (no autenticados).
+    Misma funcionalidad que /buscar-avanzada pero sin favoritos.
+    """
+    filtros_gen = busqueda.filtros_genericos or {}
+    filtros_bas = busqueda.filtros_basicos or {}
+
+    # Calcular área con ±15% si se especifica
+    area_min = None
+    area_max = None
+    if filtros_bas.get("area"):
+        area_objetivo = float(filtros_bas["area"])
+        margen = area_objetivo * 0.15
+        area_min = area_objetivo - margen
+        area_max = area_objetivo + margen
+
+    # Calcular precio con ±15% si se especifica
+    precio_max = None
+    if filtros_bas.get("precio"):
+        precio_objetivo = float(filtros_bas["precio"])
+        margen = precio_objetivo * 0.15
+        precio_max = precio_objetivo + margen
+
+    # Verificar si se debe usar búsqueda inteligente con combinaciones
+    usar_inteligente = (
+        busqueda.incluir_combinaciones
+        and area_min is not None
+        and filtros_gen.get("tipo_inmueble_id") == 1  # Solo oficinas
+        and not busqueda.filtros_avanzados
+    )
+
+    if usar_inteligente:
+        print("🔥 [DEBUG] Búsqueda PÚBLICA CON combinaciones inteligentes")
+
+        busqueda_service = BusquedaInteligenteService(db)
+
+        resultado = busqueda_service.buscar_con_combinaciones(
+            area_min=area_min,
+            area_max=area_max,
+            tipo_inmueble_id=filtros_gen.get("tipo_inmueble_id"),
+            distrito_ids=filtros_gen.get("distrito_ids"),
+            transaccion=filtros_gen.get("transaccion"),
+            precio_max=precio_max,
+            limit=busqueda.limit * 2,
+            usuario_id=None  # Sin usuario (público)
+        )
+
+        # Combinar individuales y combinaciones
+        items_totales = resultado["individuales"] + resultado["combinaciones"]
+
+        # Ordenar por relevancia
+        items_totales.sort(key=lambda x: (
+            0 if x.get("tipo") != "combinacion" else 1,
+            -x.get("area_total", x.get("area", 0))
+        ))
+
+        # Paginar
+        total = len(items_totales)
+        inicio = (busqueda.page - 1) * busqueda.limit
+        fin = inicio + busqueda.limit
+        items_paginados = items_totales[inicio:fin]
+
+        print(f"✅ [DEBUG] Búsqueda pública: {len(resultado['individuales'])} individuales, {len(resultado['combinaciones'])} combinaciones")
+
+        return {
+            "success": True,
+            "data": items_paginados,
+            "pagination": {
+                "page": busqueda.page,
+                "limit": busqueda.limit,
+                "total": total,
+                "total_pages": (total + busqueda.limit - 1) // busqueda.limit
+            },
+            "metadata": {
+                "individuales": len(resultado["individuales"]),
+                "combinaciones": len(resultado["combinaciones"]),
+                "incluir_combinaciones": True
+            }
+        }
+
+    # LÓGICA TRADICIONAL (sin combinaciones)
+    print("📌 [DEBUG] Búsqueda pública tradicional (sin combinaciones)")
+
+    query = db.query(Propiedad).options(
+        joinedload(Propiedad.propietario, innerjoin=False)
+    ).filter(Propiedad.estado == "publicado")
+
+    # Filtros genéricos
+    if filtros_gen.get("tipo_inmueble_id"):
+        query = query.filter(Propiedad.tipo_inmueble_id == filtros_gen["tipo_inmueble_id"])
+
+    if filtros_gen.get("distrito_ids") and len(filtros_gen["distrito_ids"]) > 0:
+        query = query.filter(Propiedad.distrito_id.in_(filtros_gen["distrito_ids"]))
+
+    if filtros_gen.get("transaccion"):
+        query = query.filter(Propiedad.transaccion.in_([filtros_gen["transaccion"], "ambos"]))
+
+    # Filtros básicos
+    if area_min is not None and area_max is not None:
+        query = query.filter(Propiedad.area >= area_min, Propiedad.area <= area_max)
+
+    if filtros_bas.get("precio"):
+        precio_objetivo = float(filtros_bas["precio"])
+        margen = precio_objetivo * 0.15
+        precio_min = precio_objetivo - margen
+        precio_max_query = precio_objetivo + margen
+
+        transaccion = filtros_gen.get("transaccion", "venta")
+        if transaccion == "alquiler":
+            query = query.filter(
+                Propiedad.precio_alquiler >= precio_min,
+                Propiedad.precio_alquiler <= precio_max_query
+            )
+        else:
+            query = query.filter(
+                Propiedad.precio_venta >= precio_min,
+                Propiedad.precio_venta <= precio_max_query
+            )
+
+    # Filtros avanzados
+    if busqueda.filtros_avanzados and len(busqueda.filtros_avanzados) > 0:
+        for filtro_avanzado in busqueda.filtros_avanzados:
+            query = query.filter(
+                Propiedad.registro_cab_id.in_(
+                    db.query(PropiedadDetalle.registro_cab_id).filter(
+                        PropiedadDetalle.caracteristica_id == filtro_avanzado.caracteristica_id,
+                        PropiedadDetalle.valor == filtro_avanzado.valor
+                    )
+                )
+            )
+
+    # Paginación
+    total = query.count()
+    query = query.order_by(Propiedad.created_at.desc())
+    offset = (busqueda.page - 1) * busqueda.limit
+    propiedades = query.offset(offset).limit(busqueda.limit).all()
+
+    # Formatear respuesta (sin favoritos)
+    propiedades_list = []
+    for prop in propiedades:
+        tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == prop.tipo_inmueble_id).first()
+        distrito = db.query(Distrito).filter(Distrito.distrito_id == prop.distrito_id).first()
+
+        propiedades_list.append(PropiedadResponse(
+            registro_cab_id=prop.registro_cab_id,
+            titulo=prop.titulo,
+            tipo_inmueble=tipo.nombre if tipo else "N/A",
+            tipo_inmueble_id=prop.tipo_inmueble_id,
+            distrito=distrito.nombre if distrito else "N/A",
+            direccion=prop.direccion,
+            latitud=prop.latitud,
+            longitud=prop.longitud,
+            telefono=prop.propietario.telefono if prop.propietario else "",
+            email=prop.propietario.email if prop.propietario else "",
+            propietario_nombre=prop.propietario.nombre if prop.propietario else "",
+            transaccion=prop.transaccion,
+            precio_alquiler=prop.precio_alquiler,
+            precio_venta=prop.precio_venta,
+            moneda=prop.moneda,
+            area=prop.area,
+            implementacion=prop.implementacion,
+            imagen_principal=prop.imagen_principal,
+            imagenes=prop.imagenes or [],
+            estado=prop.estado,
+            estado_crm=prop.estado_crm,
+            vistas=prop.vistas,
+            contactos=prop.contactos,
+            created_at=prop.created_at,
+            es_favorito=False  # Siempre False para usuarios no autenticados
+        ))
+
+    return PaginatedResponse(
+        success=True,
+        data=propiedades_list,
+        pagination={
+            "page": busqueda.page,
+            "limit": busqueda.limit,
+            "total": total,
+            "total_pages": (total + busqueda.limit - 1) // busqueda.limit
+        }
+    )
+
+
+# ============================================
 # 🏢 GENERACIÓN MASIVA DE OFICINAS
 # ============================================
 
