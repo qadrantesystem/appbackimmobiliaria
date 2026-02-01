@@ -20,6 +20,8 @@ class Busqueda(Base):
     
     # Resultados
     cantidad_resultados = Column(Integer, default=0)
+    cantidad_individuales = Column(Integer, default=0)
+    cantidad_combinaciones = Column(Integer, default=0)
     
     # Búsqueda guardada (alertas)
     es_guardada = Column(Boolean, default=False)

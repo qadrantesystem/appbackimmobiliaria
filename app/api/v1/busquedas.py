@@ -26,6 +26,8 @@ router = APIRouter()
 class BusquedaCreate(BaseModel):
     criterios_json: dict = Field(..., description="JSON completo con todos los criterios de búsqueda")
     cantidad_resultados: Optional[int] = 0
+    cantidad_individuales: Optional[int] = 0
+    cantidad_combinaciones: Optional[int] = 0
     sesion_id: Optional[str] = None
 
 class BusquedaGuardadaCreate(BaseModel):
@@ -33,6 +35,9 @@ class BusquedaGuardadaCreate(BaseModel):
     nombre_busqueda: str = Field(..., min_length=3, max_length=100)
     frecuencia_alerta: str = Field(..., pattern="^(inmediata|diaria|semanal)$")
     alerta_activa: bool = True
+    cantidad_resultados: Optional[int] = 0
+    cantidad_individuales: Optional[int] = 0
+    cantidad_combinaciones: Optional[int] = 0
 
 class BusquedaGuardadaUpdate(BaseModel):
     nombre_busqueda: Optional[str] = Field(None, min_length=3, max_length=100)
@@ -44,20 +49,22 @@ class BusquedaResponse(BaseModel):
     usuario_id: Optional[int]
     criterios_json: dict
     cantidad_resultados: Optional[int]
+    cantidad_individuales: Optional[int] = 0
+    cantidad_combinaciones: Optional[int] = 0
     fecha_busqueda: datetime
     es_guardada: bool
     nombre_busqueda: Optional[str]
     frecuencia_alerta: Optional[str]
     alerta_activa: Optional[bool]
-    
+
     # Campos calculados
     codigo_busqueda: Optional[str] = None
     descripcion_legible: Optional[str] = None
     usuario_nombre: Optional[str] = None
-    
+
     # Datos completos del usuario (JOIN)
     usuario: Optional[dict] = None
-    
+
     class Config:
         from_attributes = True
 
