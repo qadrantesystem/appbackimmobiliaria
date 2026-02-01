@@ -172,8 +172,10 @@ class BusquedaInteligenteService:
         # 2. Agrupar por (edificio, piso, propietario, transacción)
         grupos = {}
         for oficina in oficinas_candidatas:
-            piso = self._obtener_piso(oficina.registro_cab_id)
+            # ✅ CORREGIDO: Usar columna piso directamente, no buscar en detalles
+            piso = oficina.piso if oficina.piso is not None else self._obtener_piso(oficina.registro_cab_id)
             if piso is None:
+                logger.warning(f"⚠️ Oficina {oficina.registro_cab_id} sin piso, omitiendo")
                 continue
 
             key = (
@@ -265,7 +267,8 @@ class BusquedaInteligenteService:
                             continue
 
                 # Generar combinación
-                piso = self._obtener_piso(combo[0].registro_cab_id)
+                # ✅ CORREGIDO: Usar columna piso directamente
+                piso = combo[0].piso if combo[0].piso is not None else self._obtener_piso(combo[0].registro_cab_id)
 
                 # Obtener coordenadas del edificio padre
                 edificio = self.db.query(Propiedad).filter(
