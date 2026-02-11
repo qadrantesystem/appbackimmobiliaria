@@ -194,10 +194,11 @@ async def eliminar_caracteristica_tipo(
     """🗑️ Eliminar asignación de característica a tipo de inmueble"""
     try:
         relacion = db.query(CaracteristicaXInmueble).filter(CaracteristicaXInmueble.id == relacion_id).first()
-        
+
         if not relacion:
             raise HTTPException(status_code=404, detail="Relación no encontrada")
-        
+
+        # Hard delete intencional: tabla pivote de relación, no requiere soft delete
         db.delete(relacion)
         db.commit()
         
@@ -462,10 +463,11 @@ async def eliminar_por_composite_key(
             CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
             CaracteristicaXInmueble.caracteristica_id == caracteristica_id
         ).first()
-        
+
         if not relacion:
             raise HTTPException(status_code=404, detail="Relación no encontrada")
-        
+
+        # Hard delete intencional: tabla pivote de relación, no requiere soft delete
         db.delete(relacion)
         db.commit()
         

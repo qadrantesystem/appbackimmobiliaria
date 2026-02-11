@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from typing import Optional
+import logging
 from app.database import get_db
 from app.dependencies import get_current_active_user, require_admin
 from app.core.security import get_password_hash, verify_password
@@ -9,6 +10,8 @@ from app.core.exceptions import BadRequestException, NotFoundException
 from app.models import Usuario, Perfil, Plan, Suscripcion
 from app.schemas.usuario import UsuarioUpdate, UsuarioUpdatePassword, UsuarioResponse, UsuarioListResponse
 from app.schemas.common import ResponseModel, PaginatedResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -195,6 +198,49 @@ async def list_users(
             "total_pages": (total + limit - 1) // limit
         }
     )
+
+@router.get("/stats")
+async def get_user_stats(
+    perfil_id: Optional[int] = Query(None),
+    estado: Optional[str] = Query(None),
+    anio: Optional[int] = Query(None),
+    mes: Optional[int] = Query(None),
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(require_admin)
+):
+    """Obtener estadísticas de usuarios por perfil"""
+    try:
+        query = db.query(
+            Usuario.perfil_id,
+            func.count(Usuario.usuario_id).label('total')
+        )
+
+        if estado:
+            query = query.filter(Usuario.estado == estado)
+        if anio:
+            query = query.filter(func.extract('year', Usuario.fecha_registro) == anio)
+        if mes:
+            query = query.filter(func.extract('month', Usuario.fecha_registro) == mes)
+
+        stats = query.group_by(Usuario.perfil_id).all()
+
+        # Total general (mismos filtros que la consulta principal)
+        total_query = db.query(func.count(Usuario.usuario_id))
+        if estado:
+            total_query = total_query.filter(Usuario.estado == estado)
+        if anio:
+            total_query = total_query.filter(func.extract('year', Usuario.fecha_registro) == anio)
+        if mes:
+            total_query = total_query.filter(func.extract('month', Usuario.fecha_registro) == mes)
+        total = total_query.scalar()
+
+        return {
+            "total": total,
+            "por_perfil": {str(s[0]): s[1] for s in stats if s[0] is not None}
+        }
+    except Exception as e:
+        logger.error(f"Error obteniendo stats: {e}")
+        raise HTTPException(status_code=500, detail="Error al obtener estadísticas")
 
 @router.patch("/{usuario_id}/estado", response_model=ResponseModel[dict])
 async def update_user_status(

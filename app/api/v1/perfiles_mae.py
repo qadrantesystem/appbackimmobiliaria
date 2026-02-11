@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional, List
 from pydantic import BaseModel
 from app.database import get_db
-from app.dependencies import get_current_active_user
+from app.dependencies import get_current_active_user, require_admin
 from app.models import Usuario, Perfil
 from app.schemas.common import ResponseModel
 import logging
@@ -51,7 +51,8 @@ class PerfilPaginado(BaseModel):
 
 @router.get("", response_model=ResponseModel[List[PerfilResponse]])
 async def listar_perfiles_mantenimiento(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user)
 ):
     """
     📋 Listar todos los perfiles (catálogo de roles)
@@ -76,7 +77,8 @@ async def listar_perfiles_paginado(
     page: int = Query(1, ge=1, description="Número de página"),
     page_size: int = Query(5, ge=1, le=100, description="Tamaño de página"),
     search: Optional[str] = Query(None, description="Buscar por nombre o descripción"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_active_user)
 ):
     """
     📋 Listar perfiles con paginación y búsqueda
@@ -120,7 +122,7 @@ async def listar_perfiles_paginado(
 async def crear_perfil_mantenimiento(
     perfil: PerfilCreate,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_active_user)
+    current_user: Usuario = Depends(require_admin)
 ):
     """
     ➕ Crear nuevo perfil (rol)
@@ -168,7 +170,7 @@ async def actualizar_perfil_mantenimiento(
     perfil_id: int,
     perfil: PerfilUpdate,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_active_user)
+    current_user: Usuario = Depends(require_admin)
 ):
     """
     ✏️ Actualizar perfil existente
@@ -224,7 +226,7 @@ async def actualizar_perfil_mantenimiento(
 async def eliminar_perfil_mantenimiento(
     perfil_id: int,
     db: Session = Depends(get_db),
-    current_user: Usuario = Depends(get_current_active_user)
+    current_user: Usuario = Depends(require_admin)
 ):
     """
     🗑️ Eliminar perfil
@@ -247,6 +249,8 @@ async def eliminar_perfil_mantenimiento(
                 detail=f"No se puede eliminar el perfil porque tiene {usuarios_count} usuario(s) asignado(s)"
             )
 
+        # Hard delete intencional: Perfil es tabla maestra del sistema.
+        # Validación previa garantiza que no hay usuarios asignados.
         db.delete(perfil_db)
         db.commit()
 
