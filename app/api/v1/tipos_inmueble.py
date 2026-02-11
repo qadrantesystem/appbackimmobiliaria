@@ -4,10 +4,12 @@ Sistema Inmobiliario - CRUD completo
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import func as sa_func
 from typing import List, Optional
 from app.database import get_db
 from app.dependencies import require_admin, get_optional_user
 from app.models.tipo_inmueble import TipoInmueble
+from app.models.caracteristica_x_inmueble import CaracteristicaXInmueble
 from app.models.usuario import Usuario
 from pydantic import BaseModel, Field
 import logging
@@ -38,7 +40,8 @@ class TipoInmuebleUpdate(BaseModel):
 
 class TipoInmuebleResponse(TipoInmuebleBase):
     tipo_inmueble_id: int
-    
+    total_caracteristicas: Optional[int] = 0
+
     class Config:
         from_attributes = True
 
@@ -67,14 +70,36 @@ async def listar_tipos_inmueble(
     """
     try:
         query = db.query(TipoInmueble)
-        
+
         if activo is not None:
             query = query.filter(TipoInmueble.activo == activo)
-        
+
         tipos = query.order_by(TipoInmueble.orden, TipoInmueble.nombre).all()
-        
-        return tipos
-        
+
+        # Obtener conteos de características asignadas por tipo
+        conteos = dict(
+            db.query(
+                CaracteristicaXInmueble.tipo_inmueble_id,
+                sa_func.count(CaracteristicaXInmueble.id)
+            ).group_by(CaracteristicaXInmueble.tipo_inmueble_id).all()
+        )
+
+        # Enriquecer respuesta con total_caracteristicas
+        resultado = []
+        for tipo in tipos:
+            tipo_dict = {
+                "tipo_inmueble_id": tipo.tipo_inmueble_id,
+                "nombre": tipo.nombre,
+                "descripcion": tipo.descripcion,
+                "icono": tipo.icono,
+                "orden": tipo.orden,
+                "activo": tipo.activo,
+                "total_caracteristicas": conteos.get(tipo.tipo_inmueble_id, 0)
+            }
+            resultado.append(tipo_dict)
+
+        return resultado
+
     except Exception as e:
         logger.error(f"❌ Error listando tipos de inmueble: {e}")
         raise HTTPException(status_code=500, detail="Error al listar tipos de inmueble")
