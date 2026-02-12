@@ -67,7 +67,7 @@ async def listar_perfiles_mantenimiento(
             data=perfiles
         )
     except Exception as e:
-        logger.error(f"❌ Error listando perfiles: {str(e)}")
+        logger.error(f"Error listando perfiles: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al listar perfiles: {str(e)}"
@@ -113,7 +113,7 @@ async def listar_perfiles_paginado(
             data=perfiles
         )
     except Exception as e:
-        logger.error(f"❌ Error en paginación de perfiles: {str(e)}")
+        logger.error(f"Error en paginación de perfiles: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al paginar perfiles: {str(e)}"
@@ -149,7 +149,7 @@ async def crear_perfil_mantenimiento(
         db.commit()
         db.refresh(nuevo_perfil)
 
-        logger.info(f"✅ Perfil creado: {nuevo_perfil.nombre}")
+        logger.info(f"Perfil creado: {nuevo_perfil.nombre}")
 
         return ResponseModel(
             success=True,
@@ -159,7 +159,7 @@ async def crear_perfil_mantenimiento(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error creando perfil: {str(e)}")
+        logger.error(f"Error creando perfil: {str(e)}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -206,7 +206,7 @@ async def actualizar_perfil_mantenimiento(
         db.commit()
         db.refresh(perfil_db)
 
-        logger.info(f"✅ Perfil actualizado: {perfil_db.nombre}")
+        logger.info(f"Perfil actualizado: {perfil_db.nombre}")
 
         return ResponseModel(
             success=True,
@@ -216,7 +216,7 @@ async def actualizar_perfil_mantenimiento(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error actualizando perfil: {str(e)}")
+        logger.error(f"Error actualizando perfil: {str(e)}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -255,7 +255,7 @@ async def eliminar_perfil_mantenimiento(
         db.delete(perfil_db)
         db.commit()
 
-        logger.info(f"✅ Perfil eliminado: {perfil_db.nombre}")
+        logger.info(f"Perfil eliminado: {perfil_db.nombre}")
 
         return ResponseModel(
             success=True,
@@ -265,7 +265,7 @@ async def eliminar_perfil_mantenimiento(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error eliminando perfil: {str(e)}")
+        logger.error(f"Error eliminando perfil: {str(e)}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

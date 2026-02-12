@@ -101,7 +101,7 @@ async def listar_tipos_inmueble(
         return resultado
 
     except Exception as e:
-        logger.error(f"❌ Error listando tipos de inmueble: {e}")
+        logger.error(f"Error listando tipos de inmueble: {e}")
         raise HTTPException(status_code=500, detail="Error al listar tipos de inmueble")
 
 @router.get("/paginado", response_model=TipoInmueblePaginado)
@@ -150,7 +150,7 @@ async def obtener_tipo_inmueble(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error obteniendo tipo de inmueble {tipo_id}: {e}")
+        logger.error(f"Error obteniendo tipo de inmueble {tipo_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al obtener tipo de inmueble")
 
 @router.post("/", response_model=TipoInmuebleResponse, status_code=201)
@@ -173,7 +173,7 @@ async def crear_tipo_inmueble(
         db.commit()
         db.refresh(nuevo_tipo)
         
-        logger.info(f"✅ Tipo de inmueble creado: {nuevo_tipo.nombre} (ID: {nuevo_tipo.tipo_inmueble_id})")
+        logger.info(f"Tipo de inmueble creado: {nuevo_tipo.nombre} (ID: {nuevo_tipo.tipo_inmueble_id})")
         
         return nuevo_tipo
         
@@ -181,7 +181,7 @@ async def crear_tipo_inmueble(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error creando tipo de inmueble: {e}")
+        logger.error(f"Error creando tipo de inmueble: {e}")
         raise HTTPException(status_code=500, detail=f"Error al crear tipo de inmueble: {str(e)}")
 
 @router.put("/{tipo_id}", response_model=TipoInmuebleResponse)
@@ -208,7 +208,7 @@ async def actualizar_tipo_inmueble(
         db.commit()
         db.refresh(tipo)
         
-        logger.info(f"✅ Tipo de inmueble actualizado: {tipo.nombre} (ID: {tipo.tipo_inmueble_id})")
+        logger.info(f"Tipo de inmueble actualizado: {tipo.nombre} (ID: {tipo.tipo_inmueble_id})")
         
         return tipo
         
@@ -216,7 +216,7 @@ async def actualizar_tipo_inmueble(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error actualizando tipo de inmueble {tipo_id}: {e}")
+        logger.error(f"Error actualizando tipo de inmueble {tipo_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al actualizar tipo de inmueble: {str(e)}")
 
 @router.delete("/{tipo_id}")
@@ -237,7 +237,7 @@ async def eliminar_tipo_inmueble(
         tipo.activo = False
         db.commit()
         
-        logger.info(f"✅ Tipo de inmueble desactivado: {tipo.nombre} (ID: {tipo.tipo_inmueble_id})")
+        logger.info(f"Tipo de inmueble desactivado: {tipo.nombre} (ID: {tipo.tipo_inmueble_id})")
         
         return {
             "success": True,
@@ -248,5 +248,5 @@ async def eliminar_tipo_inmueble(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error eliminando tipo de inmueble {tipo_id}: {e}")
+        logger.error(f"Error eliminando tipo de inmueble {tipo_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al eliminar tipo de inmueble: {str(e)}")

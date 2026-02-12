@@ -12,11 +12,40 @@ from app.models.caracteristica import Caracteristica
 from app.models.tipo_inmueble import TipoInmueble
 from app.models.categoria import Categoria
 from app.models.usuario import Usuario
+from sqlalchemy import func as sql_func
 from pydantic import BaseModel, Field
 import logging
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Iconos monocromáticos elegantes con paleta azul/gris corporativa
+ICONOS = {
+    'ascensor': '▣', 'elevador': '▣', 'piso': '▢',
+    'piscina': '◈', 'gimnasio': '◐', 'gym': '◐',
+    'salon': '▭', 'sala': '▭', 'terraza': '▱',
+    'azotea': '▱', 'balcon': '▭',
+    'seguridad': '◆', 'vigilancia': '◆', 'camaras': '◆',
+    'alarma': '◆', 'portero': '◆',
+    'garaje': '▧', 'estacionamiento': '▧', 'cochera': '▧', 'parking': '▧',
+    'agua': '◉', 'luz': '◎', 'gas': '◉',
+    'internet': '◬', 'wifi': '◬', 'cable': '◭',
+    'parque': '◈', 'jardin': '◈', 'area verde': '◈',
+    'aire': '◐', 'calefaccion': '◉', 'ventilacion': '◎',
+    'cocina': '▢', 'baño': '▢', 'dormitorio': '▢',
+    'habitacion': '▢', 'closet': '▢',
+    'lavanderia': '◫', 'deposito': '▣', 'bodega': '▣',
+    'mascotas': '◇', 'amoblado': '▦', 'vista': '◈', 'esquina': '◆',
+}
+
+
+def obtener_icono(nombre: str) -> str:
+    """Retorna icono monocromático basado en palabras clave"""
+    nombre_lower = nombre.lower()
+    for palabra, icono in ICONOS.items():
+        if palabra in nombre_lower:
+            return icono
+    return '▪'
 
 # ============================================
 # 📋 SCHEMAS
@@ -107,7 +136,7 @@ async def listar_caracteristicas_por_tipo(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error listando características del tipo {tipo_inmueble_id}: {e}")
+        logger.error(f"Error listando características del tipo {tipo_inmueble_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al listar características")
 
 @router.post("/", response_model=CaracteristicaXInmuebleResponse, status_code=201)
@@ -141,7 +170,7 @@ async def asignar_caracteristica_a_tipo(
         db.commit()
         db.refresh(nueva_relacion)
         
-        logger.info(f"✅ Característica {data.caracteristica_id} asignada al tipo {data.tipo_inmueble_id}")
+        logger.info(f"Característica {data.caracteristica_id} asignada al tipo {data.tipo_inmueble_id}")
         
         return nueva_relacion
         
@@ -149,7 +178,7 @@ async def asignar_caracteristica_a_tipo(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error asignando característica: {e}")
+        logger.error(f"Error asignando característica: {e}")
         raise HTTPException(status_code=500, detail=f"Error al asignar característica: {str(e)}")
 
 @router.put("/{relacion_id}", response_model=CaracteristicaXInmuebleResponse)
@@ -174,7 +203,7 @@ async def actualizar_caracteristica_tipo(
         db.commit()
         db.refresh(relacion)
         
-        logger.info(f"✅ Relación actualizada (ID: {relacion_id})")
+        logger.info(f"Relación actualizada (ID: {relacion_id})")
         
         return relacion
         
@@ -182,7 +211,7 @@ async def actualizar_caracteristica_tipo(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error actualizando relación {relacion_id}: {e}")
+        logger.error(f"Error actualizando relación {relacion_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al actualizar: {str(e)}")
 
 @router.delete("/{relacion_id}")
@@ -202,7 +231,7 @@ async def eliminar_caracteristica_tipo(
         db.delete(relacion)
         db.commit()
         
-        logger.info(f"✅ Relación eliminada (ID: {relacion_id})")
+        logger.info(f"Relación eliminada (ID: {relacion_id})")
         
         return {
             "success": True,
@@ -213,7 +242,7 @@ async def eliminar_caracteristica_tipo(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error eliminando relación {relacion_id}: {e}")
+        logger.error(f"Error eliminando relación {relacion_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al eliminar: {str(e)}")
 
 @router.get("/tipo-inmueble/{tipo_inmueble_id}/agrupadas")
@@ -293,7 +322,7 @@ async def listar_caracteristicas_agrupadas(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error listando características agrupadas del tipo {tipo_inmueble_id}: {e}")
+        logger.error(f"Error listando características agrupadas del tipo {tipo_inmueble_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al listar características agrupadas")
 
 @router.get("/tipo-inmueble/{tipo_inmueble_id}/mantenimiento")
@@ -308,84 +337,7 @@ async def listar_todas_caracteristicas_para_mantenimiento(
     Ideal para tree view de asignación en módulo de mantenimiento
     """
     
-    # Iconos monocromáticos elegantes con paleta azul/gris corporativa
-    ICONOS = {
-        # Edificio y estructura
-        'ascensor': '▣',
-        'elevador': '▣',
-        'piso': '▢',
-        
-        # Áreas comunes
-        'piscina': '◈',
-        'gimnasio': '◐',
-        'gym': '◐',
-        'salon': '▭',
-        'sala': '▭',
-        'terraza': '▱',
-        'azotea': '▱',
-        'balcon': '▭',
-        
-        # Seguridad
-        'seguridad': '◆',
-        'vigilancia': '◆',
-        'camaras': '◆',
-        'alarma': '◆',
-        'portero': '◆',
-        
-        # Estacionamiento
-        'garaje': '▧',
-        'estacionamiento': '▧',
-        'cochera': '▧',
-        'parking': '▧',
-        
-        # Servicios
-        'agua': '◉',
-        'luz': '◎',
-        'gas': '◉',
-        'internet': '◬',
-        'wifi': '◬',
-        'cable': '◭',
-        
-        # Espacios verdes
-        'parque': '◈',
-        'jardin': '◈',
-        'area verde': '◈',
-        
-        # Clima
-        'aire': '◐',
-        'calefaccion': '◉',
-        'ventilacion': '◎',
-        
-        # Espacios interiores
-        'cocina': '▢',
-        'baño': '▢',
-        'dormitorio': '▢',
-        'habitacion': '▢',
-        'closet': '▢',
-        
-        # Servicios adicionales
-        'lavanderia': '◫',
-        'deposito': '▣',
-        'bodega': '▣',
-        
-        # Características especiales
-        'mascotas': '◇',
-        'amoblado': '▦',
-        'vista': '◈',
-        'esquina': '◆',
-    }
-    
-    def obtener_icono(nombre: str) -> str:
-        """Retorna icono monocromático basado en palabras clave"""
-        nombre_lower = nombre.lower()
-        for palabra, icono in ICONOS.items():
-            if palabra in nombre_lower:
-                return icono
-        return '▪'  # Icono por defecto (cuadrado pequeño)
-    
     try:
-        from sqlalchemy import func as sql_func
-        
         # Verificar que el tipo de inmueble existe
         tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == tipo_inmueble_id).first()
         if not tipo:
@@ -447,7 +399,7 @@ async def listar_todas_caracteristicas_para_mantenimiento(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error listando características para mantenimiento del tipo {tipo_inmueble_id}: {e}")
+        logger.error(f"Error listando características para mantenimiento del tipo {tipo_inmueble_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al listar características para mantenimiento: {str(e)}")
 
 @router.delete("/tipo/{tipo_inmueble_id}/caracteristica/{caracteristica_id}")
@@ -471,7 +423,7 @@ async def eliminar_por_composite_key(
         db.delete(relacion)
         db.commit()
         
-        logger.info(f"✅ Relación eliminada (Tipo: {tipo_inmueble_id}, Característica: {caracteristica_id})")
+        logger.info(f"Relación eliminada (Tipo: {tipo_inmueble_id}, Característica: {caracteristica_id})")
         
         return {
             "success": True,
@@ -482,5 +434,5 @@ async def eliminar_por_composite_key(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error eliminando relación: {e}")
+        logger.error(f"Error eliminando relación: {e}")
         raise HTTPException(status_code=500, detail=f"Error al eliminar: {str(e)}")

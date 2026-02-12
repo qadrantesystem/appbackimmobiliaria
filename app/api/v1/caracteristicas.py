@@ -26,7 +26,7 @@ class CaracteristicaBase(BaseModel):
     tipo_input: Optional[str] = Field(None, max_length=50)
     unidad: Optional[str] = Field(None, max_length=20)
     categoria_id: Optional[int] = None  # ✅ Usar ID en lugar de nombre
-    categoria: Optional[str] = Field(None, max_length=50)  # ⚠️ DEPRECATED: mantener por compatibilidad
+    categoria: Optional[str] = Field(None, max_length=50)  # DEPRECATED: usar categoria_id. Se eliminará en v2.0
     orden: int = 0
     activo: bool = True
 
@@ -85,7 +85,7 @@ async def listar_caracteristicas(
         return caracteristicas
         
     except Exception as e:
-        logger.error(f"❌ Error listando características: {e}")
+        logger.error(f"Error listando características: {e}")
         raise HTTPException(status_code=500, detail="Error al listar características")
 
 
@@ -131,7 +131,7 @@ async def listar_caracteristicas_paginado(
         # Calcular total de páginas
         total_pages = (total + page_size - 1) // page_size
         
-        logger.info(f"✅ Listadas {len(caracteristicas)} características (página {page}/{total_pages})")
+        logger.info(f"Listadas {len(caracteristicas)} características (página {page}/{total_pages})")
         
         return {
             "total": total,
@@ -142,7 +142,7 @@ async def listar_caracteristicas_paginado(
         }
         
     except Exception as e:
-        logger.error(f"❌ Error listando características paginadas: {e}")
+        logger.error(f"Error listando características paginadas: {e}")
         raise HTTPException(status_code=500, detail="Error al listar características")
 
 
@@ -163,7 +163,7 @@ async def obtener_caracteristica(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error obteniendo característica {caracteristica_id}: {e}")
+        logger.error(f"Error obteniendo característica {caracteristica_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al obtener característica")
 
 @router.post("/", response_model=CaracteristicaResponse, status_code=201)
@@ -179,13 +179,13 @@ async def crear_caracteristica(
         db.commit()
         db.refresh(nueva_caracteristica)
         
-        logger.info(f"✅ Característica creada: {nueva_caracteristica.nombre} (ID: {nueva_caracteristica.caracteristica_id})")
+        logger.info(f"Característica creada: {nueva_caracteristica.nombre} (ID: {nueva_caracteristica.caracteristica_id})")
         
         return nueva_caracteristica
         
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error creando característica: {e}")
+        logger.error(f"Error creando característica: {e}")
         raise HTTPException(status_code=500, detail=f"Error al crear característica: {str(e)}")
 
 @router.put("/{caracteristica_id}", response_model=CaracteristicaResponse)
@@ -210,7 +210,7 @@ async def actualizar_caracteristica(
         db.commit()
         db.refresh(caracteristica)
         
-        logger.info(f"✅ Característica actualizada: {caracteristica.nombre} (ID: {caracteristica.caracteristica_id})")
+        logger.info(f"Característica actualizada: {caracteristica.nombre} (ID: {caracteristica.caracteristica_id})")
         
         return caracteristica
         
@@ -218,7 +218,7 @@ async def actualizar_caracteristica(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error actualizando característica {caracteristica_id}: {e}")
+        logger.error(f"Error actualizando característica {caracteristica_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al actualizar característica: {str(e)}")
 
 @router.delete("/{caracteristica_id}")
@@ -237,7 +237,7 @@ async def eliminar_caracteristica(
         caracteristica.activo = False
         db.commit()
         
-        logger.info(f"✅ Característica desactivada: {caracteristica.nombre} (ID: {caracteristica.caracteristica_id})")
+        logger.info(f"Característica desactivada: {caracteristica.nombre} (ID: {caracteristica.caracteristica_id})")
         
         return {
             "success": True,
@@ -248,5 +248,5 @@ async def eliminar_caracteristica(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error eliminando característica {caracteristica_id}: {e}")
+        logger.error(f"Error eliminando característica {caracteristica_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al eliminar característica: {str(e)}")

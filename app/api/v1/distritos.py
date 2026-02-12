@@ -74,12 +74,12 @@ async def listar_distritos(
         
         distritos = query.order_by(Distrito.orden, Distrito.nombre).all()
         
-        logger.info(f"✅ Listados {len(distritos)} distritos")
+        logger.info(f"Listados {len(distritos)} distritos")
         
         return distritos
         
     except Exception as e:
-        logger.error(f"❌ Error listando distritos: {e}")
+        logger.error(f"Error listando distritos: {e}")
         raise HTTPException(status_code=500, detail="Error al listar distritos")
 
 @router.get("/paginado", response_model=DistritoPaginado)
@@ -114,7 +114,7 @@ async def listar_distritos_paginado(
         
         total_pages = (total + page_size - 1) // page_size
         
-        logger.info(f"✅ Listados {len(distritos)} distritos (página {page}/{total_pages})")
+        logger.info(f"Listados {len(distritos)} distritos (página {page}/{total_pages})")
         
         return {
             "total": total,
@@ -125,7 +125,7 @@ async def listar_distritos_paginado(
         }
         
     except Exception as e:
-        logger.error(f"❌ Error listando distritos paginados: {e}")
+        logger.error(f"Error listando distritos paginados: {e}")
         raise HTTPException(status_code=500, detail="Error al listar distritos")
 
 
@@ -149,5 +149,5 @@ async def obtener_distrito(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error obteniendo distrito {distrito_id}: {e}")
+        logger.error(f"Error obteniendo distrito {distrito_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al obtener distrito")

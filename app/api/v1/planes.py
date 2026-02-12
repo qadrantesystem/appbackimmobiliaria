@@ -95,7 +95,7 @@ async def listar_planes(
         return planes
         
     except Exception as e:
-        logger.error(f"❌ Error listando planes: {e}")
+        logger.error(f"Error listando planes: {e}")
         raise HTTPException(status_code=500, detail="Error al listar planes")
 
 @router.get("/paginado", response_model=PlanPaginado)
@@ -144,7 +144,7 @@ async def obtener_plan(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error obteniendo plan {plan_id}: {e}")
+        logger.error(f"Error obteniendo plan {plan_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al obtener plan")
 
 @router.post("/", response_model=PlanResponse, status_code=201)
@@ -168,7 +168,7 @@ async def crear_plan(
         db.commit()
         db.refresh(nuevo_plan)
         
-        logger.info(f"✅ Plan creado: {nuevo_plan.nombre} (ID: {nuevo_plan.plan_id})")
+        logger.info(f"Plan creado: {nuevo_plan.nombre} (ID: {nuevo_plan.plan_id})")
         
         return nuevo_plan
         
@@ -176,7 +176,7 @@ async def crear_plan(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error creando plan: {e}")
+        logger.error(f"Error creando plan: {e}")
         raise HTTPException(status_code=500, detail=f"Error al crear plan: {str(e)}")
 
 @router.put("/{plan_id}", response_model=PlanResponse)
@@ -204,7 +204,7 @@ async def actualizar_plan(
         db.commit()
         db.refresh(plan)
         
-        logger.info(f"✅ Plan actualizado: {plan.nombre} (ID: {plan.plan_id})")
+        logger.info(f"Plan actualizado: {plan.nombre} (ID: {plan.plan_id})")
         
         return plan
         
@@ -212,7 +212,7 @@ async def actualizar_plan(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error actualizando plan {plan_id}: {e}")
+        logger.error(f"Error actualizando plan {plan_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al actualizar plan: {str(e)}")
 
 @router.delete("/{plan_id}")
@@ -234,7 +234,7 @@ async def eliminar_plan(
         plan.activo = False
         db.commit()
         
-        logger.info(f"✅ Plan desactivado: {plan.nombre} (ID: {plan.plan_id})")
+        logger.info(f"Plan desactivado: {plan.nombre} (ID: {plan.plan_id})")
         
         return {
             "success": True,
@@ -245,7 +245,7 @@ async def eliminar_plan(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error eliminando plan {plan_id}: {e}")
+        logger.error(f"Error eliminando plan {plan_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al eliminar plan: {str(e)}")
 
 @router.patch("/{plan_id}/activar")
@@ -266,7 +266,7 @@ async def activar_plan(
         plan.activo = True
         db.commit()
         
-        logger.info(f"✅ Plan activado: {plan.nombre} (ID: {plan.plan_id})")
+        logger.info(f"Plan activado: {plan.nombre} (ID: {plan.plan_id})")
         
         return {
             "success": True,
@@ -277,5 +277,5 @@ async def activar_plan(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error activando plan {plan_id}: {e}")
+        logger.error(f"Error activando plan {plan_id}: {e}")
         raise HTTPException(status_code=500, detail=f"Error al activar plan: {str(e)}")

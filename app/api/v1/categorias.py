@@ -80,12 +80,12 @@ async def listar_categorias(
 
         categorias = query.order_by(Categoria.orden, Categoria.nombre).all()
 
-        logger.info(f"✅ Listadas {len(categorias)} categorías")
+        logger.info(f"Listadas {len(categorias)} categorías")
 
         return categorias
 
     except Exception as e:
-        logger.error(f"❌ Error listando categorías: {e}")
+        logger.error(f"Error listando categorías: {e}")
         raise HTTPException(status_code=500, detail="Error al listar categorías")
 
 
@@ -153,7 +153,7 @@ async def listar_categorias_paginado(
         # Calcular total de páginas
         total_pages = (total + page_size - 1) // page_size
 
-        logger.info(f"✅ Página {page}/{total_pages} - {len(categorias)} categorías de {total} totales")
+        logger.info(f"Página {page}/{total_pages} - {len(categorias)} categorías de {total} totales")
 
         return CategoriaPaginada(
             total=total,
@@ -164,7 +164,7 @@ async def listar_categorias_paginado(
         )
 
     except Exception as e:
-        logger.error(f"❌ Error listando categorías paginadas: {e}")
+        logger.error(f"Error listando categorías paginadas: {e}")
         raise HTTPException(status_code=500, detail="Error al listar categorías")
 
 @router.get("/{categoria_id}", response_model=CategoriaResponse)
@@ -186,7 +186,7 @@ async def obtener_categoria(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"❌ Error obteniendo categoría {categoria_id}: {e}")
+        logger.error(f"Error obteniendo categoría {categoria_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al obtener categoría")
 
 @router.post("/", response_model=CategoriaResponse, status_code=201)
@@ -219,7 +219,7 @@ async def crear_categoria(
         db.commit()
         db.refresh(nueva_categoria)
 
-        logger.info(f"✅ Categoría creada: {nueva_categoria.nombre} (ID: {nueva_categoria.categoria_id})")
+        logger.info(f"Categoría creada: {nueva_categoria.nombre} (ID: {nueva_categoria.categoria_id})")
 
         return nueva_categoria
 
@@ -227,7 +227,7 @@ async def crear_categoria(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error creando categoría: {e}")
+        logger.error(f"Error creando categoría: {e}")
         raise HTTPException(status_code=500, detail="Error al crear categoría")
 
 @router.put("/{categoria_id}", response_model=CategoriaResponse)
@@ -269,7 +269,7 @@ async def actualizar_categoria(
         db.commit()
         db.refresh(categoria)
 
-        logger.info(f"✅ Categoría actualizada: {categoria.nombre} (ID: {categoria_id})")
+        logger.info(f"Categoría actualizada: {categoria.nombre} (ID: {categoria_id})")
 
         return categoria
 
@@ -277,7 +277,7 @@ async def actualizar_categoria(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error actualizando categoría {categoria_id}: {e}")
+        logger.error(f"Error actualizando categoría {categoria_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al actualizar categoría")
 
 @router.delete("/{categoria_id}", status_code=204)
@@ -304,7 +304,7 @@ async def eliminar_categoria(
 
         db.commit()
 
-        logger.info(f"✅ Categoría eliminada (soft delete): {categoria.nombre} (ID: {categoria_id})")
+        logger.info(f"Categoría eliminada (soft delete): {categoria.nombre} (ID: {categoria_id})")
 
         return None
 
@@ -312,7 +312,7 @@ async def eliminar_categoria(
         raise
     except Exception as e:
         db.rollback()
-        logger.error(f"❌ Error eliminando categoría {categoria_id}: {e}")
+        logger.error(f"Error eliminando categoría {categoria_id}: {e}")
         raise HTTPException(status_code=500, detail="Error al eliminar categoría")
 
 @router.get("/agrupadas", response_model=ResponseModel[List[CategoriaAgrupada]])
@@ -367,7 +367,7 @@ async def listar_categorias_agrupadas(
         )
     
     except Exception as e:
-        logger.error(f"❌ Error listando categorías agrupadas: {str(e)}")
+        logger.error(f"Error listando categorías agrupadas: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error al listar categorías agrupadas: {str(e)}"
