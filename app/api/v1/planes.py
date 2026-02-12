@@ -5,6 +5,7 @@ Sistema Inmobiliario - CRUD de Planes
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from sqlalchemy import func
 from app.database import get_db
 from app.dependencies import get_current_user, require_admin, get_optional_user
 from app.models.plan import Plan
@@ -21,13 +22,13 @@ router = APIRouter()
 # ============================================
 
 class PlanBase(BaseModel):
-    nombre: str = Field(..., max_length=100)
-    descripcion: Optional[str] = None
-    precio_mensual: Optional[Decimal] = None
-    precio_anual: Optional[Decimal] = None
+    nombre: str = Field(..., min_length=2, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=500)
+    precio_mensual: Optional[Decimal] = Field(None, ge=0)
+    precio_anual: Optional[Decimal] = Field(None, ge=0)
     moneda: str = Field(default='USD', max_length=3)
-    max_propiedades: Optional[int] = None
-    max_imagenes_por_propiedad: Optional[int] = None
+    max_propiedades: Optional[int] = Field(None, ge=0, le=10000)
+    max_imagenes_por_propiedad: Optional[int] = Field(None, ge=0, le=100)
     destacar_propiedades: bool = False
     soporte_prioritario: bool = False
     caracteristicas: Optional[dict] = None
@@ -157,7 +158,7 @@ async def crear_plan(
     """
     try:
         # Verificar si ya existe un plan con ese nombre
-        plan_existente = db.query(Plan).filter(Plan.nombre == plan_data.nombre).first()
+        plan_existente = db.query(Plan).filter(func.lower(Plan.nombre) == func.lower(plan_data.nombre)).first()
         if plan_existente:
             raise HTTPException(status_code=400, detail="Ya existe un plan con ese nombre")
         

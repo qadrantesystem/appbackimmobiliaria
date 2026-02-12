@@ -12,7 +12,7 @@ from app.models.caracteristica import Caracteristica
 from app.models.tipo_inmueble import TipoInmueble
 from app.models.categoria import Categoria
 from app.models.usuario import Usuario
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import logging
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class CaracteristicaXInmuebleBase(BaseModel):
     caracteristica_id: int
     requerido: bool = False
     visible_en_filtro: bool = True
-    orden: int = 0
+    orden: int = Field(default=0, ge=0, le=999)
 
 class CaracteristicaXInmuebleCreate(CaracteristicaXInmuebleBase):
     pass
@@ -35,7 +35,7 @@ class CaracteristicaXInmuebleCreate(CaracteristicaXInmuebleBase):
 class CaracteristicaXInmuebleUpdate(BaseModel):
     requerido: Optional[bool] = None
     visible_en_filtro: Optional[bool] = None
-    orden: Optional[int] = None
+    orden: Optional[int] = Field(None, ge=0, le=999)
 
 class CaracteristicaXInmuebleResponse(CaracteristicaXInmuebleBase):
     id: int

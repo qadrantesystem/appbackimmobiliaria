@@ -22,8 +22,8 @@ router = APIRouter()
 # ============================================
 
 class TipoInmuebleBase(BaseModel):
-    nombre: str = Field(..., max_length=100)
-    descripcion: Optional[str] = None
+    nombre: str = Field(..., min_length=2, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=500)
     icono: Optional[str] = Field(None, max_length=50)
     orden: int = 0
     activo: bool = True
@@ -32,8 +32,8 @@ class TipoInmuebleCreate(TipoInmuebleBase):
     pass
 
 class TipoInmuebleUpdate(BaseModel):
-    nombre: Optional[str] = Field(None, max_length=100)
-    descripcion: Optional[str] = None
+    nombre: Optional[str] = Field(None, min_length=2, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=500)
     icono: Optional[str] = Field(None, max_length=50)
     orden: Optional[int] = None
     activo: Optional[bool] = None
@@ -164,7 +164,7 @@ async def crear_tipo_inmueble(
     """
     try:
         # Verificar si ya existe
-        tipo_existente = db.query(TipoInmueble).filter(TipoInmueble.nombre == tipo_data.nombre).first()
+        tipo_existente = db.query(TipoInmueble).filter(sa_func.lower(TipoInmueble.nombre) == sa_func.lower(tipo_data.nombre)).first()
         if tipo_existente:
             raise HTTPException(status_code=400, detail="Ya existe un tipo de inmueble con ese nombre")
         

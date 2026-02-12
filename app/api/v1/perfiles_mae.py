@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from sqlalchemy import func
 from app.database import get_db
 from app.dependencies import get_current_active_user, require_admin
 from app.models import Usuario, Perfil
@@ -27,14 +28,14 @@ class PerfilResponse(BaseModel):
 
 class PerfilCreate(BaseModel):
     """Schema para crear perfil"""
-    nombre: str
-    descripcion: Optional[str] = None
+    nombre: str = Field(..., min_length=2, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=500)
     permisos: Optional[dict] = None
 
 class PerfilUpdate(BaseModel):
     """Schema para actualizar perfil"""
-    nombre: Optional[str] = None
-    descripcion: Optional[str] = None
+    nombre: Optional[str] = Field(None, min_length=2, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=500)
     permisos: Optional[dict] = None
 
 class PerfilPaginado(BaseModel):
@@ -130,7 +131,7 @@ async def crear_perfil_mantenimiento(
     """
     try:
         # Validar que no exista un perfil con el mismo nombre
-        existing = db.query(Perfil).filter(Perfil.nombre == perfil.nombre).first()
+        existing = db.query(Perfil).filter(func.lower(Perfil.nombre) == func.lower(perfil.nombre)).first()
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -187,7 +188,7 @@ async def actualizar_perfil_mantenimiento(
 
         # Validar nombre único si se está cambiando
         if perfil.nombre and perfil.nombre != perfil_db.nombre:
-            existing = db.query(Perfil).filter(Perfil.nombre == perfil.nombre).first()
+            existing = db.query(Perfil).filter(func.lower(Perfil.nombre) == func.lower(perfil.nombre)).first()
             if existing:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,

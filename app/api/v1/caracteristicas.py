@@ -5,6 +5,7 @@ Sistema Inmobiliario - CRUD completo
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+from sqlalchemy import func
 from app.database import get_db
 from app.dependencies import require_admin, get_optional_user
 from app.models.caracteristica import Caracteristica
@@ -20,8 +21,8 @@ router = APIRouter()
 # ============================================
 
 class CaracteristicaBase(BaseModel):
-    nombre: str = Field(..., max_length=100)
-    descripcion: Optional[str] = None
+    nombre: str = Field(..., min_length=2, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=500)
     tipo_input: Optional[str] = Field(None, max_length=50)
     unidad: Optional[str] = Field(None, max_length=20)
     categoria_id: Optional[int] = None  # ✅ Usar ID en lugar de nombre
@@ -33,12 +34,12 @@ class CaracteristicaCreate(CaracteristicaBase):
     pass
 
 class CaracteristicaUpdate(BaseModel):
-    nombre: Optional[str] = Field(None, max_length=100)
-    descripcion: Optional[str] = None
+    nombre: Optional[str] = Field(None, min_length=2, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=500)
     tipo_input: Optional[str] = Field(None, max_length=50)
     unidad: Optional[str] = Field(None, max_length=20)
-    categoria_id: Optional[int] = None  # ✅ Usar ID en lugar de nombre
-    categoria: Optional[str] = Field(None, max_length=50)  # ⚠️ DEPRECATED
+    categoria_id: Optional[int] = None
+    categoria: Optional[str] = Field(None, max_length=50)
     orden: Optional[int] = None
     activo: Optional[bool] = None
 

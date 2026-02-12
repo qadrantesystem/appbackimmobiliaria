@@ -257,8 +257,9 @@ async def update_user_status(
         raise NotFoundException("Usuario no encontrado")
     
     # Validar estado
-    if estado not in ["activo", "inactivo", "suspendido"]:
-        raise BadRequestException("Estado inválido")
+    ESTADOS_VALIDOS = ["activo", "inactivo", "suspendido", "pendiente"]
+    if estado not in ESTADOS_VALIDOS:
+        raise BadRequestException(f"Estado inválido. Valores permitidos: {', '.join(ESTADOS_VALIDOS)}")
     
     # Actualizar estado
     usuario.estado = estado

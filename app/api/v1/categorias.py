@@ -23,8 +23,8 @@ router = APIRouter()
 # ============================================
 
 class CategoriaBase(BaseModel):
-    nombre: str = Field(..., min_length=3, max_length=100)
-    descripcion: Optional[str] = None
+    nombre: str = Field(..., min_length=2, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=500)
     orden: int = 0
     activo: bool = True
 
@@ -32,8 +32,8 @@ class CategoriaCreate(CategoriaBase):
     pass
 
 class CategoriaUpdate(BaseModel):
-    nombre: Optional[str] = Field(None, min_length=3, max_length=100)
-    descripcion: Optional[str] = None
+    nombre: Optional[str] = Field(None, min_length=2, max_length=100)
+    descripcion: Optional[str] = Field(None, max_length=500)
     orden: Optional[int] = None
     activo: Optional[bool] = None
 
