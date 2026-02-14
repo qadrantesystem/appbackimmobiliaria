@@ -14,7 +14,7 @@ class ContactoRequest(BaseModel):
 @router.post("", status_code=status.HTTP_200_OK)
 async def enviar_contacto(datos: ContactoRequest):
     """Recibe mensaje de contacto desde la landing page y lo envía por email."""
-    destinatario = "informes@qadrante2.com"
+    destinatario = "alancairampoma@gmail.com"
     asunto = f"Qadrante - Nuevo mensaje de {datos.nombre}"
     contenido_html = f"""
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
