@@ -254,6 +254,13 @@ try:
 except ImportError as e:
     print(f"   ⚠️ Error cargando contacto: {e}")
 
+try:
+    from app.api.v1 import corredores
+    app.include_router(corredores.router, prefix="/api/v1/corredores", tags=["🤝 Corredores"])
+    print("   ✅ Corredores")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando corredores: {e}")
+
 # ==========================================
 # 🛠️ ADMIN - MANTENIMIENTOS
 # ==========================================

@@ -34,6 +34,7 @@ async def get_my_profile(
             "foto_perfil": perfil.foto_perfil,
             "perfil_id": perfil.perfil_id,
             "estado": perfil.estado,
+            "autorizado": perfil.autorizado,
             "plan_id": perfil.plan_id,
             "fecha_registro": perfil.fecha_registro,
             "fecha_ultima_sesion": perfil.fecha_ultima_sesion

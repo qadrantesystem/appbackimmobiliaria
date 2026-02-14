@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, ForeignKey, CheckConstraint
+from sqlalchemy import Column, Integer, String, Boolean, TIMESTAMP, ForeignKey, CheckConstraint, Numeric, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -35,7 +35,15 @@ class Usuario(Base):
     fecha_ultima_sesion = Column(TIMESTAMP)
     created_at = Column(TIMESTAMP, server_default=func.now())
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
-    
+
+    # Campos de aprobación de corredor
+    autorizado = Column(Boolean, default=False, nullable=False)
+    comision_porcentaje = Column(Numeric(5, 2))
+    fecha_vigencia_corredor = Column(TIMESTAMP)
+    aprobado_por = Column(Integer, ForeignKey("usuarios.usuario_id"))
+    aprobado_at = Column(TIMESTAMP)
+    motivo_rechazo = Column(Text)
+
     # Constraints
     __table_args__ = (
         CheckConstraint("estado IN ('activo', 'inactivo', 'suspendido')", name="check_usuario_estado"),

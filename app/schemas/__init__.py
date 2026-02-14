@@ -18,6 +18,7 @@ from app.schemas.busqueda import (
     BusquedaResponse, BusquedaGuardadaResponse
 )
 from app.schemas.favorito import FavoritoCreate, FavoritoUpdate, FavoritoResponse
+from app.schemas.corredor import CorredorAprobar, CorredorRechazar
 from app.schemas.common import ResponseModel, PaginationParams, PaginatedResponse
 
 __all__ = [
@@ -39,6 +40,8 @@ __all__ = [
     "BusquedaResponse", "BusquedaGuardadaResponse",
     # Favorito
     "FavoritoCreate", "FavoritoUpdate", "FavoritoResponse",
+    # Corredor
+    "CorredorAprobar", "CorredorRechazar",
     # Common
     "ResponseModel", "PaginationParams", "PaginatedResponse",
 ]
