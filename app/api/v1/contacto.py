@@ -39,15 +39,22 @@ async def enviar_contacto(datos: ContactoRequest):
     """
 
     try:
-        await email_service.send_email_with_attachments(
+        resultado = await email_service.send_email_with_attachments(
             to_email=destinatario,
             subject=asunto,
             html_content=contenido_html
         )
+        if not resultado.get("success"):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error al enviar el mensaje. Intenta más tarde."
+            )
         return {
             "success": True,
             "message": "Mensaje enviado correctamente"
         }
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
