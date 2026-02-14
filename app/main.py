@@ -247,6 +247,13 @@ try:
 except ImportError as e:
     print(f"   ⚠️ Error cargando autorizaciones: {e}")
 
+try:
+    from app.api.v1 import contacto
+    app.include_router(contacto.router, prefix="/api/v1/contacto", tags=["📧 Contacto"])
+    print("   ✅ Contacto")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando contacto: {e}")
+
 # ==========================================
 # 🛠️ ADMIN - MANTENIMIENTOS
 # ==========================================
