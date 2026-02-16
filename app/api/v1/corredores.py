@@ -6,10 +6,11 @@ from app.dependencies import require_admin
 from app.models import Usuario
 from app.schemas.corredor import CorredorAprobar, CorredorRechazar
 from app.schemas.common import ResponseModel
+from app.core.constants import PerfilUsuario
 
 router = APIRouter()
 
-PERFIL_CORREDOR = 3
+PERFIL_CORREDOR = PerfilUsuario.CORREDOR
 
 
 def serializar_corredor(usuario: Usuario) -> dict:
@@ -130,7 +131,7 @@ async def aprobar_corredor(
 
     corredor.autorizado = True
     corredor.comision_porcentaje = datos.comision_porcentaje
-    corredor.fecha_vigencia_corredor = datos.fecha_vigencia
+    corredor.fecha_vigencia_corredor = datos.fecha_vigencia_corredor
     corredor.aprobado_por = admin.usuario_id
     corredor.aprobado_at = datetime.utcnow()
     corredor.motivo_rechazo = None

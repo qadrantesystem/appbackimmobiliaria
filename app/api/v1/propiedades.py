@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from app.database import get_db
 from app.dependencies import get_current_active_user, require_ofertante, get_optional_user
 from app.core.exceptions import BadRequestException, NotFoundException, ForbiddenException
+from app.core.constants import EstadoPropiedad, TipoTransaccion, TipoInmuebleID, MARGEN_BUSQUEDA
 from app.models import Propiedad, PropiedadDetalle, Usuario, TipoInmueble, Distrito, Caracteristica, Favorito, Propietario
 from app.schemas.propiedad import PropiedadCreate, PropiedadUpdate, PropiedadEstadoUpdate, PropiedadResponse, PropiedadDetalleResponse
 from app.schemas.common import ResponseModel, PaginatedResponse
@@ -1017,7 +1018,7 @@ async def buscar_propiedades_avanzada(
     area_max = None
     if filtros_bas.get("area"):
         area_objetivo = float(filtros_bas["area"])
-        margen = area_objetivo * 0.15
+        margen = area_objetivo * MARGEN_BUSQUEDA
         area_min = area_objetivo - margen
         area_max = area_objetivo + margen
 
@@ -1025,20 +1026,18 @@ async def buscar_propiedades_avanzada(
     precio_max = None
     if filtros_bas.get("precio"):
         precio_objetivo = float(filtros_bas["precio"])
-        margen = precio_objetivo * 0.15
-        precio_max = precio_objetivo + margen  # Solo usaremos el máximo para combinaciones
+        margen = precio_objetivo * MARGEN_BUSQUEDA
+        precio_max = precio_objetivo + margen
 
     # Verificar si se debe usar búsqueda inteligente con combinaciones
     usar_inteligente = (
         busqueda.incluir_combinaciones
         and area_min is not None
-        and filtros_gen.get("tipo_inmueble_id") == 1  # Solo oficinas
+        and filtros_gen.get("tipo_inmueble_id") == TipoInmuebleID.OFICINA_EN_EDIFICIO
         and not busqueda.filtros_avanzados  # No soportar filtros avanzados en combinaciones (por ahora)
     )
 
     if usar_inteligente:
-        print("🔥 [DEBUG] Búsqueda autenticada CON combinaciones inteligentes")
-
         # Usar servicio de búsqueda inteligente
         busqueda_service = BusquedaInteligenteService(db)
 
@@ -1068,8 +1067,6 @@ async def buscar_propiedades_avanzada(
         fin = inicio + busqueda.limit
         items_paginados = items_totales[inicio:fin]
 
-        print(f"✅ [DEBUG] Búsqueda inteligente autenticada: {len(resultado['individuales'])} individuales, {len(resultado['combinaciones'])} combinaciones")
-
         return {
             "success": True,
             "data": items_paginados,
@@ -1087,12 +1084,10 @@ async def buscar_propiedades_avanzada(
         }
 
     # LÓGICA TRADICIONAL (sin combinaciones)
-    print("📌 [DEBUG] Búsqueda autenticada tradicional (sin combinaciones)")
-
     # Query base - solo propiedades publicadas + eager load propietario (LEFT JOIN)
     query = db.query(Propiedad).options(
         joinedload(Propiedad.propietario, innerjoin=False)
-    ).filter(Propiedad.estado == "publicado")
+    ).filter(Propiedad.estado == EstadoPropiedad.PUBLICADO)
 
     # ============================================
     # 1️⃣ FILTROS GENÉRICOS (registro_x_inmueble_cab)
@@ -1108,7 +1103,7 @@ async def buscar_propiedades_avanzada(
 
     # Transacción
     if filtros_gen.get("transaccion"):
-        query = query.filter(Propiedad.transaccion.in_([filtros_gen["transaccion"], "ambos"]))
+        query = query.filter(Propiedad.transaccion.in_([filtros_gen["transaccion"], TipoTransaccion.AMBOS]))
 
     # ============================================
     # 2️⃣ FILTROS BÁSICOS con ±15% (registro_x_inmueble_cab)
@@ -1121,12 +1116,12 @@ async def buscar_propiedades_avanzada(
     # Precio (±15%) - según transacción
     if filtros_bas.get("precio"):
         precio_objetivo = float(filtros_bas["precio"])
-        margen = precio_objetivo * 0.15
+        margen = precio_objetivo * MARGEN_BUSQUEDA
         precio_min = precio_objetivo - margen
         precio_max_query = precio_objetivo + margen
 
-        transaccion = filtros_gen.get("transaccion", "venta")
-        if transaccion == "alquiler":
+        transaccion = filtros_gen.get("transaccion", TipoTransaccion.VENTA)
+        if transaccion == TipoTransaccion.ALQUILER:
             query = query.filter(
                 Propiedad.precio_alquiler >= precio_min,
                 Propiedad.precio_alquiler <= precio_max_query
@@ -1254,7 +1249,7 @@ async def buscar_propiedades_avanzada_publica(
     area_max = None
     if filtros_bas.get("area"):
         area_objetivo = float(filtros_bas["area"])
-        margen = area_objetivo * 0.15
+        margen = area_objetivo * MARGEN_BUSQUEDA
         area_min = area_objetivo - margen
         area_max = area_objetivo + margen
 
@@ -1262,20 +1257,18 @@ async def buscar_propiedades_avanzada_publica(
     precio_max = None
     if filtros_bas.get("precio"):
         precio_objetivo = float(filtros_bas["precio"])
-        margen = precio_objetivo * 0.15
+        margen = precio_objetivo * MARGEN_BUSQUEDA
         precio_max = precio_objetivo + margen
 
     # Verificar si se debe usar búsqueda inteligente con combinaciones
     usar_inteligente = (
         busqueda.incluir_combinaciones
         and area_min is not None
-        and filtros_gen.get("tipo_inmueble_id") == 1  # Solo oficinas
+        and filtros_gen.get("tipo_inmueble_id") == TipoInmuebleID.OFICINA_EN_EDIFICIO
         and not busqueda.filtros_avanzados
     )
 
     if usar_inteligente:
-        print("🔥 [DEBUG] Búsqueda PÚBLICA CON combinaciones inteligentes")
-
         busqueda_service = BusquedaInteligenteService(db)
 
         resultado = busqueda_service.buscar_con_combinaciones(
@@ -1304,8 +1297,6 @@ async def buscar_propiedades_avanzada_publica(
         fin = inicio + busqueda.limit
         items_paginados = items_totales[inicio:fin]
 
-        print(f"✅ [DEBUG] Búsqueda pública: {len(resultado['individuales'])} individuales, {len(resultado['combinaciones'])} combinaciones")
-
         return {
             "success": True,
             "data": items_paginados,
@@ -1323,11 +1314,9 @@ async def buscar_propiedades_avanzada_publica(
         }
 
     # LÓGICA TRADICIONAL (sin combinaciones)
-    print("📌 [DEBUG] Búsqueda pública tradicional (sin combinaciones)")
-
     query = db.query(Propiedad).options(
         joinedload(Propiedad.propietario, innerjoin=False)
-    ).filter(Propiedad.estado == "publicado")
+    ).filter(Propiedad.estado == EstadoPropiedad.PUBLICADO)
 
     # Filtros genéricos
     if filtros_gen.get("tipo_inmueble_id"):
@@ -1337,7 +1326,7 @@ async def buscar_propiedades_avanzada_publica(
         query = query.filter(Propiedad.distrito_id.in_(filtros_gen["distrito_ids"]))
 
     if filtros_gen.get("transaccion"):
-        query = query.filter(Propiedad.transaccion.in_([filtros_gen["transaccion"], "ambos"]))
+        query = query.filter(Propiedad.transaccion.in_([filtros_gen["transaccion"], TipoTransaccion.AMBOS]))
 
     # Filtros básicos
     if area_min is not None and area_max is not None:
@@ -1345,12 +1334,12 @@ async def buscar_propiedades_avanzada_publica(
 
     if filtros_bas.get("precio"):
         precio_objetivo = float(filtros_bas["precio"])
-        margen = precio_objetivo * 0.15
+        margen = precio_objetivo * MARGEN_BUSQUEDA
         precio_min = precio_objetivo - margen
         precio_max_query = precio_objetivo + margen
 
-        transaccion = filtros_gen.get("transaccion", "venta")
-        if transaccion == "alquiler":
+        transaccion = filtros_gen.get("transaccion", TipoTransaccion.VENTA)
+        if transaccion == TipoTransaccion.ALQUILER:
             query = query.filter(
                 Propiedad.precio_alquiler >= precio_min,
                 Propiedad.precio_alquiler <= precio_max_query
