@@ -92,7 +92,10 @@ class PropiedadResponse(BaseModel):
     precio_venta: Optional[Decimal]
     moneda: str
     area: Decimal
-    implementacion: Optional[int] = None  # 🏗️ Nivel de implementación/amoblamiento
+    habitaciones: Optional[int] = None
+    banos: Optional[int] = None
+    estacionamientos: Optional[int] = None
+    implementacion: Optional[int] = None
     imagen_principal: Optional[str]
     imagenes: Optional[List[str]] = []  # 🔥 AGREGADO para carrusel
     estado: str

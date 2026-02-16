@@ -121,6 +121,9 @@ async def list_properties(
                 precio_venta=prop.precio_venta,
                 moneda=prop.moneda,
                 area=prop.area,
+                habitaciones=prop.habitaciones,
+                banos=prop.banos,
+                estacionamientos=prop.estacionamientos,
                 implementacion=prop.implementacion,
                 imagen_principal=prop.imagen_principal,
                 imagenes=prop.imagenes or [],
@@ -245,15 +248,18 @@ async def my_properties(
             precio_venta=prop.precio_venta,
             moneda=prop.moneda,
             area=prop.area,
-            implementacion=prop.implementacion,  # 🏗️ Nivel de implementación
+            habitaciones=prop.habitaciones,
+            banos=prop.banos,
+            estacionamientos=prop.estacionamientos,
+            implementacion=prop.implementacion,
             imagen_principal=prop.imagen_principal,
-            imagenes=prop.imagenes or [],  # 🔥 AGREGADO para carrusel
+            imagenes=prop.imagenes or [],
             estado=prop.estado,
             estado_crm=prop.estado_crm,
             vistas=prop.vistas,
             contactos=prop.contactos,
             created_at=prop.created_at,
-            es_favorito=prop.registro_cab_id in favoritos_ids  # ⭐ FAVORITO
+            es_favorito=prop.registro_cab_id in favoritos_ids
         ))
 
     # Estadísticas
@@ -1184,6 +1190,9 @@ async def buscar_propiedades_avanzada(
             precio_venta=prop.precio_venta,
             moneda=prop.moneda,
             area=prop.area,
+            habitaciones=prop.habitaciones,
+            banos=prop.banos,
+            estacionamientos=prop.estacionamientos,
             implementacion=prop.implementacion,
             imagen_principal=prop.imagen_principal,
             imagenes=prop.imagenes or [],
@@ -1392,6 +1401,9 @@ async def buscar_propiedades_avanzada_publica(
             precio_venta=prop.precio_venta,
             moneda=prop.moneda,
             area=prop.area,
+            habitaciones=prop.habitaciones,
+            banos=prop.banos,
+            estacionamientos=prop.estacionamientos,
             implementacion=prop.implementacion,
             imagen_principal=prop.imagen_principal,
             imagenes=prop.imagenes or [],
@@ -1400,7 +1412,7 @@ async def buscar_propiedades_avanzada_publica(
             vistas=prop.vistas,
             contactos=prop.contactos,
             created_at=prop.created_at,
-            es_favorito=False  # Siempre False para usuarios no autenticados
+            es_favorito=False
         ))
 
     return PaginatedResponse(
