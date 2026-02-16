@@ -1,7 +1,7 @@
 import re
 from fastapi import APIRouter, Depends, Query, UploadFile, File, Body
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, and_, func
+from sqlalchemy import or_, and_, func, distinct
 from typing import Optional, List, Dict, Any
 from decimal import Decimal
 from pydantic import BaseModel
@@ -1137,19 +1137,11 @@ async def buscar_propiedades_avanzada(
                 Propiedad.precio_venta <= precio_max_query
             )
 
-    # Habitaciones (múltiples)
-    if filtros_bas.get("habitaciones") and len(filtros_bas["habitaciones"]) > 0:
-        query = query.filter(Propiedad.habitaciones.in_(filtros_bas["habitaciones"]))
+    # Estacionamientos/Parqueos (mínimo requerido)
+    if filtros_bas.get("estacionamientos"):
+        query = query.filter(Propiedad.estacionamientos >= filtros_bas["estacionamientos"])
 
-    # Baños (múltiples)
-    if filtros_bas.get("banos") and len(filtros_bas["banos"]) > 0:
-        query = query.filter(Propiedad.banos.in_(filtros_bas["banos"]))
-
-    # Parqueos (mínimo)
-    if filtros_bas.get("parqueos"):
-        query = query.filter(Propiedad.parqueos >= filtros_bas["parqueos"])
-
-    # Antigüedad (años máximo)
+    # Antigüedad (no mayor a X años)
     if filtros_bas.get("antiguedad"):
         query = query.filter(Propiedad.antiguedad <= filtros_bas["antiguedad"])
 
@@ -1159,17 +1151,26 @@ async def buscar_propiedades_avanzada(
 
     # ============================================
     # 3️⃣ FILTROS AVANZADOS (registro_x_inmueble_det)
+    # Optimizado: 1 solo subquery con GROUP BY + HAVING
     # ============================================
     if busqueda.filtros_avanzados and len(busqueda.filtros_avanzados) > 0:
-        for filtro_avanzado in busqueda.filtros_avanzados:
-            query = query.filter(
-                Propiedad.registro_cab_id.in_(
-                    db.query(PropiedadDetalle.registro_cab_id).filter(
-                        PropiedadDetalle.caracteristica_id == filtro_avanzado.caracteristica_id,
-                        PropiedadDetalle.valor == filtro_avanzado.valor
-                    )
-                )
+        condiciones = or_(*[
+            and_(
+                PropiedadDetalle.caracteristica_id == f.caracteristica_id,
+                PropiedadDetalle.valor == f.valor
             )
+            for f in busqueda.filtros_avanzados
+        ])
+
+        subquery_avanzados = (
+            db.query(PropiedadDetalle.registro_cab_id)
+            .filter(condiciones)
+            .group_by(PropiedadDetalle.registro_cab_id)
+            .having(func.count(distinct(PropiedadDetalle.caracteristica_id)) == len(busqueda.filtros_avanzados))
+            .subquery()
+        )
+
+        query = query.filter(Propiedad.registro_cab_id.in_(subquery_avanzados))
 
     # ============================================
     # PAGINACIÓN Y RESULTADO
@@ -1360,17 +1361,37 @@ async def buscar_propiedades_avanzada_publica(
                 Propiedad.precio_venta <= precio_max_query
             )
 
-    # Filtros avanzados
+    # Estacionamientos/Parqueos (mínimo requerido)
+    if filtros_bas.get("estacionamientos"):
+        query = query.filter(Propiedad.estacionamientos >= filtros_bas["estacionamientos"])
+
+    # Antigüedad (no mayor a X años)
+    if filtros_bas.get("antiguedad"):
+        query = query.filter(Propiedad.antiguedad <= filtros_bas["antiguedad"])
+
+    # Implementación / Nivel de amoblamiento (múltiples opciones)
+    if filtros_bas.get("implementacion") and len(filtros_bas["implementacion"]) > 0:
+        query = query.filter(Propiedad.implementacion.in_(filtros_bas["implementacion"]))
+
+    # Filtros avanzados - Optimizado: 1 solo subquery con GROUP BY + HAVING
     if busqueda.filtros_avanzados and len(busqueda.filtros_avanzados) > 0:
-        for filtro_avanzado in busqueda.filtros_avanzados:
-            query = query.filter(
-                Propiedad.registro_cab_id.in_(
-                    db.query(PropiedadDetalle.registro_cab_id).filter(
-                        PropiedadDetalle.caracteristica_id == filtro_avanzado.caracteristica_id,
-                        PropiedadDetalle.valor == filtro_avanzado.valor
-                    )
-                )
+        condiciones = or_(*[
+            and_(
+                PropiedadDetalle.caracteristica_id == f.caracteristica_id,
+                PropiedadDetalle.valor == f.valor
             )
+            for f in busqueda.filtros_avanzados
+        ])
+
+        subquery_avanzados = (
+            db.query(PropiedadDetalle.registro_cab_id)
+            .filter(condiciones)
+            .group_by(PropiedadDetalle.registro_cab_id)
+            .having(func.count(distinct(PropiedadDetalle.caracteristica_id)) == len(busqueda.filtros_avanzados))
+            .subquery()
+        )
+
+        query = query.filter(Propiedad.registro_cab_id.in_(subquery_avanzados))
 
     # Paginación
     total = query.count()

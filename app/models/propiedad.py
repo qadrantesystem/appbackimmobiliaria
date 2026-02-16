@@ -36,6 +36,9 @@ class Propiedad(Base):
     area = Column(DECIMAL(10, 2), nullable=False)
     antiguedad = Column(Integer)
     implementacion = Column(Integer)  # Nivel de implementación/amoblamiento
+    habitaciones = Column(Integer)
+    banos = Column(Integer)
+    estacionamientos = Column(Integer)
 
     # Precios
     transaccion = Column(String(20))
