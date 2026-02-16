@@ -39,11 +39,11 @@ async def obtener_stats_corredores(
     db: Session = Depends(get_db)
 ):
     """Estadísticas de corredores: pendientes, aprobados, rechazados"""
-    base = db.query(Usuario).filter(Usuario.perfil_id == PERFIL_CORREDOR)
+    query_corredores = db.query(Usuario).filter(Usuario.perfil_id == PERFIL_CORREDOR)
 
-    pendientes = base.filter(Usuario.autorizado == False, Usuario.motivo_rechazo == None).count()
-    aprobados = base.filter(Usuario.autorizado == True).count()
-    rechazados = base.filter(Usuario.motivo_rechazo != None, Usuario.autorizado == False).count()
+    pendientes = query_corredores.filter(Usuario.autorizado == False, Usuario.motivo_rechazo == None).count()
+    aprobados = query_corredores.filter(Usuario.autorizado == True).count()
+    rechazados = query_corredores.filter(Usuario.motivo_rechazo != None, Usuario.autorizado == False).count()
 
     return ResponseModel(
         success=True,
@@ -77,7 +77,7 @@ async def listar_corredores_pendientes(
     return ResponseModel(
         success=True,
         message=f"{len(corredores)} corredores pendientes",
-        data=[serializar_corredor(c) for c in corredores]
+        data=[serializar_corredor(corredor) for corredor in corredores]
     )
 
 
@@ -100,7 +100,7 @@ async def listar_corredores_aprobados(
     return ResponseModel(
         success=True,
         message=f"{len(corredores)} corredores aprobados",
-        data=[serializar_corredor(c) for c in corredores]
+        data=[serializar_corredor(corredor) for corredor in corredores]
     )
 
 

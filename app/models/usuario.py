@@ -54,6 +54,7 @@ class Usuario(Base):
     plan = relationship("Plan", backref="usuarios")
     verification_tokens = relationship("EmailVerificationToken", back_populates="usuario", cascade="all, delete-orphan")
     password_reset_tokens = relationship("PasswordResetToken", back_populates="usuario", cascade="all, delete-orphan")
+    aprobador = relationship("Usuario", foreign_keys=[aprobado_por], remote_side=[usuario_id])
     
     def __repr__(self):
         return f"<Usuario {self.email}>"

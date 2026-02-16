@@ -46,9 +46,6 @@ async def list_properties(
     - Busca combinaciones de oficinas contiguas que sumen el área solicitada
     - Retorna ambos resultados unificados
     """
-    print("🚀 [DEBUG] GET /propiedades endpoint llamado")
-    print(f"📊 [DEBUG] Parámetros: page={page}, limit={limit}, tipo_inmueble_id={tipo_inmueble_id}, incluir_combinaciones={incluir_combinaciones}")
-
     # Parsear distritos
     distrito_ids = None
     if distrito_id:
@@ -59,8 +56,6 @@ async def list_properties(
 
     # Si NO se solicitan combinaciones o NO hay área mínima, usar lógica ORIGINAL
     if not incluir_combinaciones or not area_min:
-        print("📌 [DEBUG] Usando búsqueda tradicional (sin combinaciones)")
-
         # Query base - solo propiedades publicadas + eager load propietario (LEFT JOIN)
         query = db.query(Propiedad).options(
             joinedload(Propiedad.propietario, innerjoin=False)
@@ -95,7 +90,6 @@ async def list_properties(
 
         # Total
         total = query.count()
-        print(f"📈 [DEBUG] Total propiedades encontradas: {total}")
 
         # Ordenar por fecha (más recientes primero)
         query = query.order_by(Propiedad.created_at.desc())
@@ -103,7 +97,6 @@ async def list_properties(
         # Paginación
         offset = (page - 1) * limit
         propiedades = query.offset(offset).limit(limit).all()
-        print(f"📦 [DEBUG] Propiedades obtenidas después de paginación: {len(propiedades)}")
 
         # Formatear respuesta
         propiedades_list = []
@@ -138,8 +131,6 @@ async def list_properties(
                 created_at=prop.created_at
             ))
 
-        print(f"✅ [DEBUG] Propiedades formateadas: {len(propiedades_list)}")
-
         return PaginatedResponse(
             success=True,
             data=propiedades_list,
@@ -152,8 +143,6 @@ async def list_properties(
         )
 
     # NUEVA LÓGICA: Búsqueda inteligente con combinaciones
-    print("🔥 [DEBUG] Usando búsqueda inteligente CON combinaciones")
-
     busqueda_service = BusquedaInteligenteService(db)
 
     resultado = busqueda_service.buscar_con_combinaciones(
@@ -181,8 +170,6 @@ async def list_properties(
     inicio = (page - 1) * limit
     fin = inicio + limit
     items_paginados = items_totales[inicio:fin]
-
-    print(f"✅ [DEBUG] Búsqueda inteligente completada: {len(resultado['individuales'])} individuales, {len(resultado['combinaciones'])} combinaciones")
 
     return {
         "success": True,
@@ -602,11 +589,9 @@ async def get_property_detail(
     # 🏢 Si es Edificio Completo (tipo_inmueble_id == 12), agregar oficinas hijas
     total_oficinas = None
     oficinas_list = []
-    
+
     # Usar tipo_inmueble_id == 12 (más robusto que buscar en nombre)
-    print(f"🔍 DEBUG: tipo_inmueble_id = {propiedad.tipo_inmueble_id}, padre_registro_cab_id = {propiedad.padre_registro_cab_id}")
     if propiedad.tipo_inmueble_id == 12 and propiedad.padre_registro_cab_id is None:
-        print(f"✅ Condición cumplida, buscando oficinas para edificio {propiedad_id}")
         # Obtener oficinas hijas
         oficinas = db.query(Propiedad).filter(
             Propiedad.padre_registro_cab_id == propiedad_id
@@ -692,18 +677,14 @@ async def get_property_detail(
         padre_registro_cab_id=propiedad.padre_registro_cab_id,
         piso=propiedad.piso
     )
-    
+
     # Agregar oficinas como campo extra si aplica
     result = ResponseModel(success=True, data=response_data)
-    print(f"🔍 DEBUG: total_oficinas = {total_oficinas}, len(oficinas_list) = {len(oficinas_list)}")
     if total_oficinas is not None:
         # Añadir info extra al response
         result.data.__dict__['total_oficinas'] = total_oficinas
         result.data.__dict__['oficinas'] = oficinas_list  # ✅ Array de oficinas con características
-        print(f"✅ DEBUG: Oficinas agregadas al response: {len(oficinas_list)} oficinas")
-    else:
-        print(f"❌ DEBUG: total_oficinas es None, no se agregaron oficinas")
-    
+
     return result
 
 @router.post("/{propiedad_id}/vista", response_model=ResponseModel[dict])
