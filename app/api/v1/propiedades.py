@@ -10,7 +10,7 @@ from app.dependencies import get_current_active_user, require_ofertante, get_opt
 from app.core.exceptions import BadRequestException, NotFoundException, ForbiddenException
 from app.core.constants import EstadoPropiedad, TipoTransaccion, TipoInmuebleID, MARGEN_BUSQUEDA
 from app.models import Propiedad, PropiedadDetalle, Usuario, TipoInmueble, Distrito, Caracteristica, Favorito, Propietario
-from app.schemas.propiedad import PropiedadCreate, PropiedadUpdate, PropiedadEstadoUpdate, PropiedadResponse, PropiedadDetalleResponse
+from app.schemas.propiedad import PropiedadCreate, PropiedadUpdate, PropiedadEstadoUpdate, PropiedadResponse, PropiedadDetalleResponse, EdificioRapidoCreate
 from app.schemas.common import ResponseModel, PaginatedResponse
 from app.schemas.oficina_masivo import GenerarOficinasRequest, GenerarOficinasResponse, OficinaGenerada, EdificioDisponible
 from app.services.imagekit_service import ImageKitService
@@ -448,6 +448,67 @@ async def listar_edificios_disponibles(
         data=edificios_list,
         message=f"{len(edificios_list)} edificios disponibles"
     )
+
+
+@router.post("/edificio-rapido", response_model=ResponseModel[EdificioDisponible], status_code=201)
+async def crear_edificio_rapido(
+    data: EdificioRapidoCreate,
+    current_user: Usuario = Depends(require_ofertante),
+    db: Session = Depends(get_db)
+):
+    """
+    Crear edificio con datos minimos desde formulario de oficina.
+    Se crea en estado borrador para completar despues.
+    """
+    # Validar distrito
+    distrito = db.query(Distrito).filter(Distrito.distrito_id == data.distrito_id).first()
+    if not distrito:
+        raise NotFoundException("Distrito no encontrado")
+
+    # Validar propietario
+    propietario = db.query(Propietario).filter(Propietario.propietario_id == data.propietario_id).first()
+    if not propietario:
+        raise NotFoundException("Propietario no encontrado")
+
+    # Crear edificio con datos minimos
+    titulo_auto = f"Edificio {data.nombre_inmueble}"
+    if len(titulo_auto) < 10:
+        titulo_auto = f"Edificio - {data.nombre_inmueble}"
+
+    nuevo_edificio = Propiedad(
+        usuario_id=current_user.usuario_id,
+        propietario_id=data.propietario_id,
+        tipo_inmueble_id=TipoInmuebleID.EDIFICIO_OFICINAS,
+        distrito_id=data.distrito_id,
+        nombre_inmueble=data.nombre_inmueble,
+        direccion=data.direccion,
+        area=1,
+        transaccion=TipoTransaccion.ALQUILER,
+        titulo=titulo_auto,
+        estado=EstadoPropiedad.BORRADOR,
+        created_by=current_user.usuario_id
+    )
+
+    db.add(nuevo_edificio)
+    db.commit()
+    db.refresh(nuevo_edificio)
+
+    return ResponseModel(
+        success=True,
+        message=f"Edificio '{data.nombre_inmueble}' creado en borrador",
+        data=EdificioDisponible(
+            registro_cab_id=nuevo_edificio.registro_cab_id,
+            nombre_inmueble=nuevo_edificio.nombre_inmueble,
+            direccion=nuevo_edificio.direccion,
+            tipo_inmueble_id=nuevo_edificio.tipo_inmueble_id,
+            distrito_id=nuevo_edificio.distrito_id,
+            latitud=None,
+            longitud=None,
+            cantidad_pisos=None
+        )
+    )
+
+
 @router.get("/{edificio_id}/caracteristicas", response_model=ResponseModel[Dict[str, List[dict]]])
 async def obtener_caracteristicas_edificio(
     edificio_id: int,

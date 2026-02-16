@@ -149,3 +149,11 @@ class PropiedadListResponse(BaseModel):
     page: int
     limit: int
     total_pages: int
+
+
+class EdificioRapidoCreate(BaseModel):
+    """Schema para crear edificio rapido desde formulario de oficina"""
+    nombre_inmueble: str = Field(..., min_length=5, max_length=200)
+    direccion: str = Field(..., min_length=10, max_length=300)
+    distrito_id: int
+    propietario_id: int
