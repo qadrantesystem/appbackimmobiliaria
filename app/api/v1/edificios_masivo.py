@@ -14,6 +14,7 @@ from app.database import get_db
 from app.dependencies import require_ofertante
 from app.models.propiedad import Propiedad
 from app.models.propiedad_detalle import PropiedadDetalle
+from app.models.piso import InmueblePiso
 from app.models.usuario import Usuario
 from app.services.imagekit_service import imagekit_service
 
@@ -61,11 +62,18 @@ class SotanoInput(BaseModel):
     nivel: int
     parqueos: int
 
+class PisoInput(BaseModel):
+    """Datos de configuracion de un piso"""
+    numero_piso: int
+    tipo_uso: Optional[str] = None
+    area_comercializable: Optional[Decimal] = None
+
 class EdificioCompletoInput(BaseModel):
     """Input completo para crear edificio con oficinas"""
     edificio: EdificioBase
     oficinas: List[OficinaInput]
     sotanos: Optional[List[SotanoInput]] = []
+    pisos: Optional[List[PisoInput]] = []
     oficinas_para_eliminar: Optional[List[int]] = []  # 🗑️ IDs de oficinas a eliminar
 
 # ============================================
@@ -261,6 +269,21 @@ async def crear_edificio_completo(
         db.commit()
         logger.info(f"✅ {len(oficinas_creadas)} oficinas creadas exitosamente")
 
+        # 6.5 Guardar configuracion de pisos en tabla inmuebles_pisos_det
+        if edificio_data.pisos:
+            logger.info(f"🏗️ Guardando {len(edificio_data.pisos)} pisos configurados...")
+            for piso_data in edificio_data.pisos:
+                nuevo_piso = InmueblePiso(
+                    registro_cab_id=edificio_principal.registro_cab_id,
+                    numero_piso=piso_data.numero_piso,
+                    tipo_uso=piso_data.tipo_uso,
+                    area_comercializable=piso_data.area_comercializable,
+                    activo=True
+                )
+                db.add(nuevo_piso)
+            db.commit()
+            logger.info(f"✅ {len(edificio_data.pisos)} pisos guardados")
+
         # 7. Registrar sótanos (como características del edificio)
         total_parqueos = 0
         if edificio_data.sotanos:
@@ -286,6 +309,7 @@ async def crear_edificio_completo(
                 },
                 "oficinas": oficinas_creadas,
                 "total_oficinas": len(oficinas_creadas),
+                "total_pisos": len(edificio_data.pisos) if edificio_data.pisos else 0,
                 "total_sotanos": len(edificio_data.sotanos) if edificio_data.sotanos else 0,
                 "total_parqueos": total_parqueos
             }
@@ -567,10 +591,34 @@ async def actualizar_edificio_completo(
             # Eliminar oficina
             db.delete(oficina_eliminar)
         
-        # 8. Commit final
+        # 8.5 Guardar/actualizar pisos (upsert)
+        if edificio_data.pisos:
+            logger.info(f"🏗️ Actualizando {len(edificio_data.pisos)} pisos...")
+            for piso_data in edificio_data.pisos:
+                existente = db.query(InmueblePiso).filter(
+                    InmueblePiso.registro_cab_id == edificio_id,
+                    InmueblePiso.numero_piso == piso_data.numero_piso
+                ).first()
+
+                if existente:
+                    if piso_data.tipo_uso is not None:
+                        existente.tipo_uso = piso_data.tipo_uso
+                    if piso_data.area_comercializable is not None:
+                        existente.area_comercializable = piso_data.area_comercializable
+                else:
+                    nuevo_piso = InmueblePiso(
+                        registro_cab_id=edificio_id,
+                        numero_piso=piso_data.numero_piso,
+                        tipo_uso=piso_data.tipo_uso,
+                        area_comercializable=piso_data.area_comercializable,
+                        activo=True
+                    )
+                    db.add(nuevo_piso)
+
+        # 9. Commit final
         db.commit()
         db.refresh(edificio)
-        
+
         # Contar oficinas finales
         total_oficinas = db.query(Propiedad).filter(
             Propiedad.padre_registro_cab_id == edificio_id
