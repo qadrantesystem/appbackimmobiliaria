@@ -259,25 +259,15 @@ async def eliminar_tipo_inmueble(
                 detail="Tipo no encontrado"
             )
 
-        # TODO: Validar que no tenga propiedades asociadas
-        # from app.models.propiedad import Propiedad
-        # propiedades_count = db.query(Propiedad).filter(
-        #     Propiedad.tipo_inmueble_id == tipo_id
-        # ).count()
-        # if propiedades_count > 0:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_400_BAD_REQUEST,
-        #         detail=f"No se puede eliminar. Hay {propiedades_count} propiedades asociadas"
-        #     )
-
-        db.delete(tipo_db)
+        # Soft delete: desactivar en vez de eliminar
+        tipo_db.activo = False
         db.commit()
 
-        logger.info(f"✅ Admin {current_user.usuario_id} eliminó tipo: {tipo_db.nombre}")
+        logger.info(f"✅ Admin {current_user.usuario_id} desactivó tipo: {tipo_db.nombre}")
 
         return {
             "success": True,
-            "message": "Tipo eliminado exitosamente",
+            "message": "Tipo desactivado exitosamente",
             "tipo_id": tipo_id
         }
 

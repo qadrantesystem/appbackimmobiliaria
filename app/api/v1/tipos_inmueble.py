@@ -61,12 +61,12 @@ class TipoInmueblePaginado(BaseModel):
 
 @router.get("/", response_model=List[TipoInmuebleResponse])
 async def listar_tipos_inmueble(
-    activo: Optional[bool] = Query(None, description="Filtrar por estado activo"),
+    activo: Optional[bool] = Query(True, description="Filtrar por estado activo (default: solo activos)"),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_optional_user)
 ):
     """
-    📋 Listar todos los tipos de inmueble
+    📋 Listar todos los tipos de inmueble (por defecto solo activos)
     """
     try:
         query = db.query(TipoInmueble)
@@ -108,7 +108,7 @@ async def listar_tipos_inmueble(
 async def listar_tipos_inmueble_paginado(
     page: int = Query(1, ge=1),
     page_size: int = Query(5, ge=1, le=100),
-    activo: Optional[bool] = Query(None),
+    activo: Optional[bool] = Query(True, description="Filtrar por estado activo (default: solo activos)"),
     search: Optional[str] = Query(None),
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_optional_user)
