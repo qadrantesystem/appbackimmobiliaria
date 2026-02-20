@@ -119,6 +119,8 @@ async def actualizar_piso(
     propiedad = db.query(Propiedad).filter(
         Propiedad.registro_cab_id == propiedad_id
     ).first()
+    if not propiedad:
+        raise HTTPException(status_code=404, detail="Propiedad no encontrada")
     if current_user.perfil_id != 4:
         if propiedad.usuario_id != current_user.usuario_id and \
            propiedad.corredor_asignado_id != current_user.usuario_id:
@@ -151,6 +153,8 @@ async def eliminar_piso(
     propiedad = db.query(Propiedad).filter(
         Propiedad.registro_cab_id == propiedad_id
     ).first()
+    if not propiedad:
+        raise HTTPException(status_code=404, detail="Propiedad no encontrada")
     if current_user.perfil_id != 4:
         if propiedad.usuario_id != current_user.usuario_id and \
            propiedad.corredor_asignado_id != current_user.usuario_id:

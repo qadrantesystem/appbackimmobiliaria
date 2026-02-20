@@ -24,7 +24,7 @@ class InmueblePiso(Base):
     )
 
     # Relationships
-    propiedad = relationship("Propiedad", backref="pisos")
+    propiedad = relationship("Propiedad", back_populates="pisos")
 
     def __repr__(self):
         return f"<InmueblePiso {self.piso_id} - Piso {self.numero_piso}>"

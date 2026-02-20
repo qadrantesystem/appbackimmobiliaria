@@ -265,22 +265,29 @@ async def my_properties(
             es_favorito=prop.registro_cab_id in favoritos_ids
         ))
 
-    # Estadísticas
+    # Estadísticas - usar el mismo filtro que la query principal
+    if current_user.perfil_id == 4:
+        stats_filter = []  # Admin: todas
+    elif current_user.perfil_id == 3:
+        stats_filter = [Propiedad.corredor_asignado_id == current_user.usuario_id]
+    else:
+        stats_filter = [Propiedad.usuario_id == current_user.usuario_id]
+
     stats = {
         "total_propiedades": total,
         "publicadas": db.query(Propiedad).filter(
-            Propiedad.usuario_id == current_user.usuario_id,
+            *stats_filter,
             Propiedad.estado == "publicado"
         ).count(),
         "borradores": db.query(Propiedad).filter(
-            Propiedad.usuario_id == current_user.usuario_id,
+            *stats_filter,
             Propiedad.estado == "borrador"
         ).count(),
         "total_vistas": db.query(func.sum(Propiedad.vistas)).filter(
-            Propiedad.usuario_id == current_user.usuario_id
+            *stats_filter
         ).scalar() or 0,
         "total_contactos": db.query(func.sum(Propiedad.contactos)).filter(
-            Propiedad.usuario_id == current_user.usuario_id
+            *stats_filter
         ).scalar() or 0
     }
 

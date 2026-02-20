@@ -30,7 +30,7 @@ class InmuebleTransaccion(Base):
     updated_at = Column(TIMESTAMP, server_default=func.now(), onupdate=func.now())
 
     # Relationships
-    propiedad = relationship("Propiedad", backref="transacciones")
+    propiedad = relationship("Propiedad", back_populates="transacciones")
     corredor = relationship("Usuario", foreign_keys=[corredor_id])
 
     def __repr__(self):
