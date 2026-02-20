@@ -96,6 +96,12 @@ class Propiedad(Base):
 
     # NUEVO: Relación recursiva (padre → hijos)
     padre = relationship("Propiedad", remote_side=[registro_cab_id], backref="hijos")
+
+    # Pisos del edificio
+    pisos = relationship("InmueblePiso", back_populates="edificio", cascade="all, delete-orphan")
+
+    # Transacciones del inmueble
+    transacciones = relationship("InmuebleTransaccion", back_populates="unidad", cascade="all, delete-orphan")
     
     def __repr__(self):
         return f"<Propiedad {self.titulo}>"

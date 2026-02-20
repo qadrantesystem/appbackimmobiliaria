@@ -261,6 +261,20 @@ try:
 except ImportError as e:
     print(f"   ⚠️ Error cargando corredores: {e}")
 
+try:
+    from app.api.v1 import pisos
+    app.include_router(pisos.router, prefix="/api/v1/propiedades", tags=["🏢 Pisos de Inmueble"])
+    print("   ✅ Pisos de Inmueble")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando pisos: {e}")
+
+try:
+    from app.api.v1 import transacciones_inmueble
+    app.include_router(transacciones_inmueble.router, prefix="/api/v1/propiedades", tags=["💼 Transacciones de Inmueble"])
+    print("   ✅ Transacciones de Inmueble")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando transacciones inmueble: {e}")
+
 # ==========================================
 # 🛠️ ADMIN - MANTENIMIENTOS
 # ==========================================

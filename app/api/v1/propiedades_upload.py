@@ -203,9 +203,16 @@ async def crear_propiedad_con_imagenes(
         )
         
         db.add(nueva_propiedad)
+
+        # Auto-asignar corredor si el usuario es perfil Corredor
+        if current_user.perfil_id == 3:
+            nueva_propiedad.corredor_asignado_id = current_user.usuario_id
+            if current_user.comision_porcentaje:
+                nueva_propiedad.comision_corredor = current_user.comision_porcentaje
+
         db.commit()
         db.refresh(nueva_propiedad)
-        
+
         logger.info(f"✅ Propiedad creada con ID: {nueva_propiedad.registro_cab_id}")
         
         # 6. Guardar características en registro_x_inmueble_det

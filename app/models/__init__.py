@@ -21,6 +21,8 @@ from app.models.propiedad_detalle import PropiedadDetalle
 from app.models.busqueda import Busqueda
 from app.models.favorito import Favorito
 from app.models.tracking import Tracking
+from app.models.piso import InmueblePiso
+from app.models.transaccion_inmueble import InmuebleTransaccion
 
 __all__ = [
     # Seguridad
@@ -43,4 +45,6 @@ __all__ = [
     "Busqueda",
     "Favorito",
     "Tracking",
+    "InmueblePiso",
+    "InmuebleTransaccion",
 ]

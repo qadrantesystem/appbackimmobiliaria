@@ -208,8 +208,11 @@ async def my_properties(
     # 🔥 Admin (perfil_id == 4) puede ver TODAS las propiedades
     if current_user.perfil_id == 4:
         query = db.query(Propiedad).options(joinedload(Propiedad.propietario, innerjoin=False))  # Admin: TODAS
+    elif current_user.perfil_id == 3:
+        # Corredor ve todas las propiedades donde está asignado como corredor
+        query = db.query(Propiedad).options(joinedload(Propiedad.propietario, innerjoin=False)).filter(Propiedad.corredor_asignado_id == current_user.usuario_id)
     else:
-        # Ofertantes/Corredores: Solo sus propiedades
+        # Ofertante/Demandante ve solo sus propiedades
         query = db.query(Propiedad).options(joinedload(Propiedad.propietario, innerjoin=False)).filter(Propiedad.usuario_id == current_user.usuario_id)
 
     # Filtro opcional por estado (si no se especifica, trae TODOS)
@@ -851,9 +854,16 @@ async def create_property(
     )
     
     db.add(nueva_propiedad)
+
+    # Auto-asignar corredor si el usuario es perfil Corredor
+    if current_user.perfil_id == 3:
+        nueva_propiedad.corredor_asignado_id = current_user.usuario_id
+        if current_user.comision_porcentaje:
+            nueva_propiedad.comision_corredor = current_user.comision_porcentaje
+
     db.commit()
     db.refresh(nueva_propiedad)
-    
+
     # Agregar características
     if propiedad_data.caracteristicas:
         for caract in propiedad_data.caracteristicas:
@@ -1762,7 +1772,7 @@ async def actualizar_corredor_comision(
     if data.corredor_asignado_id is not None:
         corredor = db.query(Usuario).filter(
             Usuario.usuario_id == data.corredor_asignado_id,
-            Usuario.perfil_id == 2  # Perfil corredor
+            Usuario.perfil_id == 3  # Perfil corredor
         ).first()
         
         if not corredor:

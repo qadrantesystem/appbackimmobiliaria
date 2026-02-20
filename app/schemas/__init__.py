@@ -20,6 +20,8 @@ from app.schemas.busqueda import (
 from app.schemas.favorito import FavoritoCreate, FavoritoUpdate, FavoritoResponse
 from app.schemas.corredor import CorredorAprobar, CorredorRechazar
 from app.schemas.common import ResponseModel, PaginationParams, PaginatedResponse
+from app.schemas.piso import PisoCreate, PisoUpdate, PisoResponse
+from app.schemas.transaccion_inmueble import TransaccionCreate, TransaccionUpdate, TransaccionResponse
 
 __all__ = [
     # Auth
@@ -44,4 +46,8 @@ __all__ = [
     "CorredorAprobar", "CorredorRechazar",
     # Common
     "ResponseModel", "PaginationParams", "PaginatedResponse",
+    # Piso
+    "PisoCreate", "PisoUpdate", "PisoResponse",
+    # Transacción Inmueble
+    "TransaccionCreate", "TransaccionUpdate", "TransaccionResponse",
 ]
