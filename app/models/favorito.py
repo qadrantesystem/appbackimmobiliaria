@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, Text, TIMESTAMP, ForeignKey, UniqueConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.sql import func
 from app.database import Base
 
@@ -20,7 +20,7 @@ class Favorito(Base):
     
     # Relationships
     usuario = relationship("Usuario", backref="favoritos")
-    propiedad = relationship("Propiedad", backref="favoritos")
+    propiedad = relationship("Propiedad", backref=backref("favoritos", passive_deletes=True))
     
     def __repr__(self):
         return f"<Favorito usuario={self.usuario_id} prop={self.registro_cab_id}>"
