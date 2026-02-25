@@ -23,6 +23,7 @@ from app.models.favorito import Favorito
 from app.models.tracking import Tracking
 from app.models.piso import InmueblePiso
 from app.models.transaccion_inmueble import InmuebleTransaccion
+from app.models.ocupante import Ocupante
 
 __all__ = [
     # Seguridad
@@ -47,4 +48,5 @@ __all__ = [
     "Tracking",
     "InmueblePiso",
     "InmuebleTransaccion",
+    "Ocupante",
 ]

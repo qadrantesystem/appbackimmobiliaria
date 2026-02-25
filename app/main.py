@@ -275,6 +275,13 @@ try:
 except ImportError as e:
     print(f"   ⚠️ Error cargando transacciones inmueble: {e}")
 
+try:
+    from app.api.v1 import ocupantes
+    app.include_router(ocupantes.router, prefix="/api/v1/ocupantes", tags=["🏠 Ocupantes de Inmueble"])
+    print("   ✅ Ocupantes de Inmueble")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando ocupantes: {e}")
+
 # ==========================================
 # 🛠️ ADMIN - MANTENIMIENTOS
 # ==========================================

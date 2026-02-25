@@ -16,6 +16,7 @@ class InmuebleTransaccion(Base):
     inquilino_ruc = Column(String(20), nullable=True)
     inquilino_contacto = Column(String(200), nullable=True)
     corredor_id = Column(Integer, ForeignKey("usuarios.usuario_id"), nullable=True)
+    ocupante_id = Column(Integer, ForeignKey("ocupantes_inmueble.ocupante_id", ondelete="SET NULL"), nullable=True)
     comision_porcentaje = Column(DECIMAL(5, 2), nullable=True)
     fecha_inicio = Column(Date, nullable=True)
     fecha_fin = Column(Date, nullable=True)
@@ -32,6 +33,7 @@ class InmuebleTransaccion(Base):
     # Relationships
     propiedad = relationship("Propiedad", back_populates="transacciones")
     corredor = relationship("Usuario", foreign_keys=[corredor_id])
+    ocupante = relationship("Ocupante", back_populates="transacciones")
 
     def __repr__(self):
         return f"<InmuebleTransaccion {self.transaccion_id} - {self.tipo_transaccion}>"

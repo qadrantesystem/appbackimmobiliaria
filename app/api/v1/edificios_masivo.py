@@ -271,8 +271,9 @@ async def crear_edificio_completo(
 
         # 6.5 Guardar configuracion de pisos en tabla inmuebles_pisos_det
         if edificio_data.pisos:
-            logger.info(f"🏗️ Guardando {len(edificio_data.pisos)} pisos configurados...")
-            for piso_data in edificio_data.pisos:
+            pisos_validos = [p for p in edificio_data.pisos if p.numero_piso != 0]
+            logger.info(f"🏗️ Guardando {len(pisos_validos)} pisos configurados...")
+            for piso_data in pisos_validos:
                 nuevo_piso = InmueblePiso(
                     registro_cab_id=edificio_principal.registro_cab_id,
                     numero_piso=piso_data.numero_piso,
@@ -593,8 +594,9 @@ async def actualizar_edificio_completo(
         
         # 8.5 Guardar/actualizar pisos (upsert)
         if edificio_data.pisos:
-            logger.info(f"🏗️ Actualizando {len(edificio_data.pisos)} pisos...")
-            for piso_data in edificio_data.pisos:
+            pisos_validos = [p for p in edificio_data.pisos if p.numero_piso != 0]
+            logger.info(f"🏗️ Actualizando {len(pisos_validos)} pisos...")
+            for piso_data in pisos_validos:
                 existente = db.query(InmueblePiso).filter(
                     InmueblePiso.registro_cab_id == edificio_id,
                     InmueblePiso.numero_piso == piso_data.numero_piso
