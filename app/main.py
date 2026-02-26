@@ -11,7 +11,7 @@ from app.models import *
 app = FastAPI(
     title="Sistema Inmobiliario API",
     description="API REST para sistema de gestión inmobiliaria",
-    version="1.0.0",
+    version="1.1.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
