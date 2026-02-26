@@ -21,6 +21,31 @@ router = APIRouter()
 # 📋 ENDPOINTS
 # ============================================
 
+@router.get("/{propiedad_id}/transacciones-edificio", response_model=List[TransaccionResponse])
+async def listar_transacciones_edificio(
+    propiedad_id: int,
+    db: Session = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user)
+):
+    """📋 Obtener transacciones vigentes de TODAS las oficinas de un edificio"""
+    # Buscar todas las oficinas hijas del edificio
+    oficinas = db.query(Propiedad.registro_cab_id).filter(
+        Propiedad.padre_registro_cab_id == propiedad_id
+    ).all()
+
+    if not oficinas:
+        return []
+
+    ids_oficinas = [o.registro_cab_id for o in oficinas]
+
+    transacciones = db.query(InmuebleTransaccion).filter(
+        InmuebleTransaccion.registro_cab_id.in_(ids_oficinas),
+        InmuebleTransaccion.es_vigente == True
+    ).all()
+
+    return transacciones
+
+
 @router.get("/{propiedad_id}/transacciones", response_model=List[TransaccionResponse])
 async def listar_transacciones(
     propiedad_id: int,
@@ -109,6 +134,7 @@ async def crear_transaccion(
         inquilino_nombre=transaccion_data.inquilino_nombre,
         inquilino_ruc=transaccion_data.inquilino_ruc,
         inquilino_contacto=transaccion_data.inquilino_contacto,
+        ocupante_id=transaccion_data.ocupante_id,
         corredor_id=transaccion_data.corredor_id,
         comision_porcentaje=transaccion_data.comision_porcentaje,
         fecha_inicio=transaccion_data.fecha_inicio,
