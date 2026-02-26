@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DECIMAL, Boolean, TIMESTAMP, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Text, DECIMAL, Boolean, TIMESTAMP, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
@@ -12,6 +12,7 @@ class InmueblePiso(Base):
     registro_cab_id = Column(Integer, ForeignKey("registro_x_inmueble_cab.registro_cab_id"), nullable=False, index=True)
     numero_piso = Column(Integer, nullable=False)
     tipo_uso = Column(String(100), nullable=True)
+    unidades_config = Column(Text, nullable=True)  # JSON: detalle por unidad en pisos mixtos
     area_total = Column(DECIMAL(10, 2), nullable=True)
     area_comercializable = Column(DECIMAL(10, 2), nullable=True)
     cantidad_unidades = Column(Integer, nullable=True)

@@ -66,6 +66,7 @@ class PisoInput(BaseModel):
     """Datos de configuracion de un piso"""
     numero_piso: int
     tipo_uso: Optional[str] = None
+    unidades_config: Optional[str] = None
     area_comercializable: Optional[Decimal] = None
 
 class EdificioCompletoInput(BaseModel):
@@ -278,6 +279,7 @@ async def crear_edificio_completo(
                     registro_cab_id=edificio_principal.registro_cab_id,
                     numero_piso=piso_data.numero_piso,
                     tipo_uso=piso_data.tipo_uso,
+                    unidades_config=piso_data.unidades_config,
                     area_comercializable=piso_data.area_comercializable,
                     activo=True
                 )
@@ -605,6 +607,8 @@ async def actualizar_edificio_completo(
                 if existente:
                     if piso_data.tipo_uso is not None:
                         existente.tipo_uso = piso_data.tipo_uso
+                    # Siempre actualizar unidades_config (puede ser null para limpiar)
+                    existente.unidades_config = piso_data.unidades_config
                     if piso_data.area_comercializable is not None:
                         existente.area_comercializable = piso_data.area_comercializable
                 else:
@@ -612,6 +616,7 @@ async def actualizar_edificio_completo(
                         registro_cab_id=edificio_id,
                         numero_piso=piso_data.numero_piso,
                         tipo_uso=piso_data.tipo_uso,
+                        unidades_config=piso_data.unidades_config,
                         area_comercializable=piso_data.area_comercializable,
                         activo=True
                     )

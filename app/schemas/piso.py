@@ -7,6 +7,7 @@ from datetime import datetime
 class PisoCreate(BaseModel):
     numero_piso: int
     tipo_uso: Optional[str] = None
+    unidades_config: Optional[str] = None
     area_total: Optional[Decimal] = None
     area_comercializable: Optional[Decimal] = None
     cantidad_unidades: Optional[int] = None
@@ -15,6 +16,7 @@ class PisoCreate(BaseModel):
 
 class PisoUpdate(BaseModel):
     tipo_uso: Optional[str] = None
+    unidades_config: Optional[str] = None
     area_total: Optional[Decimal] = None
     area_comercializable: Optional[Decimal] = None
     cantidad_unidades: Optional[int] = None
@@ -26,6 +28,7 @@ class PisoResponse(BaseModel):
     registro_cab_id: int
     numero_piso: int
     tipo_uso: Optional[str] = None
+    unidades_config: Optional[str] = None
     area_total: Optional[Decimal] = None
     area_comercializable: Optional[Decimal] = None
     cantidad_unidades: Optional[int] = None
