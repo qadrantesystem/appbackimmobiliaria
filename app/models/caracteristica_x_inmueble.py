@@ -15,10 +15,12 @@ class CaracteristicaXInmueble(Base):
     visible_en_filtro = Column(Boolean, default=True)
     orden = Column(Integer, default=0)
     created_at = Column(TIMESTAMP, server_default=func.now())
-    
+    categoria_override_id = Column(Integer, ForeignKey('categorias_mae.categoria_id'), nullable=True)
+
     # Relaciones
     tipo_inmueble = relationship("TipoInmueble")
     caracteristica = relationship("Caracteristica")
+    categoria_override = relationship("Categoria", foreign_keys=[categoria_override_id])
     
     def __repr__(self):
         return f"<CaracteristicaXInmueble tipo:{self.tipo_inmueble_id} car:{self.caracteristica_id}>"

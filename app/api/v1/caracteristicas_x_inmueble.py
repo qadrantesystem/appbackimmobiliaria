@@ -252,45 +252,50 @@ async def listar_caracteristicas_agrupadas(
     current_user: Usuario = Depends(get_optional_user)
 ):
     """
-    📊 Listar características AGRUPADAS POR CATEGORÍA
-    Retorna un objeto con categorías y sus características
-    Ideal para renderizar filtros avanzados en frontend
-
-    ✅ ACTUALIZADO: Usa tabla categorias_mae normalizada
+    Listar caracteristicas AGRUPADAS POR CATEGORIA
+    Usa COALESCE(categoria_override_id, categoria_id) para permitir
+    agrupaciones diferentes por tipo de inmueble.
     """
     try:
-        # Verificar que el tipo de inmueble existe
         tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == tipo_inmueble_id).first()
         if not tipo:
             raise HTTPException(status_code=404, detail="Tipo de inmueble no encontrado")
 
-        # ✅ NUEVA QUERY: Join con categorias_mae
+        from sqlalchemy.orm import aliased
+
+        CategoriaDefault = aliased(Categoria, name='cat_default')
+        CategoriaOverride = aliased(Categoria, name='cat_override')
+
         relaciones = db.query(
             CaracteristicaXInmueble,
             Caracteristica,
-            Categoria
+            CategoriaDefault,
+            CategoriaOverride
         ).join(
             Caracteristica,
             CaracteristicaXInmueble.caracteristica_id == Caracteristica.caracteristica_id
         ).outerjoin(
-            Categoria,
-            Caracteristica.categoria_id == Categoria.categoria_id
+            CategoriaDefault,
+            Caracteristica.categoria_id == CategoriaDefault.categoria_id
+        ).outerjoin(
+            CategoriaOverride,
+            CaracteristicaXInmueble.categoria_override_id == CategoriaOverride.categoria_id
         ).filter(
             CaracteristicaXInmueble.tipo_inmueble_id == tipo_inmueble_id,
-            CaracteristicaXInmueble.visible_en_filtro == True  # Solo las visibles en filtro
+            CaracteristicaXInmueble.visible_en_filtro == True,
+            Caracteristica.activo == True
         ).order_by(
-            Categoria.orden,
+            sql_func.coalesce(CategoriaOverride.orden, CategoriaDefault.orden),
             CaracteristicaXInmueble.orden,
             Caracteristica.nombre
         ).all()
 
-        # Agrupar por categoría
         categorias_dict = {}
-        for rel, car, cat in relaciones:
-            # Usar categoría normalizada o 'General' como fallback
-            categoria_nombre = cat.nombre if cat else 'General'
-            categoria_id = cat.categoria_id if cat else None
-            orden_cat = cat.orden if cat else 999
+        for rel, car, cat_default, cat_override in relaciones:
+            effective_cat = cat_override if cat_override else cat_default
+            categoria_nombre = effective_cat.nombre if effective_cat else 'General'
+            categoria_id = effective_cat.categoria_id if effective_cat else None
+            orden_cat = effective_cat.orden if effective_cat else 999
 
             if categoria_nombre not in categorias_dict:
                 categorias_dict[categoria_nombre] = {
@@ -310,7 +315,6 @@ async def listar_caracteristicas_agrupadas(
                 "orden": rel.orden
             })
 
-        # Convertir a lista y ordenar por orden de categoría
         categorias_list = sorted(categorias_dict.values(), key=lambda x: x['orden'])
 
         return {
@@ -318,7 +322,7 @@ async def listar_caracteristicas_agrupadas(
             "tipo_inmueble_nombre": tipo.nombre,
             "categorias": categorias_list
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
