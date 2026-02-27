@@ -10,6 +10,8 @@ class TransaccionCreate(BaseModel):
     inquilino_nombre: Optional[str] = None
     inquilino_ruc: Optional[str] = None
     inquilino_contacto: Optional[str] = None
+    inquilino_telefono: Optional[str] = None
+    inquilino_email: Optional[str] = None
     ocupante_id: Optional[int] = None
     corredor_id: Optional[int] = None
     comision_porcentaje: Optional[Decimal] = None
@@ -27,6 +29,8 @@ class TransaccionUpdate(BaseModel):
     inquilino_nombre: Optional[str] = None
     inquilino_ruc: Optional[str] = None
     inquilino_contacto: Optional[str] = None
+    inquilino_telefono: Optional[str] = None
+    inquilino_email: Optional[str] = None
     corredor_id: Optional[int] = None
     comision_porcentaje: Optional[Decimal] = None
     fecha_inicio: Optional[date] = None
@@ -46,6 +50,8 @@ class TransaccionResponse(BaseModel):
     inquilino_nombre: Optional[str] = None
     inquilino_ruc: Optional[str] = None
     inquilino_contacto: Optional[str] = None
+    inquilino_telefono: Optional[str] = None
+    inquilino_email: Optional[str] = None
     ocupante_id: Optional[int] = None
     corredor_id: Optional[int] = None
     comision_porcentaje: Optional[Decimal] = None

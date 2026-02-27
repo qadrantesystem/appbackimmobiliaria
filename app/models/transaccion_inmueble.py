@@ -15,6 +15,8 @@ class InmuebleTransaccion(Base):
     inquilino_nombre = Column(String(200), nullable=True)
     inquilino_ruc = Column(String(20), nullable=True)
     inquilino_contacto = Column(String(200), nullable=True)
+    inquilino_telefono = Column(String(50), nullable=True)
+    inquilino_email = Column(String(255), nullable=True)
     corredor_id = Column(Integer, ForeignKey("usuarios.usuario_id"), nullable=True)
     ocupante_id = Column(Integer, ForeignKey("ocupantes_inmueble.ocupante_id", ondelete="SET NULL"), nullable=True)
     comision_porcentaje = Column(DECIMAL(5, 2), nullable=True)

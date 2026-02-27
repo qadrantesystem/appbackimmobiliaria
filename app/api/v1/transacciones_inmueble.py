@@ -134,6 +134,8 @@ async def crear_transaccion(
         inquilino_nombre=transaccion_data.inquilino_nombre,
         inquilino_ruc=transaccion_data.inquilino_ruc,
         inquilino_contacto=transaccion_data.inquilino_contacto,
+        inquilino_telefono=transaccion_data.inquilino_telefono,
+        inquilino_email=transaccion_data.inquilino_email,
         ocupante_id=transaccion_data.ocupante_id,
         corredor_id=transaccion_data.corredor_id,
         comision_porcentaje=transaccion_data.comision_porcentaje,
