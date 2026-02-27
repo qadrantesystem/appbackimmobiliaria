@@ -9,6 +9,7 @@ from app.database import get_db
 from app.dependencies import get_current_user, require_ofertante
 from app.models.propiedad import Propiedad
 from app.models.transaccion_inmueble import InmuebleTransaccion
+from app.models.ocupante import Ocupante
 from app.models.usuario import Usuario
 from app.schemas.transaccion_inmueble import TransaccionCreate, TransaccionUpdate, TransaccionResponse
 import logging
@@ -125,6 +126,32 @@ async def crear_transaccion(
     if transaccion_anterior:
         transaccion_anterior.es_vigente = False
         transaccion_anterior.updated_by = current_user.usuario_id
+
+    # Auto-crear ocupante si no hay ocupante_id pero si hay DNI
+    if not transaccion_data.ocupante_id and transaccion_data.inquilino_ruc:
+        ocupante_existente = db.query(Ocupante).filter(
+            Ocupante.dni == transaccion_data.inquilino_ruc
+        ).first()
+
+        if ocupante_existente:
+            # Ya existe, usar su ID
+            transaccion_data.ocupante_id = ocupante_existente.ocupante_id
+            logger.info(f"Ocupante existente encontrado: ID {ocupante_existente.ocupante_id} para DNI {transaccion_data.inquilino_ruc}")
+        else:
+            # Crear nuevo ocupante
+            nuevo_ocupante = Ocupante(
+                dni=transaccion_data.inquilino_ruc,
+                nombre=transaccion_data.inquilino_nombre or "Sin nombre",
+                empresa=transaccion_data.inquilino_contacto,
+                telefono=transaccion_data.inquilino_telefono,
+                email=transaccion_data.inquilino_email,
+                tipo_persona=transaccion_data.tipo_persona or "natural",
+                created_by=current_user.usuario_id
+            )
+            db.add(nuevo_ocupante)
+            db.flush()  # Obtener ID sin commit
+            transaccion_data.ocupante_id = nuevo_ocupante.ocupante_id
+            logger.info(f"Ocupante auto-creado: ID {nuevo_ocupante.ocupante_id} para DNI {transaccion_data.inquilino_ruc}")
 
     # Crear nueva transacción vigente
     nueva_transaccion = InmuebleTransaccion(
