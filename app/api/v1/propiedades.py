@@ -215,6 +215,9 @@ async def my_properties(
         # Ofertante/Demandante ve solo sus propiedades
         query = db.query(Propiedad).options(joinedload(Propiedad.propietario, innerjoin=False)).filter(Propiedad.usuario_id == current_user.usuario_id)
 
+    # Excluir oficinas hijas (sub-registros de edificios) - se ven dentro del edificio padre
+    query = query.filter(Propiedad.padre_registro_cab_id == None)
+
     # Filtro opcional por estado (si no se especifica, trae TODOS)
     if estado:
         query = query.filter(Propiedad.estado == estado)
@@ -265,13 +268,13 @@ async def my_properties(
             es_favorito=prop.registro_cab_id in favoritos_ids
         ))
 
-    # Estadísticas - usar el mismo filtro que la query principal
+    # Estadísticas - usar el mismo filtro que la query principal (excluyendo hijas)
     if current_user.perfil_id == 4:
-        stats_filter = []  # Admin: todas
+        stats_filter = [Propiedad.padre_registro_cab_id == None]  # Admin: todas, sin hijas
     elif current_user.perfil_id == 3:
-        stats_filter = [Propiedad.corredor_asignado_id == current_user.usuario_id]
+        stats_filter = [Propiedad.corredor_asignado_id == current_user.usuario_id, Propiedad.padre_registro_cab_id == None]
     else:
-        stats_filter = [Propiedad.usuario_id == current_user.usuario_id]
+        stats_filter = [Propiedad.usuario_id == current_user.usuario_id, Propiedad.padre_registro_cab_id == None]
 
     stats = {
         "total_propiedades": total,
