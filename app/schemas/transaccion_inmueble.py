@@ -12,6 +12,9 @@ class TransaccionCreate(BaseModel):
     inquilino_contacto: Optional[str] = None
     inquilino_telefono: Optional[str] = None
     inquilino_email: Optional[str] = None
+    parqueos_simples: Optional[int] = 0
+    parqueos_dobles: Optional[int] = 0
+    tipo_persona: Optional[str] = "natural"
     ocupante_id: Optional[int] = None
     corredor_id: Optional[int] = None
     comision_porcentaje: Optional[Decimal] = None
@@ -31,6 +34,9 @@ class TransaccionUpdate(BaseModel):
     inquilino_contacto: Optional[str] = None
     inquilino_telefono: Optional[str] = None
     inquilino_email: Optional[str] = None
+    parqueos_simples: Optional[int] = None
+    parqueos_dobles: Optional[int] = None
+    tipo_persona: Optional[str] = None
     corredor_id: Optional[int] = None
     comision_porcentaje: Optional[Decimal] = None
     fecha_inicio: Optional[date] = None
@@ -52,6 +58,9 @@ class TransaccionResponse(BaseModel):
     inquilino_contacto: Optional[str] = None
     inquilino_telefono: Optional[str] = None
     inquilino_email: Optional[str] = None
+    parqueos_simples: Optional[int] = 0
+    parqueos_dobles: Optional[int] = 0
+    tipo_persona: Optional[str] = None
     ocupante_id: Optional[int] = None
     corredor_id: Optional[int] = None
     comision_porcentaje: Optional[Decimal] = None
