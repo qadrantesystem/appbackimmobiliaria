@@ -445,12 +445,16 @@ async def listar_edificios_disponibles(
         if pisos_det:
             cantidad_pisos = pisos_det.valor
 
+        # Obtener nombre del distrito
+        distrito_obj = db.query(Distrito).filter(Distrito.distrito_id == edificio.distrito_id).first() if edificio.distrito_id else None
+
         edificios_list.append(EdificioDisponible(
             registro_cab_id=edificio.registro_cab_id,
             nombre_inmueble=edificio.nombre_inmueble,
             direccion=edificio.direccion,
             tipo_inmueble_id=edificio.tipo_inmueble_id,  # ✅ Para filtros en frontend
             distrito_id=edificio.distrito_id,  # ✅ Para herencia
+            distrito_nombre=distrito_obj.nombre if distrito_obj else None,  # ✅ Para tooltip
             latitud=str(edificio.latitud) if edificio.latitud else None,  # ✅ Para herencia
             longitud=str(edificio.longitud) if edificio.longitud else None,  # ✅ Para herencia
             cantidad_pisos=cantidad_pisos
