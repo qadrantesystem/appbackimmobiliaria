@@ -153,6 +153,8 @@ async def login(
                 "email": user.email,
                 "nombre": user.nombre,
                 "apellido": user.apellido,
+                "telefono": user.telefono,
+                "dni": user.dni,
                 "perfil_id": user.perfil_id,
                 "perfil_nombre": perfil.nombre if perfil else None,
                 "permisos": perfil.permisos if perfil else {},
