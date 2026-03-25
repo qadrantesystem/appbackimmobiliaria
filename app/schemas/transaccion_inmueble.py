@@ -22,6 +22,7 @@ class TransaccionCreate(BaseModel):
     fecha_fin: Optional[date] = None
     precio_oficina: Optional[Decimal] = None
     precio_estacionamiento: Optional[Decimal] = None
+    precio_venta: Optional[Decimal] = None
     moneda: Optional[str] = "USD"
     observaciones: Optional[str] = None
 
@@ -43,6 +44,7 @@ class TransaccionUpdate(BaseModel):
     fecha_fin: Optional[date] = None
     precio_oficina: Optional[Decimal] = None
     precio_estacionamiento: Optional[Decimal] = None
+    precio_venta: Optional[Decimal] = None
     moneda: Optional[str] = None
     es_vigente: Optional[bool] = None
     observaciones: Optional[str] = None
@@ -68,6 +70,7 @@ class TransaccionResponse(BaseModel):
     fecha_fin: Optional[date] = None
     precio_oficina: Optional[Decimal] = None
     precio_estacionamiento: Optional[Decimal] = None
+    precio_venta: Optional[Decimal] = None
     moneda: Optional[str] = None
     es_vigente: bool
     observaciones: Optional[str] = None

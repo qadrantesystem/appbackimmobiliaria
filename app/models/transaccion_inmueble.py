@@ -27,6 +27,7 @@ class InmuebleTransaccion(Base):
     fecha_fin = Column(Date, nullable=True)
     precio_oficina = Column(DECIMAL(12, 2), nullable=True)
     precio_estacionamiento = Column(DECIMAL(10, 2), nullable=True)
+    precio_venta = Column(DECIMAL(12, 2), nullable=True)
     moneda = Column(String(3), default="USD")
     es_vigente = Column(Boolean, default=True)
     observaciones = Column(Text, nullable=True)

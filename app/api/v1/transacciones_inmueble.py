@@ -173,6 +173,7 @@ async def crear_transaccion(
         fecha_fin=transaccion_data.fecha_fin,
         precio_oficina=transaccion_data.precio_oficina,
         precio_estacionamiento=transaccion_data.precio_estacionamiento,
+        precio_venta=transaccion_data.precio_venta,
         moneda=transaccion_data.moneda or "USD",
         es_vigente=True,
         observaciones=transaccion_data.observaciones,
