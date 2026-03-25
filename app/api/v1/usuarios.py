@@ -49,6 +49,7 @@ async def get_my_profile(
             "apellido": current_user.apellido,
             "telefono": current_user.telefono,
             "dni": current_user.dni,
+            "foto_perfil": current_user.foto_perfil,
             "perfil": {
                 "perfil_id": perfil.perfil_id,
                 "nombre": perfil.nombre,
