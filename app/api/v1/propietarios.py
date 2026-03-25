@@ -32,20 +32,28 @@ async def buscar_propietario_por_dni(
     current_user: Usuario = Depends(get_current_active_user)
 ):
     """
-    🔍 Buscar propietario por DNI (auto-fill frontend)
+    🔍 Buscar propietario por DNI o RUC (auto-fill frontend)
 
     Si el propietario existe, devuelve sus datos para auto-completar el formulario.
     Si no existe, el frontend permite crear uno nuevo.
+    Busca por DNI (8 dígitos) o por RUC (11 dígitos).
     """
-    logger.info(f"Buscando propietario con DNI: {dni}")
+    logger.info(f"Buscando propietario con documento: {dni}")
 
+    # Buscar por DNI primero, luego por RUC
     propietario = db.query(Propietario).filter(
         Propietario.dni == dni,
         Propietario.activo == True
     ).first()
 
+    if not propietario and len(dni) == 11:
+        propietario = db.query(Propietario).filter(
+            Propietario.ruc == dni,
+            Propietario.activo == True
+        ).first()
+
     if not propietario:
-        logger.info(f"Propietario con DNI {dni} no encontrado")
+        logger.info(f"Propietario con documento {dni} no encontrado")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Propietario no encontrado"
@@ -55,8 +63,13 @@ async def buscar_propietario_por_dni(
 
     return PropietarioBuscarResponse(
         propietario_id=propietario.propietario_id,
+        tipo_persona=propietario.tipo_persona or "natural",
+        tipo_documento=propietario.tipo_documento or "DNI",
         dni=propietario.dni,
         nombre=propietario.nombre,
+        razon_social=propietario.razon_social,
+        ruc=propietario.ruc,
+        representante_legal=propietario.representante_legal,
         telefono=propietario.telefono,
         email=propietario.email,
         existe=True
@@ -125,8 +138,13 @@ async def crear_propietario(
 
     try:
         nuevo_propietario = Propietario(
+            tipo_persona=propietario.tipo_persona or "natural",
+            tipo_documento=propietario.tipo_documento or "DNI",
             dni=propietario.dni,
             nombre=propietario.nombre,
+            razon_social=propietario.razon_social,
+            ruc=propietario.ruc,
+            representante_legal=propietario.representante_legal,
             telefono=propietario.telefono,
             email=propietario.email,
             notas=propietario.notas,

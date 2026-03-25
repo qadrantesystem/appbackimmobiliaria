@@ -8,8 +8,13 @@ class Propietario(Base):
     __tablename__ = "propietarios"
 
     propietario_id = Column(Integer, primary_key=True, index=True)
+    tipo_persona = Column(String(20), default="natural")
+    tipo_documento = Column(String(10), default="DNI")
     dni = Column(String(20), unique=True, nullable=False, index=True)
     nombre = Column(String(255), nullable=False, index=True)
+    razon_social = Column(String(255))
+    ruc = Column(String(11), index=True)
+    representante_legal = Column(String(255))
     telefono = Column(String(50))
     email = Column(String(255))
     notas = Column(Text)
