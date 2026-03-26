@@ -50,6 +50,7 @@ class PropiedadCreateWithImages(BaseModel):
 
     # Características básicas (solo transversales)
     area: Decimal
+    estacionamientos: Optional[int] = Field(None, description="Cantidad de estacionamientos/parqueos")
     antiguedad: Optional[int] = None
     implementacion: Optional[int] = Field(None, ge=1, le=4, description="Nivel de implementación/amoblamiento (1-4)")
 
@@ -188,6 +189,7 @@ async def crear_propiedad_con_imagenes(
             latitud=propiedad_data.latitud,
             longitud=propiedad_data.longitud,
             area=propiedad_data.area,
+            estacionamientos=propiedad_data.estacionamientos,
             antiguedad=propiedad_data.antiguedad,
             implementacion=propiedad_data.implementacion,
             transaccion=propiedad_data.transaccion,
@@ -374,6 +376,7 @@ class PropiedadUpdateComplete(BaseModel):
 
     # Características básicas (solo transversales)
     area: Optional[Decimal] = None
+    estacionamientos: Optional[int] = Field(None, description="Cantidad de estacionamientos/parqueos")
     antiguedad: Optional[int] = None
     implementacion: Optional[int] = Field(None, ge=1, le=4, description="Nivel de implementación/amoblamiento (1-4)")
 
@@ -482,6 +485,8 @@ async def actualizar_propiedad_completa(
 
             if datos_actualizacion.area is not None:
                 propiedad.area = datos_actualizacion.area
+            if datos_actualizacion.estacionamientos is not None:
+                propiedad.estacionamientos = datos_actualizacion.estacionamientos
             if datos_actualizacion.antiguedad is not None:
                 propiedad.antiguedad = datos_actualizacion.antiguedad
             if datos_actualizacion.implementacion is not None:
