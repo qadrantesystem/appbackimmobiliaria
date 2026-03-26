@@ -737,7 +737,10 @@ async def get_property_detail(
         precio_venta=propiedad.precio_venta,
         moneda=propiedad.moneda,
         area=propiedad.area,
-        implementacion=propiedad.implementacion,  # 🏗️ Nivel de implementación
+        habitaciones=propiedad.habitaciones,
+        banos=propiedad.banos,
+        estacionamientos=propiedad.estacionamientos,
+        implementacion=propiedad.implementacion,
         imagen_principal=propiedad.imagen_principal,
         estado=propiedad.estado,
         vistas=propiedad.vistas,
