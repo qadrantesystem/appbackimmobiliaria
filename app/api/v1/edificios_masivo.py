@@ -175,7 +175,6 @@ async def crear_edificio_completo(
             area=edificio_data.edificio.area,
             antiguedad=edificio_data.edificio.antiguedad,
             implementacion=edificio_data.edificio.implementacion,
-            transaccion=edificio_data.edificio.transaccion,
             precio_venta=edificio_data.edificio.precio_venta,
             precio_alquiler=edificio_data.edificio.precio_alquiler,
             moneda=edificio_data.edificio.moneda,
@@ -186,6 +185,17 @@ async def crear_edificio_completo(
             estado="borrador",
             created_by=current_user.usuario_id
         )
+        # Auto-detectar transacción según precios
+        pv = edificio_data.edificio.precio_venta
+        pa = edificio_data.edificio.precio_alquiler
+        if pv and pv > 0 and pa and pa > 0:
+            nuevo_edificio.transaccion = "ambos"
+        elif pv and pv > 0:
+            nuevo_edificio.transaccion = "venta"
+        elif pa and pa > 0:
+            nuevo_edificio.transaccion = "alquiler"
+        else:
+            nuevo_edificio.transaccion = edificio_data.edificio.transaccion
 
         db.add(edificio_principal)
         db.commit()
@@ -227,7 +237,7 @@ async def crear_edificio_completo(
                 latitud=edificio_data.edificio.latitud,
                 longitud=edificio_data.edificio.longitud,
                 area=oficina_data.area,  # Área específica de la oficina
-                transaccion=edificio_data.edificio.transaccion,
+                transaccion=nuevo_edificio.transaccion,  # Hereda transacción auto-detectada
                 moneda=edificio_data.edificio.moneda,
                 titulo=f"{oficina_data.nombre} - {edificio_data.edificio.nombre_inmueble}",
                 descripcion=f"Oficina ubicada en el piso {oficina_data.piso} del edificio {edificio_data.edificio.nombre_inmueble}",
@@ -386,10 +396,20 @@ async def actualizar_edificio_completo(
         edificio.area = edificio_data.edificio.area
         edificio.antiguedad = edificio_data.edificio.antiguedad
         edificio.implementacion = edificio_data.edificio.implementacion
-        edificio.transaccion = edificio_data.edificio.transaccion
         edificio.precio_venta = edificio_data.edificio.precio_venta
         edificio.precio_alquiler = edificio_data.edificio.precio_alquiler
         edificio.moneda = edificio_data.edificio.moneda
+        # Auto-detectar transacción según precios
+        pv = edificio_data.edificio.precio_venta
+        pa = edificio_data.edificio.precio_alquiler
+        if pv and pv > 0 and pa and pa > 0:
+            edificio.transaccion = "ambos"
+        elif pv and pv > 0:
+            edificio.transaccion = "venta"
+        elif pa and pa > 0:
+            edificio.transaccion = "alquiler"
+        else:
+            edificio.transaccion = edificio_data.edificio.transaccion
         edificio.titulo = edificio_data.edificio.titulo
         edificio.descripcion = edificio_data.edificio.descripcion
         edificio.updated_by = current_user.usuario_id
@@ -508,7 +528,7 @@ async def actualizar_edificio_completo(
                 oficina_existente.piso = oficina_data.piso  # ✅ Actualizar piso en cabecera
                 oficina_existente.titulo = f"{oficina_data.nombre} - {edificio_data.edificio.nombre_inmueble}"
                 oficina_existente.descripcion = f"Oficina ubicada en el piso {oficina_data.piso} del edificio {edificio_data.edificio.nombre_inmueble}"
-                oficina_existente.transaccion = edificio_data.edificio.transaccion
+                oficina_existente.transaccion = edificio.transaccion  # Hereda transacción auto-detectada
                 oficina_existente.moneda = edificio_data.edificio.moneda
 
                 # Actualizar características (eliminar y recrear)
@@ -548,7 +568,7 @@ async def actualizar_edificio_completo(
                     latitud=edificio_data.edificio.latitud,
                     longitud=edificio_data.edificio.longitud,
                     area=oficina_data.area,
-                    transaccion=edificio_data.edificio.transaccion,
+                    transaccion=edificio.transaccion,  # Hereda transacción auto-detectada
                     moneda=edificio_data.edificio.moneda,
                     titulo=f"{oficina_data.nombre} - {edificio_data.edificio.nombre_inmueble}",
                     descripcion=f"Oficina ubicada en el piso {oficina_data.piso} del edificio {edificio_data.edificio.nombre_inmueble}",

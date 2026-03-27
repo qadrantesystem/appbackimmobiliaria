@@ -505,7 +505,17 @@ async def actualizar_propiedad_completa(
                 propiedad.titulo = datos_actualizacion.titulo
             if datos_actualizacion.descripcion is not None:
                 propiedad.descripcion = datos_actualizacion.descripcion
-            
+
+            # Auto-detectar transacción según precios llenados
+            tiene_venta = propiedad.precio_venta is not None and propiedad.precio_venta > 0
+            tiene_alquiler = propiedad.precio_alquiler is not None and propiedad.precio_alquiler > 0
+            if tiene_venta and tiene_alquiler:
+                propiedad.transaccion = "ambos"
+            elif tiene_venta:
+                propiedad.transaccion = "venta"
+            elif tiene_alquiler:
+                propiedad.transaccion = "alquiler"
+
             propiedad.updated_by = current_user.usuario_id
             logger.info(f"✅ Datos de cabecera actualizados")
             

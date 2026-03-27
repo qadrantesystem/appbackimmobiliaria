@@ -858,6 +858,17 @@ async def create_property(
     db: Session = Depends(get_db)
 ):
     """Crear nueva propiedad (Ofertante/Corredor)"""
+    # Auto-detectar transacción según precios llenados
+    transaccion = propiedad_data.transaccion
+    tiene_venta = propiedad_data.precio_venta is not None and propiedad_data.precio_venta > 0
+    tiene_alquiler = propiedad_data.precio_alquiler is not None and propiedad_data.precio_alquiler > 0
+    if tiene_venta and tiene_alquiler:
+        transaccion = "ambos"
+    elif tiene_venta:
+        transaccion = "venta"
+    elif tiene_alquiler:
+        transaccion = "alquiler"
+
     # Crear propiedad
     nueva_propiedad = Propiedad(
         usuario_id=current_user.usuario_id,
@@ -872,7 +883,7 @@ async def create_property(
         longitud=propiedad_data.longitud,
         area=propiedad_data.area,
         antiguedad=propiedad_data.antiguedad,
-        transaccion=propiedad_data.transaccion,
+        transaccion=transaccion,
         precio_alquiler=propiedad_data.precio_alquiler,
         precio_venta=propiedad_data.precio_venta,
         moneda=propiedad_data.moneda,
