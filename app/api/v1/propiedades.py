@@ -230,19 +230,33 @@ async def my_properties(
 
     # Formatear respuesta (similar a list_properties)
     propiedades_list = []
+
+    # Pre-cargar nombres de edificios padres para oficinas
+    padre_ids = {prop.padre_registro_cab_id for prop in propiedades if prop.padre_registro_cab_id}
+    edificios_map = {}
+    if padre_ids:
+        edificios = db.query(Propiedad.registro_cab_id, Propiedad.nombre_inmueble).filter(
+            Propiedad.registro_cab_id.in_(padre_ids)
+        ).all()
+        edificios_map = {e.registro_cab_id: e.nombre_inmueble for e in edificios}
+
     for prop in propiedades:
         tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == prop.tipo_inmueble_id).first()
         distrito = db.query(Distrito).filter(Distrito.distrito_id == prop.distrito_id).first()
 
+        # Nombre del edificio padre (para oficinas)
+        edificio_nombre = edificios_map.get(prop.padre_registro_cab_id) if prop.padre_registro_cab_id else None
+
         propiedades_list.append(PropiedadResponse(
             registro_cab_id=prop.registro_cab_id,
             titulo=prop.titulo,
+            nombre_inmueble=prop.nombre_inmueble,
             tipo_inmueble=tipo.nombre if tipo else "N/A",
-            tipo_inmueble_id=prop.tipo_inmueble_id,  # ✅ ID para filtros en frontend
+            tipo_inmueble_id=prop.tipo_inmueble_id,
             distrito=distrito.nombre if distrito else "N/A",
             direccion=prop.direccion,
-            latitud=prop.latitud,  # 🗺️ Para mapa
-            longitud=prop.longitud,  # 🗺️ Para mapa
+            latitud=prop.latitud,
+            longitud=prop.longitud,
             telefono=prop.propietario.telefono if prop.propietario else "",
             email=prop.propietario.email if prop.propietario else "",
             propietario_nombre=prop.propietario.nombre if prop.propietario else "",
@@ -255,6 +269,9 @@ async def my_properties(
             banos=prop.banos,
             estacionamientos=prop.estacionamientos,
             implementacion=prop.implementacion,
+            piso=prop.piso,
+            padre_registro_cab_id=prop.padre_registro_cab_id,
+            edificio_nombre=edificio_nombre,
             imagen_principal=prop.imagen_principal,
             imagenes=prop.imagenes or [],
             estado=prop.estado,

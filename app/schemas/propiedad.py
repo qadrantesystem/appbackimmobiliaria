@@ -96,6 +96,10 @@ class PropiedadResponse(BaseModel):
     banos: Optional[int] = None
     estacionamientos: Optional[int] = None
     implementacion: Optional[int] = None
+    piso: Optional[int] = None
+    padre_registro_cab_id: Optional[int] = None
+    edificio_nombre: Optional[str] = None
+    nombre_inmueble: Optional[str] = None
     imagen_principal: Optional[str]
     imagenes: Optional[List[str]] = []  # 🔥 AGREGADO para carrusel
     estado: str
