@@ -17,7 +17,7 @@ class BusquedaAvanzadaRequest(BaseModel):
     incluir_combinaciones: bool = True
 
 
-@router.post("/buscar-avanzada", response_model=PaginatedResponse[PropiedadResponse])
+@router.post("/buscar-avanzada")
 async def buscar_propiedades_avanzada(
     busqueda: BusquedaAvanzadaRequest = Body(...),
     current_user: Usuario = Depends(get_current_active_user),
@@ -211,13 +211,16 @@ async def buscar_propiedades_avanzada(
         except Exception as e:
             logger.warning(f"Error buscando combinaciones: {e}")
 
+    # Serializar PropiedadResponse a dicts para mezclar con combinaciones
+    propiedades_dicts = [p.model_dump() if hasattr(p, 'model_dump') else p.dict() for p in propiedades_list]
+
     # Combinar individuales + combinaciones
-    all_items = propiedades_list + combinaciones_list
+    all_items = propiedades_dicts + combinaciones_list
 
     # Ordenar: individuales primero, luego por área descendente
     all_items.sort(key=lambda x: (
-        0 if not isinstance(x, dict) or x.get("tipo") != "combinacion" else 1,
-        -(x.get("area_total", 0) if isinstance(x, dict) else (x.area if hasattr(x, 'area') else 0))
+        0 if x.get("tipo") != "combinacion" else 1,
+        -(x.get("area_total", 0) if x.get("tipo") == "combinacion" else float(x.get("area", 0)))
     ))
 
     total_con_combos = total + len(combinaciones_list)
