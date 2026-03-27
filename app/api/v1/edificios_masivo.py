@@ -643,9 +643,9 @@ async def actualizar_edificio_completo(
                     "total_imagenes_galeria": len(edificio.imagenes) if edificio.imagenes else 0
                 },
                 "total_oficinas": total_oficinas,
-                "oficinas_creadas": len(oficinas_nuevas_keys - set(oficinas_actuales_map.keys())),
-                "oficinas_actualizadas": len(oficinas_nuevas_keys & set(oficinas_actuales_map.keys())),
-                "oficinas_eliminadas": oficinas_eliminadas + len(oficinas_a_eliminar)  # Marcadas + automáticas
+                "oficinas_creadas": len([o for o in edificio_data.oficinas if not o.registro_cab_id or o.registro_cab_id not in oficinas_actuales_map]),
+                "oficinas_actualizadas": len([o for o in edificio_data.oficinas if o.registro_cab_id and o.registro_cab_id in oficinas_actuales_map]),
+                "oficinas_eliminadas": oficinas_eliminadas
             }
         }
     
