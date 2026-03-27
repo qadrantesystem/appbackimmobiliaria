@@ -51,11 +51,12 @@ class EdificioBase(BaseModel):
 
 class OficinaInput(BaseModel):
     """Datos de una oficina"""
+    registro_cab_id: Optional[int] = None  # ID existente para UPDATE, None para CREATE
     piso: int
     numero_oficina: int
     nombre: str
     area: Decimal
-    caracteristicas: List[CaracteristicaInput] = []  # 🆕 Equipamiento por oficina
+    caracteristicas: List[CaracteristicaInput] = []
 
 class SotanoInput(BaseModel):
     """Datos de un sótano"""
@@ -495,56 +496,47 @@ async def actualizar_edificio_completo(
             db.flush()
             logger.info(f"✅ {oficinas_eliminadas} oficinas eliminadas correctamente")
 
-        # 7. Gestionar oficinas: comparar existentes vs nuevas
+        # 7. Gestionar oficinas: comparar existentes vs nuevas por ID
         logger.info(f"🏢 Gestionando oficinas...")
 
-        # Obtener oficinas actuales con número de oficina (después de eliminar las marcadas)
+        # Obtener oficinas actuales (después de eliminar las marcadas)
         oficinas_actuales = db.query(Propiedad).filter(
             Propiedad.padre_registro_cab_id == edificio_id
         ).all()
-        
-        # Mapear oficinas actuales por piso+número para identificarlas
-        oficinas_actuales_map = {}
-        for oficina_actual in oficinas_actuales:
-            # ✅ Obtener piso directamente de la columna (no de característica)
-            piso_num = oficina_actual.piso or 0
-            key = f"{piso_num}_{oficina_actual.nombre_inmueble}"
-            oficinas_actuales_map[key] = oficina_actual
-        
-        # Mapear oficinas nuevas
-        oficinas_nuevas_keys = set()
-        tipo_inmueble_oficina_id = 1
-        
-        for oficina_data in edificio_data.oficinas:
-            key = f"{oficina_data.piso}_{oficina_data.nombre}"
-            oficinas_nuevas_keys.add(key)
-            
-            if key in oficinas_actuales_map:
-                # ACTUALIZAR oficina existente
-                logger.info(f"   ♻️ Actualizando {oficina_data.nombre}...")
-                oficina_existente = oficinas_actuales_map[key]
 
+        # Mapear por registro_cab_id para match por ID
+        oficinas_actuales_map = {ofi.registro_cab_id: ofi for ofi in oficinas_actuales}
+        oficinas_procesadas_ids = set()
+        tipo_inmueble_oficina_id = 1
+
+        for oficina_data in edificio_data.oficinas:
+            if oficina_data.registro_cab_id and oficina_data.registro_cab_id in oficinas_actuales_map:
+                # ACTUALIZAR oficina existente (match por ID)
+                oficina_existente = oficinas_actuales_map[oficina_data.registro_cab_id]
+                oficinas_procesadas_ids.add(oficina_data.registro_cab_id)
+                logger.info(f"   ♻️ Actualizando {oficina_data.nombre} (ID: {oficina_data.registro_cab_id})...")
+
+                oficina_existente.nombre_inmueble = oficina_data.nombre
                 oficina_existente.area = oficina_data.area
-                oficina_existente.piso = oficina_data.piso  # ✅ Actualizar piso en cabecera
+                oficina_existente.piso = oficina_data.piso
                 oficina_existente.titulo = f"{oficina_data.nombre} - {edificio_data.edificio.nombre_inmueble}"
                 oficina_existente.descripcion = f"Oficina ubicada en el piso {oficina_data.piso} del edificio {edificio_data.edificio.nombre_inmueble}"
-                oficina_existente.transaccion = edificio.transaccion  # Hereda transacción auto-detectada
+                oficina_existente.transaccion = edificio.transaccion
                 oficina_existente.moneda = edificio_data.edificio.moneda
+                # Preservar imágenes existentes (NO sobreescribir con null)
 
                 # Actualizar características (eliminar y recrear)
                 db.query(PropiedadDetalle).filter(
                     PropiedadDetalle.registro_cab_id == oficina_existente.registro_cab_id
                 ).delete()
 
-                # Agregar número de oficina
                 detalle_numero = PropiedadDetalle(
                     registro_cab_id=oficina_existente.registro_cab_id,
                     caracteristica_id=111,
                     valor=str(oficina_data.numero_oficina)
                 )
                 db.add(detalle_numero)
-                
-                # Agregar equipamiento
+
                 if oficina_data.caracteristicas:
                     for caract in oficina_data.caracteristicas:
                         detalle_equip = PropiedadDetalle(
@@ -560,7 +552,7 @@ async def actualizar_edificio_completo(
                     usuario_id=current_user.usuario_id,
                     propietario_id=edificio_data.edificio.propietario_id,
                     padre_registro_cab_id=edificio_id,
-                    piso=oficina_data.piso,  # ✅ Guardar piso directamente en cabecera
+                    piso=oficina_data.piso,
                     tipo_inmueble_id=tipo_inmueble_oficina_id,
                     distrito_id=edificio_data.edificio.distrito_id,
                     nombre_inmueble=oficina_data.nombre,
@@ -568,7 +560,7 @@ async def actualizar_edificio_completo(
                     latitud=edificio_data.edificio.latitud,
                     longitud=edificio_data.edificio.longitud,
                     area=oficina_data.area,
-                    transaccion=edificio.transaccion,  # Hereda transacción auto-detectada
+                    transaccion=edificio.transaccion,
                     moneda=edificio_data.edificio.moneda,
                     titulo=f"{oficina_data.nombre} - {edificio_data.edificio.nombre_inmueble}",
                     descripcion=f"Oficina ubicada en el piso {oficina_data.piso} del edificio {edificio_data.edificio.nombre_inmueble}",
@@ -581,15 +573,13 @@ async def actualizar_edificio_completo(
                 db.add(nueva_oficina)
                 db.flush()
 
-                # Agregar número de oficina
                 detalle_numero = PropiedadDetalle(
                     registro_cab_id=nueva_oficina.registro_cab_id,
                     caracteristica_id=111,
                     valor=str(oficina_data.numero_oficina)
                 )
                 db.add(detalle_numero)
-                
-                # Agregar equipamiento
+
                 if oficina_data.caracteristicas:
                     for caract in oficina_data.caracteristicas:
                         detalle_equip = PropiedadDetalle(
@@ -598,21 +588,10 @@ async def actualizar_edificio_completo(
                             valor=caract.valor
                         )
                         db.add(detalle_equip)
-        
-        # 8. ELIMINAR oficinas que ya no existen en la lista (adicional a las marcadas)
-        oficinas_a_eliminar = set(oficinas_actuales_map.keys()) - oficinas_nuevas_keys
 
-        for key_eliminar in oficinas_a_eliminar:
-            oficina_eliminar = oficinas_actuales_map[key_eliminar]
-            logger.info(f"   🗑️ Eliminando {oficina_eliminar.nombre_inmueble}...")
-            
-            # Eliminar características
-            db.query(PropiedadDetalle).filter(
-                PropiedadDetalle.registro_cab_id == oficina_eliminar.registro_cab_id
-            ).delete()
-            
-            # Eliminar oficina
-            db.delete(oficina_eliminar)
+        # 8. NO eliminar automáticamente oficinas que no vienen en el payload
+        # Solo se eliminan las marcadas explícitamente en oficinas_para_eliminar (paso 6)
+        # Esto preserva oficinas con fotos/datos que no se incluyeron en la edición
         
         # 8.5 Guardar/actualizar pisos (upsert)
         if edificio_data.pisos:
