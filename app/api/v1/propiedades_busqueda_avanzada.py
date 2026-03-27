@@ -14,6 +14,7 @@ class BusquedaAvanzadaRequest(BaseModel):
     filtros_avanzados: Optional[List[FiltroAvanzadoItem]] = []
     page: int = 1
     limit: int = 12
+    incluir_combinaciones: bool = True
 
 
 @router.post("/buscar-avanzada", response_model=PaginatedResponse[PropiedadResponse])
@@ -113,9 +114,9 @@ async def buscar_propiedades_avanzada(
     if filtros_bas.get("banos") and len(filtros_bas["banos"]) > 0:
         query = query.filter(Propiedad.banos.in_(filtros_bas["banos"]))
 
-    # Parqueos (mínimo)
+    # Estacionamientos/Parqueos (mínimo)
     if filtros_bas.get("parqueos"):
-        query = query.filter(Propiedad.parqueos >= filtros_bas["parqueos"])
+        query = query.filter(Propiedad.estacionamientos >= filtros_bas["parqueos"])
 
     # ============================================
     # 3️⃣ FILTROS AVANZADOS (registro_x_inmueble_det)
@@ -173,7 +174,7 @@ async def buscar_propiedades_avanzada(
             area=prop.area,
             habitaciones=prop.habitaciones,
             banos=prop.banos,
-            parqueos=prop.parqueos,
+            estacionamientos=prop.estacionamientos,
             imagen_principal=prop.imagen_principal,
             imagenes=prop.imagenes or [],  # 🔥 Para carrusel
             estado=prop.estado,
@@ -184,13 +185,55 @@ async def buscar_propiedades_avanzada(
             es_favorito=prop.registro_cab_id in favoritos_ids  # ⭐ FAVORITO
         ))
 
-    return PaginatedResponse(
-        success=True,
-        data=propiedades_list,
-        pagination={
+    # ============================================
+    # 4️⃣ COMBINACIONES INTELIGENTES (oficinas contiguas)
+    # ============================================
+    combinaciones_list = []
+    if busqueda.incluir_combinaciones and filtros_bas.get("area") and filtros_gen.get("tipo_inmueble_id") == 1:
+        try:
+            area_objetivo = float(filtros_bas["area"])
+            margen = area_objetivo * 0.15
+            area_min_combo = area_objetivo - margen
+            area_max_combo = area_objetivo + margen
+
+            busqueda_service = BusquedaInteligenteService(db)
+            resultado_combo = busqueda_service.buscar_con_combinaciones(
+                area_min=area_min_combo,
+                area_max=area_max_combo,
+                tipo_inmueble_id=1,
+                distrito_ids=filtros_gen.get("distrito_ids"),
+                transaccion=filtros_gen.get("transaccion"),
+                precio_max=None,
+                limit=busqueda.limit,
+                usuario_id=current_user.usuario_id
+            )
+            combinaciones_list = resultado_combo.get("combinaciones", [])
+        except Exception as e:
+            logger.warning(f"Error buscando combinaciones: {e}")
+
+    # Combinar individuales + combinaciones
+    all_items = propiedades_list + combinaciones_list
+
+    # Ordenar: individuales primero, luego por área descendente
+    all_items.sort(key=lambda x: (
+        0 if not isinstance(x, dict) or x.get("tipo") != "combinacion" else 1,
+        -(x.get("area_total", 0) if isinstance(x, dict) else (x.area if hasattr(x, 'area') else 0))
+    ))
+
+    total_con_combos = total + len(combinaciones_list)
+
+    return {
+        "success": True,
+        "data": all_items,
+        "pagination": {
             "page": busqueda.page,
             "limit": busqueda.limit,
-            "total": total,
-            "total_pages": (total + busqueda.limit - 1) // busqueda.limit
+            "total": total_con_combos,
+            "total_pages": (total_con_combos + busqueda.limit - 1) // busqueda.limit
+        },
+        "metadata": {
+            "individuales": total,
+            "combinaciones": len(combinaciones_list),
+            "incluir_combinaciones": busqueda.incluir_combinaciones
         }
-    )
+    }
