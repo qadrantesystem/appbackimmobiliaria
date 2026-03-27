@@ -221,7 +221,12 @@ async def my_properties(
 
     total = query.count()
     offset = (page - 1) * limit
-    propiedades = query.order_by(Propiedad.created_at.desc()).offset(offset).limit(limit).all()
+    propiedades = query.order_by(
+        Propiedad.tipo_inmueble_id.desc(),          # Edificios (12,13) primero, luego oficinas (1)
+        Propiedad.padre_registro_cab_id.asc().nullsfirst(),  # Edificios sin padre primero, luego oficinas agrupadas por edificio
+        Propiedad.piso.asc().nullslast(),            # Piso menor a mayor
+        Propiedad.nombre_inmueble.asc()              # Alfabético dentro del mismo piso
+    ).offset(offset).limit(limit).all()
 
     # Obtener IDs de favoritos del usuario
     favoritos_ids = {f.registro_cab_id for f in db.query(Favorito.registro_cab_id).filter(
