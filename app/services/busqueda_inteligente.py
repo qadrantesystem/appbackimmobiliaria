@@ -289,12 +289,32 @@ class BusquedaInteligenteService:
                     "piso": piso,
                     "distrito": combo[0].distrito.nombre if combo[0].distrito else None,
                     "distrito_id": combo[0].distrito_id,
-                    "latitud": str(edificio.latitud) if edificio and edificio.latitud else None,
-                    "longitud": str(edificio.longitud) if edificio and edificio.longitud else None,
+                    "latitud": self._obtener_coordenada(edificio, combo, "latitud"),
+                    "longitud": self._obtener_coordenada(edificio, combo, "longitud"),
                     "oficinas": [self._serializar_oficina_simple(ofi) for ofi in combo]
                 })
 
         return resultados
+
+    def _obtener_coordenada(self, edificio, combo, campo: str) -> Optional[str]:
+        """Obtener coordenada: del edificio, de las oficinas, o de cualquier hermana del edificio"""
+        # 1. Del edificio padre
+        if edificio and getattr(edificio, campo):
+            return str(getattr(edificio, campo))
+        # 2. De las oficinas de la combinación
+        for ofi in combo:
+            val = getattr(ofi, campo, None)
+            if val:
+                return str(val)
+        # 3. De cualquier oficina hermana del mismo edificio
+        if combo[0].padre_registro_cab_id:
+            hermana = self.db.query(Propiedad).filter(
+                Propiedad.padre_registro_cab_id == combo[0].padre_registro_cab_id,
+                getattr(Propiedad, campo).isnot(None)
+            ).first()
+            if hermana:
+                return str(getattr(hermana, campo))
+        return None
 
     def _generar_glosa(self, oficinas: List[Propiedad]) -> str:
         """Genera texto descriptivo de la combinación"""
