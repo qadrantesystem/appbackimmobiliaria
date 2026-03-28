@@ -199,6 +199,13 @@ except ImportError as e:
     print(f"   ⚠️ Error cargando favoritos: {e}")
 
 try:
+    from app.api.v1 import contactos
+    app.include_router(contactos.router, prefix="/api/v1", tags=["📞 Contactos/Leads"])
+    print("   ✅ Contactos/Leads")
+except ImportError as e:
+    print(f"   ⚠️ Error cargando contactos: {e}")
+
+try:
     from app.api.v1 import busquedas
     app.include_router(busquedas.router, prefix="/api/v1/busquedas", tags=["🔍 Búsquedas"])
     print("   ✅ Búsquedas")

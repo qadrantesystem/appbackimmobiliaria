@@ -10,6 +10,7 @@ from app.dependencies import get_current_active_user, require_ofertante, get_opt
 from app.core.exceptions import BadRequestException, NotFoundException, ForbiddenException
 from app.core.constants import EstadoPropiedad, TipoTransaccion, TipoInmuebleID, MARGEN_BUSQUEDA
 from app.models import Propiedad, PropiedadDetalle, Usuario, TipoInmueble, Distrito, Caracteristica, Favorito, Propietario
+from app.models.tracking import Tracking
 from app.schemas.propiedad import PropiedadCreate, PropiedadUpdate, PropiedadEstadoUpdate, PropiedadResponse, PropiedadDetalleResponse, EdificioRapidoCreate
 from app.schemas.common import ResponseModel, PaginatedResponse
 from app.schemas.oficina_masivo import GenerarOficinasRequest, GenerarOficinasResponse, OficinaGenerada, EdificioDisponible
@@ -796,20 +797,34 @@ async def get_property_detail(
 @router.post("/{propiedad_id}/vista", response_model=ResponseModel[dict])
 async def increment_view(
     propiedad_id: int,
+    current_user: Usuario = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
-    """Incrementar contador de vistas"""
+    """Incrementar vistas — registra usuario si está logueado"""
     propiedad = db.query(Propiedad).filter(Propiedad.registro_cab_id == propiedad_id).first()
     if not propiedad:
         raise NotFoundException("Propiedad no encontrada")
-    
+
     propiedad.vistas += 1
+
+    # Registrar en tracking si es usuario logueado
+    if current_user:
+        tracking = Tracking(
+            registro_cab_id=propiedad_id,
+            estado_anterior=propiedad.estado_crm,
+            estado_nuevo=propiedad.estado_crm,
+            usuario_id=current_user.usuario_id,
+            motivo="Vista de propiedad",
+            metadata_json={"tipo": "vista", "usuario_tipo": "registrado"}
+        )
+        db.add(tracking)
+
     db.commit()
-    
+
     return ResponseModel(
         success=True,
         message="Vista registrada",
-        data={"vistas": propiedad.vistas}
+        data={"vistas": propiedad.vistas, "tipo": "registrado" if current_user else "invitado"}
     )
 
 @router.post("/{propiedad_id}/contacto", response_model=ResponseModel[dict])
@@ -819,41 +834,68 @@ async def contact_property(
     email: str,
     telefono: str,
     mensaje: str,
+    current_user: Usuario = Depends(get_optional_user),
     db: Session = Depends(get_db)
 ):
-    """Contactar propietario de propiedad"""
+    """Contactar propietario — guarda lead + mueve CRM + tracking"""
+    from app.models.contacto import Contacto
+
     propiedad = db.query(Propiedad).filter(Propiedad.registro_cab_id == propiedad_id).first()
     if not propiedad:
         raise NotFoundException("Propiedad no encontrada")
-    
-    # Incrementar contador de contactos
-    propiedad.contactos += 1
-    db.commit()
-    
-    # Enviar email al propietario
-    if propiedad.propietario and propiedad.propietario.email:
-        EmailService.send_property_contact_notification(
-            propietario_email=propiedad.propietario.email,
-            propietario_nombre=propiedad.propietario.nombre,
-            propiedad_titulo=propiedad.titulo,
-            contacto_nombre=nombre,
-            contacto_email=email,
-            contacto_telefono=telefono,
-            mensaje=mensaje
-        )
 
-    # Enviar SMS (opcional)
-    if propiedad.propietario and propiedad.propietario.telefono:
-        SMSService.send_property_contact_sms(
-            propietario_telefono=propiedad.propietario.telefono,
-            propiedad_titulo=propiedad.titulo,
-            contacto_nombre=nombre
+    # 1. Guardar contacto en tabla contactos_inmueble
+    nuevo_contacto = Contacto(
+        registro_cab_id=propiedad_id,
+        usuario_id=current_user.usuario_id if current_user else None,
+        nombre=nombre,
+        email=email,
+        telefono=telefono,
+        mensaje=mensaje,
+        tipo_contacto="registrado" if current_user else "invitado",
+        estado="nuevo",
+        corredor_id=propiedad.corredor_asignado_id,
+        ip_address=None
+    )
+    db.add(nuevo_contacto)
+
+    # 2. Incrementar contador de contactos
+    propiedad.contactos += 1
+
+    # 3. Mover estado CRM a "contacto" si estaba en "lead"
+    if propiedad.estado_crm == "lead":
+        estado_anterior = propiedad.estado_crm
+        propiedad.estado_crm = "contacto"
+
+        # 4. Registrar en tracking
+        tracking = Tracking(
+            registro_cab_id=propiedad_id,
+            estado_anterior=estado_anterior,
+            estado_nuevo="contacto",
+            usuario_id=current_user.usuario_id if current_user else None,
+            corredor_id=propiedad.corredor_asignado_id,
+            motivo=f"Contacto de {nombre} ({email})",
+            metadata_json={"tipo": "contacto_entrante", "nombre": nombre, "email": email}
         )
-    
+        db.add(tracking)
+
+    db.commit()
+
+    # 5. Notificar por SMS
+    try:
+        if propiedad.propietario and propiedad.propietario.telefono:
+            SMSService.send_property_contact_sms(
+                propietario_telefono=propiedad.propietario.telefono,
+                propiedad_titulo=propiedad.titulo,
+                contacto_nombre=nombre
+            )
+    except Exception as e:
+        logger.warning(f"Error enviando SMS: {e}")
+
     return ResponseModel(
         success=True,
         message="Contacto registrado. El propietario se comunicará contigo pronto.",
-        data={}
+        data={"contacto_id": nuevo_contacto.contacto_id}
     )
 
 @router.post("", response_model=ResponseModel[dict], status_code=201)
