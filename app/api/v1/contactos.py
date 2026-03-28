@@ -14,7 +14,7 @@ from app.models.propiedad import Propiedad
 from app.models.usuario import Usuario
 from app.models.tracking import Tracking
 from app.dependencies import get_current_active_user, get_optional_user
-from app.schemas.response import ResponseModel
+from app.schemas.common import ResponseModel
 
 logger = logging.getLogger(__name__)
 
