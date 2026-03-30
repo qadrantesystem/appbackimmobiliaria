@@ -412,6 +412,9 @@ async def get_oficinas_edificio(
             "piso": piso,
             "area": float(oficina.area) if oficina.area else None,
             "estado": oficina.estado,
+            "transaccion": oficina.transaccion,
+            "estado_crm": oficina.estado_crm,
+            "imagen_principal": oficina.imagen_principal,
             "precio_venta": float(oficina.precio_venta) if oficina.precio_venta else None,
             "precio_alquiler": float(oficina.precio_alquiler) if oficina.precio_alquiler else None,
             "caracteristicas": caracteristicas
