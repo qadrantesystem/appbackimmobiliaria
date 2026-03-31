@@ -169,10 +169,10 @@ class BusquedaInteligenteService:
 
         logger.info(f"📊 Candidatas para combinación: {len(oficinas_candidatas)} oficinas")
 
-        # 2. Agrupar por (edificio, piso, propietario, transacción)
+        # 2. Agrupar por (edificio, piso, transacción) — sin propietario
+        # El propietario no importa para combinaciones, lo gestiona el corredor/Qdrante
         grupos = {}
         for oficina in oficinas_candidatas:
-            # ✅ CORREGIDO: Usar columna piso directamente, no buscar en detalles
             piso = oficina.piso if oficina.piso is not None else self._obtener_piso(oficina.registro_cab_id)
             if piso is None:
                 logger.warning(f"⚠️ Oficina {oficina.registro_cab_id} sin piso, omitiendo")
@@ -181,7 +181,6 @@ class BusquedaInteligenteService:
             key = (
                 oficina.padre_registro_cab_id,
                 piso,
-                oficina.propietario_id,
                 oficina.transaccion
             )
 
