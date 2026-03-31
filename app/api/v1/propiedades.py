@@ -1,11 +1,13 @@
 import re
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, Query, UploadFile, File, Body
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, and_, func, distinct
+from sqlalchemy import or_, and_, func, distinct, not_
 from typing import Optional, List, Dict, Any
 from decimal import Decimal
 from pydantic import BaseModel
 from app.database import get_db
+from app.models.transaccion_inmueble import InmuebleTransaccion
 from app.dependencies import get_current_active_user, require_ofertante, get_optional_user
 from app.core.exceptions import BadRequestException, NotFoundException, ForbiddenException
 from app.core.constants import EstadoPropiedad, TipoTransaccion, TipoInmuebleID, MARGEN_BUSQUEDA
@@ -58,9 +60,23 @@ async def list_properties(
     # Si NO se solicitan combinaciones o NO hay área mínima, usar lógica ORIGINAL
     if not incluir_combinaciones or not area_min:
         # Query base - solo propiedades publicadas + eager load propietario (LEFT JOIN)
+        # Excluir oficinas ocupadas cuyo contrato vence en más de 2 meses
+        limite_vencimiento = datetime.utcnow() + timedelta(days=60)
+        ids_ocupadas_vigentes = db.query(InmuebleTransaccion.registro_cab_id).filter(
+            InmuebleTransaccion.es_vigente == True,
+            InmuebleTransaccion.estado_ocupacion == "ocupada",
+            or_(
+                InmuebleTransaccion.fecha_fin == None,
+                InmuebleTransaccion.fecha_fin > limite_vencimiento
+            )
+        ).subquery()
+
         query = db.query(Propiedad).options(
             joinedload(Propiedad.propietario, innerjoin=False)
-        ).filter(Propiedad.estado == "publicado")
+        ).filter(
+            Propiedad.estado == "publicado",
+            not_(Propiedad.registro_cab_id.in_(ids_ocupadas_vigentes))
+        )
 
         # Filtros
         if tipo_inmueble_id:
@@ -1797,6 +1813,14 @@ async def asignar_corredor(
         if data.estado_crm not in estados_validos:
             raise BadRequestException(f"Estado CRM inválido. Estados válidos: {', '.join(estados_validos)}")
         propiedad.estado_crm = data.estado_crm
+
+        # Auto-cambiar estado propiedad cuando CRM es cerrado_ganado o cerrado_perdido
+        if data.estado_crm == "cerrado_ganado":
+            propiedad.estado = "cerrado"
+        elif data.estado_crm == "cerrado_perdido":
+            # Volver a publicado para que siga disponible
+            if propiedad.estado == "cerrado":
+                propiedad.estado = "publicado"
 
     # Actualizar comisión si se proporciona
     if data.comision is not None:

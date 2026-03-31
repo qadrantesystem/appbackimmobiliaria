@@ -219,3 +219,37 @@ async def actualizar_transaccion(
     db.commit()
     db.refresh(transaccion)
     return transaccion
+
+
+@router.post("/{propiedad_id}/liberar")
+async def liberar_propiedad(
+    propiedad_id: int,
+    current_user: Usuario = Depends(require_ofertante),
+    db: Session = Depends(get_db)
+):
+    """Liberar/desocupar una propiedad — marca transacción vigente como histórica"""
+    propiedad = db.query(Propiedad).filter(Propiedad.registro_cab_id == propiedad_id).first()
+    if not propiedad:
+        raise HTTPException(status_code=404, detail="Propiedad no encontrada")
+
+    # Buscar transacción vigente
+    transaccion_vigente = db.query(InmuebleTransaccion).filter(
+        InmuebleTransaccion.registro_cab_id == propiedad_id,
+        InmuebleTransaccion.es_vigente == True
+    ).first()
+
+    if not transaccion_vigente:
+        raise HTTPException(status_code=400, detail="No hay transacción vigente para liberar")
+
+    # Marcar como histórica
+    transaccion_vigente.es_vigente = False
+    transaccion_vigente.estado_ocupacion = "libre"
+
+    # Volver propiedad a publicado si estaba cerrada
+    if propiedad.estado == "cerrado":
+        propiedad.estado = "publicado"
+        propiedad.estado_crm = "lead"
+
+    db.commit()
+
+    return {"success": True, "message": "Propiedad liberada exitosamente"}

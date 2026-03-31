@@ -55,7 +55,21 @@ async def buscar_propiedades_avanzada(
     }
     """
     # Query base - solo propiedades publicadas
-    query = db.query(Propiedad).filter(Propiedad.estado == "publicado")
+    # Excluir oficinas ocupadas cuyo contrato vence en más de 2 meses
+    limite_vencimiento = datetime.utcnow() + timedelta(days=60)
+    ids_ocupadas = db.query(InmuebleTransaccion.registro_cab_id).filter(
+        InmuebleTransaccion.es_vigente == True,
+        InmuebleTransaccion.estado_ocupacion == "ocupada",
+        or_(
+            InmuebleTransaccion.fecha_fin == None,
+            InmuebleTransaccion.fecha_fin > limite_vencimiento
+        )
+    ).subquery()
+
+    query = db.query(Propiedad).filter(
+        Propiedad.estado == "publicado",
+        not_(Propiedad.registro_cab_id.in_(ids_ocupadas))
+    )
 
     # ============================================
     # 1️⃣ FILTROS GENÉRICOS (registro_x_inmueble_cab)
