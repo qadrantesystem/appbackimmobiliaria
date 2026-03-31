@@ -120,11 +120,10 @@ async def obtener_historial(
     db: Session = Depends(get_db),
     current_user: Usuario = Depends(get_current_user)
 ):
-    """📋 Obtener historial de búsquedas del usuario"""
+    """📋 Obtener todas las búsquedas del usuario (guardadas + historial)"""
     try:
         busquedas = db.query(Busqueda).filter(
-            Busqueda.usuario_id == current_user.usuario_id,
-            Busqueda.es_guardada == False
+            Busqueda.usuario_id == current_user.usuario_id
         ).order_by(Busqueda.fecha_busqueda.desc()).limit(limit).all()
 
         # Enriquecer con datos adicionales
