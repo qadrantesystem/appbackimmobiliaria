@@ -458,11 +458,11 @@ async def listar_edificios_disponibles(
     # Formatear respuesta con características de cantidad de pisos
     edificios_list = []
     for edificio in edificios:
-        # Buscar característica "Cantidad de Pisos"
+        # Buscar característica "Cantidad Pisos Edificio" (ID 110 exacto)
         cantidad_pisos = None
-        pisos_det = db.query(PropiedadDetalle).join(Caracteristica).filter(
+        pisos_det = db.query(PropiedadDetalle).filter(
             PropiedadDetalle.registro_cab_id == edificio.registro_cab_id,
-            Caracteristica.nombre.ilike("%piso%")
+            PropiedadDetalle.caracteristica_id == 110
         ).first()
 
         if pisos_det:
