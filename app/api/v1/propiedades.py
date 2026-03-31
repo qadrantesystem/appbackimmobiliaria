@@ -262,6 +262,15 @@ async def my_properties(
         ).all()
         edificios_map = {e.registro_cab_id: e.nombre_inmueble for e in edificios}
 
+    # Pre-cargar nombres de corredores asignados
+    corredor_ids = {prop.corredor_asignado_id for prop in propiedades if prop.corredor_asignado_id}
+    corredores_map = {}
+    if corredor_ids:
+        corredores = db.query(Usuario.usuario_id, Usuario.nombre, Usuario.apellido).filter(
+            Usuario.usuario_id.in_(corredor_ids)
+        ).all()
+        corredores_map = {c.usuario_id: f"{c.nombre} {c.apellido}" for c in corredores}
+
     for prop in propiedades:
         tipo = db.query(TipoInmueble).filter(TipoInmueble.tipo_inmueble_id == prop.tipo_inmueble_id).first()
         distrito = db.query(Distrito).filter(Distrito.distrito_id == prop.distrito_id).first()
@@ -301,7 +310,10 @@ async def my_properties(
             vistas=prop.vistas,
             contactos=prop.contactos,
             created_at=prop.created_at,
-            es_favorito=prop.registro_cab_id in favoritos_ids
+            es_favorito=prop.registro_cab_id in favoritos_ids,
+            corredor_asignado_id=prop.corredor_asignado_id,
+            corredor_nombre=corredores_map.get(prop.corredor_asignado_id) if prop.corredor_asignado_id else None,
+            comision_corredor=prop.comision_corredor
         ))
 
     # Estadísticas

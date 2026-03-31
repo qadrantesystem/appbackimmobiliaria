@@ -108,6 +108,9 @@ class PropiedadResponse(BaseModel):
     contactos: int
     created_at: datetime
     es_favorito: bool = False  # Si el usuario autenticado la tiene en favoritos
+    corredor_asignado_id: Optional[int] = None
+    corredor_nombre: Optional[str] = None
+    comision_corredor: Optional[Decimal] = None
 
     class Config:
         from_attributes = True
