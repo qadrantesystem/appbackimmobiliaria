@@ -311,6 +311,7 @@ async def listar_caracteristicas_agrupadas(
                 "descripcion": car.descripcion,
                 "tipo_input": car.tipo_input,
                 "unidad": car.unidad,
+                "icono": car.icono,
                 "requerido": rel.requerido,
                 "orden": rel.orden
             })

@@ -20,6 +20,7 @@ class Caracteristica(Base):
     # ✅ NUEVO: Relación con tabla categorias_mae
     categoria_id = Column(Integer, ForeignKey('categorias_mae.categoria_id'), index=True)
 
+    icono = Column(String(100), nullable=True)  # Archivo WebP del icono (ej: parking.webp)
     orden = Column(Integer, default=0)
     activo = Column(Boolean, default=True)
     created_at = Column(TIMESTAMP, server_default=func.now())
