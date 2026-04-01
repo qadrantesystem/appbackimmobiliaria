@@ -340,8 +340,23 @@ async def obtener_estadisticas_dashboard(
 
             propiedades_por_mes = {int(r.mes): r.cantidad for r in prop_mes.group_by('mes').all()}
 
+            # Corredores asignados
+            query_con_corredor = db.query(func.count(Propiedad.registro_cab_id)).filter(
+                extract('year', Propiedad.created_at) == filtro_anio,
+                Propiedad.corredor_asignado_id.isnot(None)
+            )
+            if not mostrar_global:
+                query_con_corredor = query_con_corredor.filter(Propiedad.usuario_id == target_user_id)
+            elif perfil_id and user_ids:
+                query_con_corredor = query_con_corredor.filter(Propiedad.usuario_id.in_(user_ids))
+
+            con_corredor = query_con_corredor.scalar() or 0
+            sin_corredor = total_propiedades - con_corredor
+
             resultado["propiedades"] = {
                 "total": total_propiedades,
+                "con_corredor": con_corredor,
+                "sin_corredor": sin_corredor,
                 "por_estado": propiedades_por_estado,
                 "por_estado_crm": propiedades_por_estado_crm,
                 "por_tipo_inmueble": propiedades_por_tipo,
