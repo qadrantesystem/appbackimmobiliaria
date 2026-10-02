@@ -34,6 +34,11 @@ class Settings:
     SMTP_FROM_EMAIL: str = config("SMTP_FROM_EMAIL", default="sistemas@qadrante2.com")
     SMTP_FROM_NAME: str = config("SMTP_FROM_NAME", default="Sistema Inmobiliario")
     USE_SMTP: bool = config("USE_SMTP", default=True, cast=bool)
+
+    # 📧 Resend Email Service (HTTP API - NO bloqueado por Railway)
+    RESEND_API_KEY: str = config("RESEND_API_KEY", default="")
+    RESEND_FROM_EMAIL: str = config("RESEND_FROM_EMAIL", default="sistemas@jsinnovatech.com")
+    RESEND_FROM_NAME: str = config("RESEND_FROM_NAME", default="Qadrante Inmobiliario")
     
     # 📱 Twilio SMS
     TWILIO_ACCOUNT_SID: str = config("TWILIO_ACCOUNT_SID", default="")

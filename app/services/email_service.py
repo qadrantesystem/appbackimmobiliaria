@@ -9,9 +9,17 @@ from sendgrid.helpers.mail import Mail, From, To, Subject, PlainTextContent, Htm
 from app.core.config import settings
 import random
 import string
+import base64
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+try:
+    import resend  # HTTP API (no bloqueada por Railway)
+    _RESEND_AVAILABLE = True
+except Exception:
+    resend = None
+    _RESEND_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -60,8 +68,61 @@ class EmailService:
                 logger.error(f"❌ [SENDGRID] Error inicializando: {e}")
                 logger.exception(e)
                 self.sendgrid = None
-    
-    def generate_verification_code(self) -> str:
+
+        # 📧 Resend (HTTP) - PREFERIDO si hay API key (Railway bloquea SMTP)
+        self.use_resend = _RESEND_AVAILABLE and bool(getattr(settings, "RESEND_API_KEY", ""))
+        if self.use_resend:
+            resend.api_key = settings.RESEND_API_KEY
+            logger.info("🔧 [RESEND] Configurado (HTTP) - SMTP deshabilitado")
+        else:
+            logger.info("ℹ️ [RESEND] No configurado, usando SMTP/SendGrid")
+
+    async def send_email_with_attachments(self, to_email, subject, html_content, attachments=None):
+        # Resend (HTTP) tiene prioridad para adjuntos
+        if getattr(self, "use_resend", False):
+            return self._send_via_resend(to_email, subject, html_content, attachments)
+        return await self._send_with_attachments_smtp(to_email, subject, html_content, attachments)
+
+    def _send_via_resend(self, to_email, subject, html_content, attachments=None):
+        """Enviar email con adjuntos via Resend (HTTP)."""
+        try:
+            resend.api_key = settings.RESEND_API_KEY
+            adjuntos = []
+            for a in (attachments or []):
+                content = a.get("content")
+                if isinstance(content, (bytes, bytearray)):
+                    content = base64.b64encode(content).decode("utf-8")
+                if not content:
+                    continue
+                adjuntos.append({
+                    "filename": a.get("filename", "ficha.pdf"),
+                    "content": content,
+                })
+
+            params = {
+                "from": f"{settings.RESEND_FROM_NAME} <{settings.RESEND_FROM_EMAIL}>",
+                "to": [to_email],
+                "subject": subject,
+                "html": html_content,
+            }
+            if adjuntos:
+                params["attachments"] = adjuntos
+
+            resp = resend.Emails.send(params)
+            rid = resp.get("id") if isinstance(resp, dict) else getattr(resp, "id", None)
+            logger.info(f"✅ [RESEND] Email enviado a {to_email} | adjuntos={len(adjuntos)} | id={rid}")
+            return {
+                "success": True,
+                "message": "Email enviado correctamente",
+                "email": to_email,
+                "attachments_count": len(adjuntos),
+            }
+        except Exception as e:
+            logger.error(f"❌ [RESEND] Error enviando email: {e}")
+            logger.exception(e)
+            return {"success": False, "message": f"Error enviando email: {e}", "email": to_email}
+
+    async def generate_verification_code(self) -> str:
         """Generar código de verificación de 6 dígitos"""
         return ''.join(random.choices(string.digits, k=6))
     
@@ -459,7 +520,7 @@ class EmailService:
         """Alias para send_password_reset_code"""
         return await self.send_password_reset_code(email, name, reset_code)
 
-    async def send_email_with_attachments(
+    async def _send_with_attachments_smtp(
         self,
         to_email: str,
         subject: str,
