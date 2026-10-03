@@ -37,7 +37,7 @@ class Settings:
 
     # 📧 Resend Email Service (HTTP API - NO bloqueado por Railway)
     RESEND_API_KEY: str = config("RESEND_API_KEY", default="")
-    RESEND_FROM_EMAIL: str = config("RESEND_FROM_EMAIL", default="sistemas@jsinnovatech.com")
+    RESEND_FROM_EMAIL: str = config("RESEND_FROM_EMAIL", default="sistemas@qadrante2.com")
     RESEND_FROM_NAME: str = config("RESEND_FROM_NAME", default="Qadrante Inmobiliario")
     
     # 📱 Twilio SMS
