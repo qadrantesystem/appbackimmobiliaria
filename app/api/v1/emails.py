@@ -21,6 +21,7 @@ from reportlab.platypus import Table, TableStyle
 import base64
 from datetime import datetime
 from app.services.imagekit_service import imagekit_service
+from app.services.ficha_pdf import generar_ficha_pdf as generar_ficha_pdf_v2, cargar_contexto_ficha
 import requests
 from reportlab.lib.utils import ImageReader
 from PIL import Image
@@ -96,7 +97,8 @@ async def enviar_fichas_por_correo(
         attachments = []
         for propiedad in propiedades:
             try:
-                pdf_bytes = generar_ficha_pdf(propiedad)
+                _caract, _edif, _edif_car = cargar_contexto_ficha(db, propiedad)
+                pdf_bytes = generar_ficha_pdf_v2(propiedad, _caract, _edif, _edif_car)
                 codigo = f"PROP_{propiedad.registro_cab_id}"
 
                 attachments.append({
@@ -199,7 +201,8 @@ async def generar_fichas_urls(
         for propiedad in propiedades:
             try:
                 # Generar PDF
-                pdf_bytes = generar_ficha_pdf(propiedad)
+                _caract, _edif, _edif_car = cargar_contexto_ficha(db, propiedad)
+                pdf_bytes = generar_ficha_pdf_v2(propiedad, _caract, _edif, _edif_car)
                 codigo = f"PROP_{propiedad.registro_cab_id}"
                 filename = f"Ficha_{codigo}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
 
