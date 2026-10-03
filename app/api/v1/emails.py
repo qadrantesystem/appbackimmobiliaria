@@ -22,13 +22,27 @@ import base64
 from datetime import datetime
 from app.services.imagekit_service import imagekit_service
 from app.services.ficha_pdf import cargar_contexto_ficha
-from app.services.ficha_html import generar_ficha_pdf as generar_ficha_pdf_v2
+from app.services.ficha_pdf import generar_ficha_pdf as _ficha_reportlab
+try:
+    from app.services.ficha_html import generar_ficha_pdf as _ficha_weasy
+except Exception:  # WeasyPrint no disponible en el entorno
+    _ficha_weasy = None
 import requests
 from reportlab.lib.utils import ImageReader
 from PIL import Image
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def _generar_ficha(propiedad, caracteristicas, edificio, edificio_caracteristicas):
+    """Genera la ficha PDF. Prefiere WeasyPrint; si falla, cae a reportlab."""
+    if _ficha_weasy is not None:
+        try:
+            return _ficha_weasy(propiedad, caracteristicas, edificio, edificio_caracteristicas)
+        except Exception as e:
+            logger.warning(f"⚠️ WeasyPrint falló ({e}); usando generador reportlab")
+    return _ficha_reportlab(propiedad, caracteristicas, edificio, edificio_caracteristicas)
 
 
 class EnviarFichasRequest(BaseModel):
@@ -99,7 +113,7 @@ async def enviar_fichas_por_correo(
         for propiedad in propiedades:
             try:
                 _caract, _edif, _edif_car = cargar_contexto_ficha(db, propiedad)
-                pdf_bytes = generar_ficha_pdf_v2(propiedad, _caract, _edif, _edif_car)
+                pdf_bytes = _generar_ficha(propiedad, _caract, _edif, _edif_car)
                 codigo = f"PROP_{propiedad.registro_cab_id}"
 
                 attachments.append({
@@ -203,7 +217,7 @@ async def generar_fichas_urls(
             try:
                 # Generar PDF
                 _caract, _edif, _edif_car = cargar_contexto_ficha(db, propiedad)
-                pdf_bytes = generar_ficha_pdf_v2(propiedad, _caract, _edif, _edif_car)
+                pdf_bytes = _generar_ficha(propiedad, _caract, _edif, _edif_car)
                 codigo = f"PROP_{propiedad.registro_cab_id}"
                 filename = f"Ficha_{codigo}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
 
