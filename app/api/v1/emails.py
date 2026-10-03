@@ -21,7 +21,8 @@ from reportlab.platypus import Table, TableStyle
 import base64
 from datetime import datetime
 from app.services.imagekit_service import imagekit_service
-from app.services.ficha_pdf import generar_ficha_pdf as generar_ficha_pdf_v2, cargar_contexto_ficha
+from app.services.ficha_pdf import cargar_contexto_ficha
+from app.services.ficha_html import generar_ficha_pdf as generar_ficha_pdf_v2
 import requests
 from reportlab.lib.utils import ImageReader
 from PIL import Image
